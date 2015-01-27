@@ -1,6 +1,10 @@
 <?php
 
 #Includes
+
+include "player.class.php";
+include "competition.class.php";
+include "group.class.php";
 /*
 include "fantacalcio.common.inc";
 include "fantacalcio.admin.inc";
@@ -98,7 +102,7 @@ function fantacalcio_menu() {
   
   $items['classifica']  = array(
       'title' => 'Classifica',
-      'page callback' => 'fantacalcio_classifica',
+      'page callback' => 'fantacalcio_standings',
       'page arguments' => array(1),
       'access arguments' => array('access content'),
       'type' => MENU_NORMAL_ITEM,
@@ -108,7 +112,7 @@ function fantacalcio_menu() {
 
   $items['calendario'] = array(
       'title' => 'Calendario',
-      'page callback' => '_fantacalcio_calendario',
+      'page callback' => 'fantacalcio_calendar',
       'page arguments' => array(1),
       'access arguments' => array('access content'),
       'type' => MENU_NORMAL_ITEM,

@@ -276,7 +276,7 @@ function show_rosa($t_id) {
 
   $credits = variable_get("fantacalcio_credits", 350);
 
-  $players = get_players();
+  $players = Player::allWithRound();
 
   $rose = array(); 
   $spesa = 0;
