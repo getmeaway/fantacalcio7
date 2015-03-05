@@ -19,19 +19,72 @@ function _fantacalcio_formazioni() {
 /************************/
 /* visualizzazione    */
 /************************/
-function _fantacalcio_formazioni_view($c_name, $round, $t_id) {
+function _fantacalcio_formazioni_view($competition_name, $round_number =  null, $t_id = null) {
 
-  $js_mobile = "function change_round(competition, c_id, base_url){
-	var roundCompetition = document.getElementById('round_' + c_id);
-	var url = base_url + 'formazioni/view/' + competition + '/' + roundCompetition.value;
-	$.mobile.changePage( url , true );
-    }";
+	global $user;
+	  
+  $selected_competition = Competition::getByName($competition_name);
+  
+  $competitions = Competition::all(array("has_lineups" => 1));
+  
+  foreach($competitions as $c_id => $competition) {
+  	
+  	$round_number = (!isset($round_number) || $round_number == null) ? Round::getLast($c_id) : $round_number;
 
-  if (is_mobile())
-    drupal_add_js($js_mobile, 'inline', 'footer');
-
-  $args = array("c_name" => $c_name, "round" => $round, "t_id" => $t_id);
-  return make_competition_tabs("get_formazione", $args, array('lineups' => 1));
+  	$main_round_number = Round::getRoundByCompetitionRound($round_number, $competition->id);
+  	
+  	$competition_round = Round::getCompetitionRound($main_round_number, $c_id);
+//   	print_r($competition_round);
+  	
+  	$teams_list = array();
+  	
+  	foreach($competition->groups as $g_id => $group) {
+  	
+  		$teams = Team::allByGroupLineups($c_id, $g_id, $competition_round->competition_round);
+  	
+  		$expanded = false;
+  			
+  		$teams_group_list = array();
+  		foreach ($teams as $team_id => $team) {
+  				
+  			$classes = array("list-group-item");
+  			if (isset($array_args["t_id"]) && $team_id == $t_id )
+  				array_push($classes, "active");
+  			if ($team->user == $user->uid) {
+  				array_push($classes, "mine");
+  				$expanded = true;
+  			}
+  				
+  			array_push($teams_group_list, array("data" => l($team->name, "formazioni/view/" .$competition->name . "/" . $competition_round->competition_round . "/" . $team->id), "class" => $classes, "data-name" => $team->name));
+  		}
+  	
+  		$teams_list[$g_id] = array("group_name" => $group->name,
+  				"teams" => theme_item_list(array("items" => $teams_group_list, "attributes" => array("class" => array("list-group")), "type" => "ul", "title" => "")),
+  				"expanded" => $expanded);
+  	}
+  	
+  	$columns_output["teams_list"] = $teams_list;
+  	if ($selected_competition == $competition && Team::exists($t_id))
+  		$columns_output["main_output"] = show_lineup(Team::get($t_id), $selected_competition, $competition_round);
+  	
+  	$choose_rounds = array();
+  	$max_round = 15;//TODO
+  	for($i = 1; $i <= $max_round; $i++) {
+  		$choose_rounds[$i] = base_path() . "formazioni/view/" . strtolower($competition->name) . "/" . $i;
+  	}
+  	
+  	$columns_output["choose_rounds"] = $choose_rounds;
+  	
+  	$competition->output = theme("columns", $columns_output);  	 
+  	  	
+  	$competition->active = (isset($competition_name) && Competition::getByName($competition_name) != null && strtolower($competition->name) == strtolower($competition_name));
+  }
+  
+  $output = array();
+  $output["competitions"] = $competitions;
+  $output["active"] = 1;
+  
+  return theme("lineup-view", $output);
 }
 
 function _fantacalcio_formazioni_box($c_name, $round, $t_id) {
@@ -40,7 +93,7 @@ function _fantacalcio_formazioni_box($c_name, $round, $t_id) {
   return show_formazione($args);
 }
 
-function get_formazione($args = array()) {
+function get_lineup($args = array()) {
 
   $c_name = $args["c_name"];
   $t_id = $args["t_id"];
@@ -50,122 +103,96 @@ function get_formazione($args = array()) {
   $args["c_id"] = $c_id;
   $round = (!empty ($round)) ? $round : get_last_round_formazione($c_id);
 
-  $out = make_columns('show_formazione', 'formazioni/view/' . $c_name . '/' . $round, $args, 'filter_teams_formazioni', 'choose_formazioni_round_form');
+  $out = make_columns('show_lineup', 'formazioni/view/' . $c_name . '/' . $round, $args, 'filter_teams_formazioni', 'choose_formazioni_round_form');
 
   return $out;
 
 }
 
-function show_formazione($args = array()) {
+function show_lineup($team, $competition, $round) {
 
-  $teams = get_teams();
-  $competitions = get_competitions();
-
-  $t_id = $args['t_id'];
-  $c_name = $competitions[$args['c_id']]->name;
-  $c_id = get_competition_id($c_name);
-  $round = (!empty ($args['round'])) ? $args['round'] : get_last_round_formazione($c_id);
-  $players = get_players(get_round_by_competition_round($round, $c_id));
-
-  $out = "";
+  $round = (isset ($round)) ? $round : Round::getLastLineups($competition_id);
 
   #squadra trovata
-  if (array_key_exists($t_id, $teams)) {
-    $round_label = get_round_label(get_match($round, $t_id, $c_id));  
-    drupal_set_title(filter_xss($competitions[$c_id]->name . " - " . $round_label . " - ". $teams[$t_id]->name));
+  if (Team::exists($team->id)) {
 
-    $out .= "<h3 class='team_name'>" . $teams[$t_id]->name . "</h3><br>";
+  	drupal_set_title(filter_xss($competition->name . " - " . $round->label));
 
-    $out .= "<div class='shirt'><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $teams[$t_id]->shirt . "'></div>";
+    $out = "<h3 class='team_name'>" . $team->name . "</h3><br>";
 
-    $formazione = array();
-    $titolari = array();
-    $riserve = array();
-    $sql = "SELECT * FROM {fanta_lineups} 
-            WHERE t_id = :t_id
-            AND c_id = :c_id
-            AND round = :round
-			AND position > 0";
-    $result = db_query($sql, array(":t_id" => $t_id, ":c_id" => $c_id, ":round" => $round));
-    if ($result->rowCount() > 0) {
-      foreach ($result as $row) {
-        $pl_id = $row->pl_id;
-        $formazione[$pl_id] = $row;
-        $posizioni[$row->position][$pl_id] = $row;
-        if ($row->position == 1)
-          $titolari[$pl_id] = $row;
-        elseif (in_array($row->position, array(
-          2,
-          3
-        ))) $riserve[$pl_id] = $row;
-      }
+    $out .= "<div class='shirt'><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></div>";
+    
+    $lineup = Lineup::get($team->id, $competition->id, $round->competition_round);
 
-      ksort($posizioni);
+    if ($lineup) {
+
+      ksort($lineup["positions"]);
 
       #ordino i titolari(ruolo, nome)
       $roles = array();
       $names = array();
-      $modulo = array(0, 0, 0, 0);
+      $module = array(0, 0, 0, 0);
 
-      foreach ($titolari as $titolare) {
-        $modulo[$players[$titolare->pl_id]->role]++;
-        $roles[] = $players[$titolare->pl_id]->role;
-        $names[] = $players[$titolare->pl_id]->name;
+      foreach ($lineup["starting_lineups"] as $starting_player) {
+        $module[$starting_player->role]++;
+        $roles[] = $starting_player->role;
+        $names[] = $starting_player->name;
       }
 
-      array_multisort($roles, SORT_ASC, $names, SORT_ASC, $titolari);
+      array_multisort($roles, SORT_ASC, $names, SORT_ASC, $lineup["starting_lineups"]);
 
       #ordino le riserve(ruolo, posizione, nome)
       #ordino i titolari(ruolo, nome)
       $roles = array();
       $names = array();
 
-      foreach ($riserve as $riserva) {
-        $roles[] = $players[$riserva->pl_id]->role;
-        $names[] = $players[$riserva->pl_id]->name;
+      foreach ($lineup["reserves_lineups"] as $reserve_player) {
+        $roles[] = $reserve_player->role;
+        $names[] = $reserve_player->name;
       }
 
-      array_multisort($roles, SORT_ASC, $names, SORT_ASC, $riserve);
+      array_multisort($roles, SORT_ASC, $names, SORT_ASC, $lineup["reserves_lineups"]);
 
-      if ($modulo) {
-        ksort($modulo);
+      //modulo
+      if ($module) {
+        ksort($module);
 
-        unset($modulo[0]);
-        $out .= "<p><strong>" . implode(" - ", $modulo) . "</strong></p>";
+        unset($module[0]);
+        $out .= "<p><strong>" . implode(" - ", $module) . "</strong></p>";
       }
       
       //mostra l'ordine dei rigoristi se è previsto il passaggio del turno
-      $show_penalties = is_passaggio_turno($c_id, $round);
+      $show_penalties = $round->next;
 
       #titolari
-      $header_titolari = array( array("data" => "Titolari", "colspan" => 5) );
-      $rows_titolari = show_position($titolari, $players, $show_penalties);
+      $header_startings = array( array("data" => t("Titolari"), "colspan" => 5) );
+      $rows_startings = show_position($lineup["starting_lineups"], $show_penalties);
 
       #riserve
-      $header_riserve = array(array("data" => "Riserve", "colspan" => 5));
-      $rows_riserve = show_position($riserve, $players);
+      $header_reserves = array(array("data" => t("Riserve"), "colspan" => 5));
+      $rows_reserves = show_position($lineup["reserves_lineups"]);
 
-      $out .= theme_table(array("header" => $header_titolari, "rows" => $rows_titolari, "attributes" => array("class" => "table table-responsive"), "colgroups" => array(), "sticky" => "", "caption" => "", "empty" => "" ));
-      $out .= theme_table(array("header" => $header_riserve, "rows" => $rows_riserve , "attributes" => array("class" => "table table-responsive"), "colgroups" => array(), "sticky" => "", "caption" => "", "empty" => "" ));
+      $out .= theme_table(array("header" => $header_startings, "rows" => $rows_startings, "attributes" => array("class" => "table table-responsive"), "colgroups" => array(), "sticky" => "", "caption" => "", "empty" => "" ));
+      $out .= theme_table(array("header" => $header_reserves, "rows" => $rows_reserves , "attributes" => array("class" => "table table-responsive"), "colgroups" => array(), "sticky" => "", "caption" => "", "empty" => "" ));
 
     } 
-    else $out .= "<p>Formazione non trovata</p>";
+    else $out .= "<p>" . t("Formazione non trovata") . "</p>";
 
   } 
   
-  else $out .= "<h3>Squadra inesistente</h3><br>";
+  else $out = "<h3>" . t("Squadra inesistente") . "</h3><br>";
 
   return $out;
 }
 
-function show_position($position, $players, $show_penalties = FALSE) {
+function show_position($position, $show_penalties = FALSE) {
 
-  $out = "";
-
+	$rows = array();
+	
   if ($position) {  
     foreach ($position as $pl_id => $player) {
-      $roles[] = $players[$player->pl_id]->role;
-      $names[] = $players[$player->pl_id]->name;
+      $roles[] = $player->role;
+      $names[] = $player->name;
       $positions[] = $player->position;
     }
 
@@ -174,18 +201,21 @@ function show_position($position, $players, $show_penalties = FALSE) {
     foreach ($position as $p_id => $player) {
       $rows[] = array(
               "data" => array(
-                      array("data" => convert_role($players[$player->pl_id]->role), "class" => "role"),
-                      array("data" => $players[$player->pl_id]->name, "class" => "name"),
-                      ucwords(convert_teams($players[$player->pl_id]->team)),
-                      l("<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>", "scheda/giocatore/" . $player->pl_id, array("html" => "TRUE", "attributes" => array("class" => "thickbox", "rel" => "lightframe"))),
+                      array("data" => "<span class=\"fa-stack\">
+					<i class=\"fa fa-square fa-stack-2x role-" . $player->role . "\"></i>
+					<i class=\"fa fa-stack-1x\" style=\"color: white;\"><span class=\"font-normal\">" . Player::convertRole($player->role) . "</span></i>
+				</span>", "class" => "role"),
+                      array("data" => $player->name, "class" => "name"),
+                      ucwords(strtolower($player->team)),
+                      "<a href=\"#\" data-toggle=\"modal\" data-target=\"#player-stats-modal\" class=\"player-stats\" id=\"player-stat-" . $pl_id . "\"><i class=\"fa fa-bar-chart\"></i></a>",
                       $show_penalties ? "<span title='Ordine rigoristi'>(" . ($player->penalty_position + 12) . ")</span>" : ""
                       ),
-              "class" => array("role_" . $players[$player->pl_id]->role)
+              "class" => array("role_" . $player->role)
               );
 
     }
   }
-#print_r($rows);die();
+
   return $rows;
 }
 

@@ -10,22 +10,23 @@ class Competition {
 	var $has_newsletters;
 	var $groups;
 
-	function __construct($id, $name, $type, $has_matches, $has_standings, $has_newsletters) {
+	function __construct($id, $name, $type, $has_matches, $has_standings, $has_lineups, $has_newsletters) {
 		$this->id = $id;
 		$this->name = $name;
 		$this->type = $type;
 		$this->has_matches = $has_matches;
 		$this->has_standings = $has_standings;
+		$this->has_lineups = $has_lineups;
 		$this->has_newsletters = $has_newsletters;
 	}
 	
 	static function get($id) {
 		$query = db_select("fanta_competitions", "c");
-		$query->condition("id", $id);
+		$query->condition("c_id", $id);
 		$query->fields("c");
 		$result = $query->execute();
 		foreach($result as $row) {
-			$competition = new Competition($row->c_id, $row->name, $row->type, $row->has_matches, $row->has_standings, $row->has_newsletters);
+			$competition = new Competition($row->c_id, $row->name, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
 			$competition->groups = Group::allByCompetition($row->c_id);
 		}
 		
@@ -41,7 +42,7 @@ class Competition {
 		$query->fields("c");
 		$result = $query->execute();
 		foreach($result as $row) {
-			$competition = new Competition($row->c_id, $row->name, $row->type, $row->has_matches, $row->has_standings, $row->has_newsletters);
+			$competition = new Competition($row->c_id, $row->name, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
 			$competition->groups = Group::allByCompetition($row->c_id);
 		}
 	
@@ -60,7 +61,8 @@ class Competition {
 		$query->fields("c");
 		$result = $query->execute();
 		foreach($result as $row) {
-			$competitions[$row->c_id] = new Competition($row->c_id, $row->name, $row->type, $row->has_matches, $row->has_standings, $row->has_newsletters);
+			$competitions[$row->c_id] = new Competition($row->c_id, $row->name, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
+			$competitions[$row->c_id]->groups = Group::allByCompetition($row->c_id);
 		}
 	
 		return $competitions;

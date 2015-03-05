@@ -1,0 +1,8 @@
+; $Id: fantacalcio.info,v 1.0 2014/04/08 05:50:53 dries Exp $
+name = Fantarest
+package = Fantacalcio
+description = Gestione completa di una lega di Fantacalcio.
+author = Sauro Ruggeri
+version = 7.x-1.0
+core = 7.x
+dependencies[] = fantacalcio

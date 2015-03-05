@@ -1,7 +1,6 @@
 <?php
 
-class Team
-{
+class Team {
 
 	var $id;
 	var $name;
@@ -22,16 +21,25 @@ class Team
 		$result = $query->execute();
 		foreach ( $result as $row ) {
 			$team = new Team($row->t_id, $row->name, $row->uid);
+			$team->coach = $row->coach;
+			$team->stadium = $row->stadium;
+			$team->shirt = $row->shirt;
 			$team->register_date = $row->register_date;
+			$team->completed_date = $row->completed_date;
 		}
 		
 		return $team;
+	}
+	
+	static function exists($t_id) {
+		return self::get($t_id) != null;
 	}
 
 	static function all () {
 		$teams = array();
 		$query = db_select("fanta_teams", "t");
 		$query->fields("t");
+		$query->orderBy("t.name");
 		$result = $query->execute();
 		foreach ( $result as $row ) {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
@@ -47,6 +55,7 @@ class Team
 		$query->condition("active", 1);
 		$query->orderBy("name");
 		$query->fields("t");
+		$query->orderBy("t.name");
 		$result = $query->execute();
 		foreach ( $result as $row ) {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
@@ -62,6 +71,7 @@ class Team
 		$query->join("fanta_teams_groups", "g", "g.t_id =  t.t_id");
 		$query->fields("t");
 		$query->condition("g_id", $g_id);
+		$query->orderBy("t.name");
 		$result = $query->execute();
 		foreach ( $result as $row ) {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
@@ -71,12 +81,32 @@ class Team
 		return $teams;
 	}
 	
+	static function allByGroupLineups ($c_id, $g_id, $round) {
+		$teams = array();
+		$query = db_select("fanta_teams", "t");
+		$query->join("fanta_teams_groups", "g", "g.t_id =  t.t_id");
+		$query->join("fanta_lineups", "l", "l.t_id =  t.t_id");
+		$query->fields("t");
+		$query->condition("g_id", $g_id);
+		$query->condition("l.c_id", $c_id);
+		$query->condition("l.round", $round);
+		$query->orderBy("t.name");
+		$result = $query->execute();
+		foreach ( $result as $row ) {
+			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
+			$teams[$row->t_id]->register_date = $row->register_date;
+		}
+	
+		return $teams;
+	}
+	
 	static function allByUser ($u_id) {
 		$teams = array();
 		$query = db_select("fanta_teams", "t");
 		//$query->join("fanta_teams_groups", "g", "g.t_id =  t.t_id");
 		$query->fields("t");
 		$query->condition("t.uid", $u_id);
+		$query->orderBy("t.name");
 		$result = $query->execute();
 		foreach ( $result as $row ) {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
@@ -127,7 +157,7 @@ class Team
 	}
 	
 	function isSquadComplete() {
-		return TRUE;
+		return $this->completed_date != null && $this->completed_date > 0;
 	}
 	
 	function getMovements() {
@@ -369,4 +399,25 @@ class Team
 		
 		return null;
 	}
+	
+	function hasPlayer($player_id) {
+		$query = db_select("fanta_squads", "s");
+		$query->condition("s.pl_id", $player_id);
+		$query->condition("s.t_id", $this->id);
+		$query->fields("s", array("pl_id"));
+		$result = $query->execute();
+		
+		return $result->rowCount() == 1;
+	}
+	
+	function getMovementsCount() {
+		$query = db_select("fanta_squads_movements", "s");
+		$query->condition("s.t_id", $this->id);
+		$query->condition("s.status", 1);
+		$query->fields("s", array("pl_id"));
+		$result = $query->execute();
+		
+		return $result->rowCount();
+	}
+	
 }

@@ -1,0 +1,744 @@
+<?php
+
+#init
+function fantarest_init() {
+/*  global $user;
+
+  if ($user->uid > 0 && !isset($user->groups)) {
+
+    //t_id
+    $result = (db_query("SELECT t_id FROM {fanta_teams} WHERE active = 1 AND uid = :t_id", array(":t_id" => $user->uid) ));
+    $t_id = $result->fetchObject()->t_id;
+    
+    if ($t_id) {
+      $user->t_id = $t_id;
+
+      $sql = "SELECT * FROM {fanta_groups} WHERE active = 1";
+      $result = db_query($sql);
+      foreach ($result as $row) {
+        $competitions[$row->g_id] = $row;
+      }
+      
+      $sql = "SELECT g_id FROM {fanta_teams_groups} WHERE active = 1 AND t_id = :t_id";  
+      $result = db_query($sql, array(":t_id" => $t_id));
+      foreach ($result as $row) {
+        $user->groups[$competitions[$row->g_id]->c_id] = $competitions[$row->g_id];
+      }
+    }
+  }*/
+}
+
+#permessi
+function fantarest_permission() {
+  return array(
+    'access content fantacalcio' => array('title' => 'access content fantacalcio'),
+    'access fantacalcio' => array('title' => 'access fantacalcio'),
+    'administer fantacalcio' => array('title' => 'administer fantacalcio'),
+    'carica voti' => array('title' => 'carica voti'),
+    'calcola risultati' => array('title' => 'calcola risultati'),
+    'inserisci formazione' => array('title' => 'inserisci formazione'),
+    'access team' => array('title' => 'access team'),
+    'amministra formazioni' => array('title' => 'amministra formazioni'),
+    'gestione calendario' => array('title' => 'gestione calendario'),
+  );
+}
+
+#menu
+function fantarest_menu() {
+
+  $items = array();
+  
+  $items['fantarest/classifica']  = array(
+      'title' => 'Classifica',
+      'page callback' => 'fantacalcio_standings',
+      'page arguments' => array(1),
+      'access arguments' => array('access content'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.standings.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['fantarest/calendario'] = array(
+      'title' => 'Calendario',
+      'page callback' => '_fantacalcio_calendar',
+      'page arguments' => array(1),
+      'access arguments' => array('access content'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.calendar.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['fantarest/calendario/%/%'] = array(
+      'title' => 'Calendario',
+      'page callback' => 'fantacalcio_calendario_round',
+      'page arguments' => array(1, 2),
+      'access arguments' => array('access content'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.calendar.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['fantarest/team']  = array(
+      'title' => 'Gestione squadra',
+      'page callback' => 'fantacalcio_team_manager',
+      'access arguments' => array('access team'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.teams.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['fantarest/lineups']  = array(
+      'title' => 'Formazioni',
+      'page callback' => '_fantacalcio_formazioni',
+      'access arguments' => array('access fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.lineups.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+    
+  $items['fantarest/lineups/multe']  = array(
+      'title' => 'Multe',
+      'page callback' => 'fantacalcio_show_multe',
+      'access arguments' => array('access team'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.lineups.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['fantarest/lineups/view']  = array(
+      'title' => 'Formazioni',
+      'page callback' => '_fantacalcio_formazioni_view',
+      'page arguments' => array(2, 3, 4),
+      'access arguments' => array('access fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.lineups.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+    
+  $items['fantarest/lineups/box']  = array(
+      'title' => 'Formazioni',
+      'page callback' => '_fantacalcio_formazioni_box',
+      'page arguments' => array(2, 3, 4),
+      'access arguments' => array('access fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.lineups.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['formazioni/insert'] = array(
+      'title' => 'Inserisci Formazione',
+      'page callback' => 'fantacalcio_formazione_insert_start_user',
+    'page arguments' => array(2),
+      'access arguments' => array('inserisci formazione'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.lineups.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+    
+  $items['formazioni/insert/%/penalties'] = array(
+      'title' => 'Inserisci Rigoristi',
+      'page callback' => 'fantacalcio_insert_penalties',
+    'page arguments' => array(2),
+      'access arguments' => array('inserisci formazione'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.lineups.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['formazioni/admin'] = array(
+      'title' => 'Amministra Formazioni',
+      'page callback' => 'fantacalcio_admin_formazione',
+    'page arguments' => array(2, 3),
+      'access arguments' => array('amministra formazioni'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.lineups.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+    
+  $items['formazioni/admin/penalties'] = array(
+      'title' => 'Amministra Rigoristi',
+      'page callback' => 'fantacalcio_admin_penalties',
+    'page arguments' => array(3, 4),
+      'access arguments' => array('amministra formazioni'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.lineups.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['formazioni/validate'] = array(
+      'title' => 'Valida Formazione',
+      'page callback' => 'fantacalcio_formazione_validate',
+    'page arguments' => array(2, 3),
+      'access arguments' => array('inserisci formazione'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.lineups.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['risultati'] = array(
+      'title' => 'Risultati',
+      'page callback' => 'fantacalcio_risultati',
+      'page arguments' => array(1),
+      'access arguments' => array('calcola risultati'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.results.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['risultati/%'] = array(
+      'title' => 'Risultati',
+      'page callback' => 'fantacalcio_risultati',
+      'page arguments' => array(1, 2),
+      'access arguments' => array('calcola risultati'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.results.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['squadre'] = array(
+      'title' => 'Squadre',
+      'page callback' => 'fantacalcio_show_teams',
+      'access arguments' => array('access fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.teams.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['giocatori/liberi'] = array(
+      'title' => 'Giocatori Liberi',
+      'page callback' => 'fantacalcio_giocatori_liberi',
+    'page arguments' => array(2),
+      'access arguments' => array('access fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.players.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['team/js'] = array(
+      'title'            => 'JSON',
+      'description'      => 'Dati ahah',
+      'page callback'    => 'fantacalcio_team_form_ahah',
+      'access arguments' => array('access team'),
+      'type'             => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.teams.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+    );
+
+  $items['updateformazione']  = array(
+      'title' => 'update formazione',
+      'page callback' => 'fantacalcio_update_formazione',
+    'page arguments' => array(1, 2, 3, 4),
+      'access arguments' => array('inserisci formazione'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.lineups.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+    );
+
+  $items['updateformazioneadmin']  = array(
+      'title' => 'update formazione',
+      'page callback' => 'fantacalcio_update_formazione_admin',
+    'page arguments' => array(1, 2, 3, 4, 5),
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.lineups.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+    );
+
+  $items['updatecompetitionround']  = array(
+      'title' => 'update competition round',
+      'page callback' => 'fantacalcio_update_competition_round',
+    'page arguments' => array(1, 2, 3),
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+    );
+
+  $items['calendario/partita/%']  = array(
+      'title' => 'Scheda Partita',
+      'page callback' => 'show_match_details',
+
+      'page arguments' => array(2),
+      'access arguments' => array('access content'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.calendar.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+
+  
+  $items['scheda/partita']  = array(
+      'title' => 'Scheda Partita',
+      'page callback' => 'show_match_details',
+      'page arguments' => array(2),
+      'access arguments' => array('access content'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.calendar.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+
+  $items['statistiche']  = array(
+      'title' => 'Statistiche',
+      'page callback' => 'stats_home',
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.general.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['statistiche/players']  = array(
+      'title' => 'Statistiche Giocatori',
+      'page callback' => 'drupal_get_form',
+    'page arguments' => array( 'choose_players_stats'),
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.players.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['statistiche/players/%/%/%/%/%']  = array(
+      'title' => 'Statistiche Giocatori',
+      'page callback' => 'players_stats',
+    'page arguments' => array(2, 3, 4, 5, 6),
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.players.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+
+  $items['statistiche/giocatore']  = array(
+      'title' => 'Statistiche Giocatore',
+      'page callback' => 'dettagli_giocatore',
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.players.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+    
+  $items['statistiche/giocatore/%']  = array(
+      'title' => 'Statistiche Giocatore',
+      'page callback' => 'dettagli_giocatore',
+    'page arguments' => array(2),
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.players.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['scheda/giocatore/%']  = array(
+      'title' => 'Statistiche Giocatore',
+      'page callback' => 'scheda_giocatore',
+    'page arguments' => array(2),
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.players.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['statistiche/squadra']  = array(
+      'title' => 'Statistiche Squadra',
+      'page callback' => 'team_stats',
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.teams.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['statistiche/generali']  = array(
+      'title' => 'Statistiche Generali',
+      'page callback' => 'statistiche_generali',
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.general.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+  $items['statistiche/grafici']  = array(
+      'title' => 'Grafici',
+      'page callback' => 'statistiche_grafici',
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.charts.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+      
+  $items['statistiche/grafici/%/%/%/%']  = array(
+      'title' => 'Grafici',
+      'page callback' => 'statistiche_crea_grafico',
+    'page arguments' => array(2, 3, 4, 5),
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.charts.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+    
+  $items['statistiche/grafici/chart/%/%/%/%']  = array(
+      'title' => 'Grafici',
+      'page callback' => 'statistiche_crea_grafico',
+      'page arguments' => array(3, 4, 5, 6),
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.charts.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+    
+  $items['statistiche/topflop']  = array(
+      'title' => 'Top / Flop',
+      'page callback' => 'statistiche_topflop',
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.topflop.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+    
+  $items['statistiche/topflop/%']  = array(
+      'title' => 'Top / Flop',
+      'page callback' => 'statistiche_topflop_round',
+    'page arguments' => array(2),
+    'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.topflop.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+	  
+  $items['statistiche/topflop-all']  = array(
+      'title' => 'Top / Flop',
+      'page callback' => 'statistiche_topflop_all',
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.topflop.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+    
+  $items['statistiche/topflop-all/%']  = array(
+      'title' => 'Top / Flop',
+      'page callback' => 'statistiche_topflop_all_round',
+    'page arguments' => array(2),
+    'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.topflop.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+    
+  $items['statistiche/topflop/%/%']  = array(
+      'title' => 'Top / Flop',
+      'page callback' => 'statistiche_topflop_round_team',
+    'page arguments' => array(2, 3),
+    'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.topflop.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+  
+  $items['statistiche/autocomplete/players']  = array(
+      'title' => 'Statistiche Generali',
+      'page callback' => 'statistiche_autocomplete_players',
+      'access arguments' => array('access fantastats'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.stats.players.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+      );
+
+    
+  $items['admin/fantacalcio'] = array(
+    'title' => 'Fantacalcio',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_settings'),
+      'access arguments' => array('administer fantacalcio'),
+    'description' => 'Gestione di una lega di Fantacalcio.',
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+    );
+      
+  $items['admin/fantacalcio/general']  = array(
+      'title' => 'Generale',
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -1,
+      );
+    
+  $items['admin/fantacalcio/teams']  = array(
+      'title' => 'Squadre',
+      'page callback' => 'fantacalcio_admin_teams_list',
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/teams/%']  = array(
+      'title' => 'Squadre',
+      'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_team', 3),
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+  
+  $items['admin/fantacalcio/teams/%/delete']  = array(
+      'title' => 'Squadre',
+      'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_team_delete', 3),
+    'access arguments' => array('administer fantacalcio'),
+    'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/groups']  = array(
+      'title' => 'Gironi',
+      'page callback' => 'fantacalcio_admin_groups_list',
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/groups/%']  = array(
+      'title' => 'Gironi',
+      'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_group', 3),
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/groups/%/delete']  = array(
+      'title' => 'Gironi',
+      'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_group_delete', 3),
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/competitions']  = array(
+      'title' => 'Competizioni',
+      'page callback' => 'fantacalcio_admin_competitions_list',
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/competitions/%']  = array(
+      'title' => 'Competizioni',
+      'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_competition', 3),
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/competitions/%/delete']  = array(
+      'title' => 'Competizioni',
+      'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_competition_delete', 3),
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+
+  $items['admin/fantacalcio/competitions/%/rounds']  = array(
+      'title' => 'Giornate Competizione',
+      'page callback' => 'fantacalcio_admin_competition_rounds',
+      'page arguments' => array(4),
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/matches'] = array(
+      'title' => 'Partite',
+      'page callback' => 'fantacalcio_admin_matches',
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/matches/%'] = array(
+      'title' => 'Partite',
+      'page callback' => 'fantacalcio_admin_matches',
+      'page arguments' => array(4),
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/matches/%/%'] = array(
+      'title' => 'Partite',
+      'page callback' => 'fantacalcio_admin_matches',
+      'page arguments' => array(4, 5),
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/matches/%/%/add'] = array(
+      'title' => 'Partite',
+      'page callback' => 'fantacalcio_admin_matches',
+      'page arguments' => array(4, 5, 6),
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/matches/%/delete'] = array(
+      'title' => 'Partite',
+      'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_match_delete', 3),
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+
+  $items['admin/fantacalcio/matches/%/calendar']  = array(
+      'title' => 'Calendario Gironi',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('fantacalcio_admin_matches_calendar', 3),
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+  
+  $items['admin/fantacalcio/rounds']  = array(
+      'title' => 'Giornate',
+      'page callback' => 'fantacalcio_admin_rounds_list',
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_LOCAL_TASK,
+    'weight' => 9,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/rounds/%']  = array(
+      'title' => 'Giornate',
+      'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_round', 4),
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/rounds/%/delete']  = array(
+      'title' => 'Giornate',
+      'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_round_delete', 3),
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/players']  = array(
+      'title' => 'Giocatori',
+      'page callback' => 'fantacalcio_admin_players_list',
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_LOCAL_TASK,
+    'weight' => 15,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+      );
+    
+  $items['admin/fantacalcio/players/%']  = array(
+      'title' => 'Lista Giocatori',
+      'page callback' => 'fantacalcio_admin_players_list_player',
+    'page arguments' => array(4),
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 0,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+    );
+    
+  $items['admin/fantacalcio/players/list']  = array(
+      'title' => 'Aggiorna Lista',
+      'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_players_list_update'),
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 1,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+    );
+	
+  $items['admin/fantacalcio/players/add']  = array(
+    'title' => 'Aggiungi giocatore',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('fantacalcio_admin_players_add_form'),
+    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 1,
+      'file' => 'fantacalcio.admin.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+    );
+
+  $items['curl/voti']  = array(
+      'title' => 'curl',
+      'page callback' => 'test_curl_voti',
+      'page arguments' => array(2),
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'weight' => 1,
+      'file' => 'fantacalcio.curl.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+    );
+
+  $items['curl/players']  = array(
+      'title' => 'curl',
+      'page callback' => 'test_curl_players',
+#    'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+      'weight' => 1,
+      'file' => 'fantacalcio.curl.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'),
+
+    );
+
+    
+  return $items;
+}
+

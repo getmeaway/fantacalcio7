@@ -4,12 +4,55 @@
 * 
 */
 
+function fantacalcio_calendar($name = '', $round = null) {
 
+	$competition = Competition::getByName($name);
 
+	if ($competition == null || $competition->has_matches != 1)
+		return Competition::choose(array("has_matches" => 1), "calendario");
 
-function get_matches_table($g_id) {
+	else {
+		drupal_set_title(check_plain(t("Calendario") . " - " . ucwords($name)));
 
-  $teams = get_teams();
+		if (variable_get("fantacalcio_league_type", 1) != LEAGUE_TYPE_GP)
+			return get_matches_table($competition);
+		else
+			return get_matches_table($competition);
+	}
+
+}
+
+function get_matches_table($competition) {
+	global $user;
+	
+	$output = array();
+	$index = 0;
+	
+	foreach($competition->groups as $g_id => $group) {
+		 
+		if ($group->matches_order > 0) {
+			 
+			$index++;
+	
+// 			$group = Group::get($g_id);
+			$last_round = theme_table(array("header" => array(), "rows" => array(), "attributes" => array(), "sticky" => false, "caption" => t("Ultima giornata"), "empty" => "", "colgroups" => array()));
+			$next_round = theme_table(array("header" => array(), "rows" => array(), "attributes" => array(), "sticky" => false, "caption" => t("Prossima giornata"), "empty" => "", "colgroups" => array()));
+	
+			$group->output = theme("calendar", array("matches" => Match::getByGroup($g_id), "rounds_list" => null, "last_round" => $last_round, "next_round" => $next_round)); //"ABC";//theme_table(array("header" => $header, "rows" => $rows, "attributes" => array("class" => "table table-responsive tablesorter tablesorter-blue classifica", "id" => "classifica_" . $g_id), "caption" => "", "sticky" => "", "empty" => "", "colgroups" => array()));
+			$group->active = (isset($user_group) && $g_id == $user_group) || $index == 1;
+			 
+			$groups[$g_id] = $group;
+		}
+	}
+	 
+	$output["groups"] = $groups;
+	
+	return theme("group_tabs", $output);
+}
+
+function _get_matches_table($g_id) {
+
+  $teams = Team::all();
   $rounds = get_rounds_by_g_id($g_id);
 
   $out = "<div class='-container-fluid'>";
@@ -95,8 +138,8 @@ function show_matches($matches, $g_id = '', $is_header = FALSE) {
 
   $out = "";
 
-  $teams = get_teams();
-  $rounds = get_rounds_by_g_id($g_id);
+//   $teams = get_teams();
+//   $rounds = get_rounds_by_g_id($g_id);
     
   foreach ($matches as $m_id => $match) {
     $round = $match->round;
@@ -141,7 +184,7 @@ function show_matches_for_round($matches, $teams, $rounds, $round, $g_id) {
     foreach ($matches as $m_id => $match) 
       $date = $match->date;
 
-    $date = get_round_date($match->round, get_cid_by_gid($g_id));
+    //$date = get_round_date($match->round, get_cid_by_gid($g_id));
     
     #table header
     $round_name = (empty($rounds[$match->round]->round_label)) ? $round . "&deg; Giornata" : $rounds[$match->round]->round_label;  
@@ -176,10 +219,10 @@ function show_matches_for_round($matches, $teams, $rounds, $round, $g_id) {
       else $rows[$m_id][] = array("data" => "&nbsp;", "colspan" => 2);
 
       //link statistiche      
-      if ($match->round == get_next_competition_round(get_cid_by_gid($match->g_id)) || $match->played == 1) {
-        $rows[$m_id][] = l("<i class=\"fa fa-2x fa-bar-chart-o\"></i>", "scheda/partita/" . $m_id, array("html" => "true", "attributes" => $link_attributes));
-      }
-      else $rows[$m_id][] = array("data" => "&nbsp;", "colspan" => 1);
+//       if ($match->round == get_next_competition_round(get_cid_by_gid($match->g_id)) || $match->played == 1) {
+//         $rows[$m_id][] = l("<i class=\"fa fa-2x fa-bar-chart-o\"></i>", "scheda/partita/" . $m_id, array("html" => "true", "attributes" => $link_attributes));
+//       }
+//       else $rows[$m_id][] = array("data" => "&nbsp;", "colspan" => 1);
     }
 
     return theme_table(array("header" => $header, "rows" => $rows, "attributes" => $attributes, "caption" => "", "sticky" => "", "empty" => "", "colgroups" => array()));

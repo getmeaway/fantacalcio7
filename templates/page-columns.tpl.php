@@ -1,82 +1,80 @@
 <div class="row">
 	<div id='teams_list' class="col-sm-3 col-xs-hidden">
 
-		<?php if (isset($choose_rounds)) : ?> 
+		<?php if (isset($choose_rounds) ) : ?> 
 		<!-- scegli giornata TODO -->
-		<div>		
+		<div>
+			<?php //print ($choose_rounds); ?>
+			<div class="dropdown">
+			  <button class="btn btn-sm btn-default dropdown-toggle" type="button" id="dropdown-rounds" data-toggle="dropdown" aria-expanded="true">
+			    <?php print t("Giornata"); ?>
+			    <span class="caret"></span>
+			  </button>
+			  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdown-rounds">
+			  	<?php foreach ($choose_rounds as $round => $link): ?>
+			    <li role="presentation"><a role="menuitem" tabindex="-1" href="<?php print $link; ?>"><?php print $round; ?></a></li>
+			    <?php endforeach; ?>			    
+			  </ul>
+			</div>
 		</div>
 		<?php endif; ?>
 		
 		<!-- elenco squadre-->
+		
 		<div class="panel-group" id='accordion_1'>
+			<?php if (variable_get("show_teams_filter", 0) > 0 && array_count($teams_list) > variable_get("show_teams_filter", 0)): ?>
 			<div class="input-group">
 				<span class="input-group-btn btn-group-custom">
-					<button id="filterAll" class="btn btn-default" title="<?php print t("Tutte le squadre") ?>">
+					<button id="filterAll" class="btn btn-default"
+						title="<?php print t("Tutte le squadre") ?>">
 						<span class="fa fa-list"></span>
 					</button>
-					<button id="filterMine" class="btn btn-default" title="<?php print t("Mie squadre") ?>">
+					<button id="filterMine" class="btn btn-default"
+						title="<?php print t("Mie squadre") ?>">
 						<span class="fa fa-user"></span>
-					</button> 
-				</span>
+					</button>
+				</span> 
 				<input class="form-control" id="filterTeamsText" placeholder="Cerca..." type="text" />
 			</div>
-			<div id="teams-list" class="-panel-collapse -collapse">
-				<?php print render($teams_list); ?>
+			<?php endif; ?>
+			
+			<?php if (count($teams_list) > 1): ?>
+			<!-- Accordion -->
+			<div class="panel-group" id="teams-accordion" role="tablist" aria-multiselectable="true">
+				<?php foreach($teams_list as $t_id => $teams_group): ?>
+				<div class="panel panel-default">
+					<div class="panel-heading" role="tab" id="heading-<?php print $t_id; ?>">
+						<h4 class="panel-title">
+							<a <?php if($teams_group["expanded"] == true) print "class=\"collapsed\""; ?> data-toggle="collapse" data-parent="#teams-accordion" href="#collapse-<?php print $t_id; ?>" 
+							aria-expanded="<?php print (($teams_group["expanded"]) ? "true" : "false"); ?>" aria-controls="collapse-<?php print $t_id; ?>">
+							<?php print $teams_group["group_name"]; ?> 
+							</a>
+						</h4>
+					</div>
+					<div id="collapse-<?php print $t_id; ?>" class="panel-collapse collapse <?php print (($teams_group["expanded"]) ? "in" : ""); ?>" role="tabpanel" 
+						aria-labelledby="heading-<?php print $t_id; ?>">
+						<?php if (count($teams_group["teams"]) > 0): ?>
+						<?php print ($teams_group["teams"]) ?>						
+						<?php endif; ?>
+					</div>
+				</div>
+				<?php endforeach; ?>
 			</div>
+			<?php else: ?>
+			<div id="teams-list" class="">
+				<?php foreach($teams_list as $t_id => $teams_group): ?>
+				<?php print ($teams_group["teams"]); ?>
+				<?php endforeach; ?>
+			</div>
+			<?php endif; ?>
+
 		</div>
 	</div>
 
 	<!-- output -->
 	<div id='team_data' class="col-sm-9 col-xs-12">
-		<?php if (isset($squad) && $squad != null): ?>
-		<div role="tabpanel" class="collapse navbar-collapse">
-
-			<!-- Nav tabs -->
-			<ul class="nav nav-pills" role="tablist">
-				<li role="presentation" class="active">
-					<a href="#squad" aria-controls="squad" role="tab" data-toggle="tab">
-					<?php print t("Rosa"); ?>
-					</a>
-				</li>
-				<li role="presentation">
-					<a href="#details" aria-controls="details" role="tab" data-toggle="tab">
-					<?php print t("Dettagli"); ?>
-					</a>
-				</li>
-				<li role="presentation">
-					<a href="#rounds" aria-controls="rounds" role="tab" data-toggle="tab">
-					<?php print t("Giornate"); ?>
-					</a>
-				</li>
-				<li role="presentation">
-					<a href="#stats" aria-controls="stats" role="tab" data-toggle="tab">
-					<?php print t("Statistiche"); ?>
-					</a>
-				</li>
-				<?php if ($is_own_team) : ?>
-				<li class="pull-right">
-					<a class="btn-info" href="<?php print base_path() . "mie/" . $team->id ?>"><?php print t("Gestione squadra"); ?></a>
-				</li>
-				<?php endif; ?>
-			</ul>
-
-			<!-- Tab panes -->
-			<div class="tab-content">
-				<div role="tabpanel" class="tab-pane active" id="squad">
-				<?php print render($squad); ?>
-				</div>
-				<div role="tabpanel" class="tab-pane" id="details">
-				<?php print render($details); ?>
-				</div>
-				<div role="tabpanel" class="tab-pane" id="rounds">
-				<?php print render($rounds); ?>
-				</div>
-				<div role="tabpanel" class="tab-pane" id="stats">
-				<?php print render($stats); ?>
-				</div>
-			</div>
-
-		</div>
+		<?php if (isset($main_output) && $main_output != null): ?>
+		<?php print render($main_output); ?>
 		<?php endif; ?>
 	</div>
 </div>

@@ -25,6 +25,8 @@ include "team.class.php";
 include "real_team.class.php";
 include "competition.class.php";
 include "group.class.php";
+include "lineup.class.php";
+include "match.class.php";
 include "round.class.php";
 // include "fantacalcio.common.inc";
 include "fantacalcio.block.inc";
@@ -1189,9 +1191,13 @@ function fantacalcio_theme ($existing, $type, $theme, $path) {
 							'form' => NULL 
 					) 
 			),
+			'team' => array(
+					'render element' => 'elements',
+					'template' => 'templates/page-team' 
+			),
 			'columns' => array(
 					'render element' => 'elements',
-					'template' => 'templates/page-columns' 
+					'template' => 'templates/page-columns'
 			),
 			'movements' => array(
 					'render element' => 'elements',
@@ -1205,13 +1211,25 @@ function fantacalcio_theme ($existing, $type, $theme, $path) {
 					'render element' => 'elements',
 					'template' => 'templates/page-squad'
 			),
+			'team_form' => array(
+					'render element' => 'elements',
+					'template' => 'templates/page-team-form'
+			),
 			'standings' => array(
 					'render element' => 'elements',
 					'template' => 'templates/page-tabs'
 			),
 			'calendar' => array(
 					'render element' => 'elements',
-					'template' => 'templates/page-league-calendar' 
+					'template' => 'templates/page-calendar' 
+			),
+			'group_tabs' => array(
+					'render element' => 'elements',
+					'template' => 'templates/page-tabs'
+			),
+			'lineup-view' => array(
+					'render element' => 'elements',
+					'template' => 'templates/page-competitions-tabs'
 			),
 			'lineup-insert' => array(
 					'render element' => 'elements',

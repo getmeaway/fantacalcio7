@@ -57,6 +57,7 @@ class Group
 		$groups = array();
 		$query = db_select("fanta_groups", "g");
 		$query->condition("c_id", $c_id);
+		$query->condition("active", 1);
 		$query->fields("g");
 		$result = $query->execute();
 		foreach ( $result as $row ) {
