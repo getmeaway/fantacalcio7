@@ -7,7 +7,11 @@
 
 function fantacalcio_team_form ($form, $form_state, $id) {
 
-	$team = Team::get($id);
+	if ($id == null)
+		$team = null;
+	else
+		$team = Team::get($id);
+	
 	$action = ($team) ? "update" : "insert";
 	$title = ($team) ? t("Gestione squadra") . " - " . $team->name : t("Crea squadra");
 	drupal_set_title(filter_xss($title));
@@ -16,37 +20,36 @@ function fantacalcio_team_form ($form, $form_state, $id) {
 			"#title" => check_plain($title) 
 	);
 	
-	if (variable_get("fantacalcio_team_change_name", 2) == 1) {
-		$form ["name"] = array(
-				"#type" => "textfield",
-				"#title" => "Nome squadra",
-				"#default_value" => check_plain($team->name),
-				"#required" => TRUE 
-		);
-	}
-	else {
-		$form ["name"] = array(
-				"#type" => "hidden",
-				"#title" => "Nome squadra",
-				"#suffix" => "<h4>" . check_plain($team->name) . "</h4>",
-				"#default_value" => check_plain($team->name),
-				"#required" => TRUE
-		);
-	}
+// 	if (variable_get("fantacalcio_team_change_name", 0) == 1 || $team == null) {
+	$form ["name"] = array(
+			"#type" => "textfield",
+			"#title" => "Nome squadra",
+			"#default_value" => $team ? check_plain($team->name) : "",
+			"#required" => TRUE,
+			"#disabled" => (variable_get("fantacalcio_team_change_name", 0) == 1 || $team != null) ? TRUE : FALSE 
+	);
+// 	}
+// 	else {
+// 		$form ["name"] = array(
+// 				"#type" => "hidden",
+// 				"#title" => "Nome squadra",
+// 				"#suffix" => "<h4>" . check_plain($team->name) . "</h4>",
+// 				"#default_value" => check_plain($team->name),
+// 				"#required" => TRUE
+// 		);
+// 	}
 	
 	$form ["coach"] = array(
 			"#type" => "textfield",
 			"#title" => "Allenatore",
-			"#default_value" => check_plain($team->coach) 
-	)
-	;
+			"#default_value" => $team ? check_plain($team->coach) : "" 
+	);
 	
 	$form ["stadium"] = array(
 			"#type" => "textfield",
 			"#title" => "Stadio",
-			"#default_value" => check_plain($team->stadium) 
-	)
-	;
+			"#default_value" => $team ? check_plain($team->stadium) : "" 
+	);
 	
 	$form ["shirt"] = array(
 			"#type" => "fieldset",
@@ -60,8 +63,7 @@ function fantacalcio_team_form ($form, $form_state, $id) {
 					"path" => "js/divisa.js" 
 			)
 			 
-	)
-	;
+	);
 	
 	$form ["shirt"] ["type"] = array(
 			"#type" => "select",
@@ -72,7 +74,7 @@ function fantacalcio_team_form ($form, $form_state, $id) {
 					3 => "banda diagonale" 
 			),
 			"#title" => "Tipo",
-			"#default_value" => check_plain(substr($team->shirt, -9, 1)),
+			"#default_value" => $team ? check_plain(substr($team->shirt, -9, 1)) : "",
 			"#ahah" => array(
 					"wrapper" => "shirt_preview",
 					
@@ -95,7 +97,7 @@ function fantacalcio_team_form ($form, $form_state, $id) {
 					5 => "Giallo" 
 			),
 			"#title" => "Colore 1",
-			"#default_value" => check_plain(substr($team->shirt, -7, 1)),
+			"#default_value" => $team ? check_plain(substr($team->shirt, -7, 1)) : "",
 			"#ahah" => array(
 					"wrapper" => "shirt_preview",
 					
@@ -118,7 +120,7 @@ function fantacalcio_team_form ($form, $form_state, $id) {
 					5 => "Giallo" 
 			),
 			"#title" => "Colore 2",
-			"#default_value" => check_plain(substr($team->shirt, -5, 1)),
+			"#default_value" => $team ? check_plain(substr($team->shirt, -5, 1)) : "",
 			"#ahah" => array(
 					"wrapper" => "shirt_preview",
 					
@@ -134,20 +136,18 @@ function fantacalcio_team_form ($form, $form_state, $id) {
 			"#prefix" => "<div id=\"shirt_preview\" style=\"float:left;\">",
 			"#suffix" => "</div>",
 			"#type" => "markup",
-			"#value" => "<img src=\"" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "\">" 
+			"#value" => $team ? "<img src=\"" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "\">" : "" 
 	);
 	
 	$form ["t_id"] = array(
 			"#type" => "hidden",
-			"#value" => check_plain($team->id) 
-	)
-	;
+			"#value" => $team ? check_plain($team->id) : "" 
+	);
 	
 	$form ["action"] = array(
 			"#type" => "hidden",
 			"#value" => check_plain($action) 
-	)
-	;
+	);
 	
 	$form ["submit"] = array(
 			"#type" => "submit",
@@ -160,8 +160,7 @@ function fantacalcio_team_form ($form, $form_state, $id) {
 			"#validate" => array(
 					"fantacalcio_team_form_clear" 
 			) 
-	)
-	;
+	);
 	
 	return $form;
 }
@@ -251,32 +250,54 @@ function fantacalcio_teams_manager () {
 	if (count($teams) == 0)
 		return t("Non hai ancora nessuna squadra");
 
-	//1 squadra --> redirect
-	if (count($teams) == 1)
-		drupal_goto("mie/" . $teams[0]->id);
+// 	//1 squadra --> redirect
+// 	if (count($teams) == 1)
+// 		drupal_goto("mie/" . $teams[0]->id);
 
 	//+1 squadre --> scelta
 	if (count($teams) >= 1) {
-		$own_teams_list = array();
+		$own_teams_rows = array();
 
 		foreach($teams as $t_id => $team) {
-			$classes = array("list-group-item");
+			$classes = array();
+			$row = array();
 			if ($team->isSquadComplete())
 				array_push($classes, "bold");
-			array_push($own_teams_list, array("data" => l($team->name, "mie/" . $team->id), "class" => $classes, "data-name" => $team->name));
+			array_push($row, l($team->name, "mie/" . $team->id)); 
+			array_push($row, l(t("Dati"), "mie/" . $team->id . "/dati", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info")))) . " " .
+					l(t("Rosa"), "mie/" . $team->id . "/rosa", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info")))) . " " .
+					l(t("Movimenti"), "mie/" . $team->id . "/movimenti", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info")))) . " " .
+					l(t("Lista movimenti"), "mie/" . $team->id . "/lista-movimenti", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info"))))	
+			);
+			array_push($own_teams_rows, array("data" => $row, "class" => $classes, "data-name" => $team->name));
 		}
 				
 		$prefix = "";
 		if (variable_get("fantacalcio_user_can_create_team", 1) == 1 
 				&& (count($teams) < variable_get("fantacalcio_user_teams_limit", 0) || variable_get("fantacalcio_user_teams_limit", 0) == 0)) 
-			$prefix = "<button type=\"button\" class=\"clearfix btn btn-sm btn-info\">" . t("Aggiungi squadra") . "</button>";
+			$prefix = "<a href=\"mie/add\" class=\"btn btn-sm btn-success\">" . t("Aggiungi squadra") . "</a>";
 
 		return array(
 				"#prefix" => $prefix,
-				"#items" => $own_teams_list,
-				"#attributes" => array("class" => array("list-group")),
-				"#theme" => "item_list",
+				"#rows" => $own_teams_rows,
+				"#attributes" => array("class" => array("table", "table-responsive")),
+				"#theme" => "table",
 		);
+	}
+}
+
+function fantacalcio_team_manager_add () {
+	
+	if (fantacalcio_user_can_add_team()) {
+		return drupal_get_form("fantacalcio_team_form", null);
+	}
+	else {
+		$out = "<div class=\"well\">" 
+				. "<p>" . t("Per creare un'altra squadra") . " " 
+				. l(t("contatta un amministratore"), variable_get("fantacalcio_admin_contact_url", "")) . "</p>"
+				. "</div>";
+		
+		return $out;
 	}
 }
 
@@ -818,26 +839,30 @@ function fantacalcio_sell_player_form_validate($form, &$form_state) {
 }
 
 function fantacalcio_sell_player_form_submit($form, &$form_state) {
+	fantacalcio_sell_player_function($form_state["input"]["t_id"], $form_state["input"]["pl_id"]);
+}
+
+function fantacalcio_sell_player_function($t_id, $pl_id) {
 		
 	global $user;
 	
 // 	print_r($form_state["values"]);die();
 	
-	$team = Team::get($form_state["input"]["t_id"]);
-	$player = Player::get($form_state["input"]["pl_id"]);
+	$team = Team::get($t_id);
+	$player = Player::get($pl_id);
 	
 	if ($team != null && $team->user == $user->uid) {
 		//verifico che il giocatore sia presente in rosa
-		if ($team->hasPlayer($form_state["input"]["pl_id"]) && $player != null) {
+		if ($team->hasPlayer($pl_id) && $player != null) {
 			//vendo giocatore - elimino il giocatore dalla rosa
 			$query = db_delete("fanta_squads");
-			$query->condition("t_id", $form_state["input"]["t_id"]);
-			$query->condition("pl_id", $form_state["input"]["pl_id"]);
+			$query->condition("t_id", $t_id);
+			$query->condition("pl_id", $pl_id);
 			$query->execute();
 			
 			//aggiungo il movimento alla lista movimenti
 			$query = db_insert("fanta_squads_movements");
-			$query->fields(array("t_id" => $form_state["input"]["t_id"], "pl_id" => $form_state["input"]["pl_id"], "status" => -1, "timestamp" => time(), "value" => $player->getQuotation(), "temporary" => !($team->isSquadComplete())));
+			$query->fields(array("t_id" => $t_id, "pl_id" => $pl_id, "status" => -1, "timestamp" => time(), "value" => $player->getQuotation(), "temporary" => !($team->isSquadComplete())));
 			$query->execute();
 			
 			drupal_set_message(t("Cessione completata"), "status");
@@ -867,29 +892,37 @@ function fantacalcio_buy_player_form_validate($form, &$form_state) {
 }
 
 function fantacalcio_buy_player_form_submit($form, &$form_state) {
+	fantacalcio_buy_player_function($form_state["input"]["t_id"], $form_state["input"]["pl_id"]);
+}
+
+function fantacalcio_buy_player_ajax($t_id, $pl_id) {
+	fantacalcio_buy_player_function($t_id, $pl_id);
+	
+	return drupal_json_output("ok");
+}
+
+function fantacalcio_buy_player_function($t_id, $pl_id) {
 
 	global $user;
 
-		//print_r($form_state["values"]);die();
-
-	$team = Team::get($form_state["input"]["t_id"]);
-	$player = Player::get($form_state["input"]["pl_id"]);
+	$team = Team::get($t_id);
+	$player = Player::get($pl_id);
 
 	if ($team != null && $team->user == $user->uid) {
-// 		print_r($player);die();
+ 		
 		//verifico che il giocatore sia presente in rosa
-		if (!$team->hasPlayer($form_state["input"]["pl_id"]) && $player != null) {
+		if (!$team->hasPlayer($pl_id) && $player != null) {
 			
 			//vendo giocatore - elimino il giocatore dalla rosa
 			$query = db_insert("fanta_squads");
-			$query->fields(array("t_id" => $form_state["input"]["t_id"], "pl_id" => $form_state["input"]["pl_id"], "cost" => $player->getQuotation(), "status" => 1, "timestamp" => time()));
+			$query->fields(array("t_id" => $t_id, "pl_id" => $pl_id, "cost" => $player->getQuotation(), "status" => 1, "timestamp" => time()));
 			//$query->condition("t_id", $form_state["input"]["t_id"]);
 			//$query->condition("pl_id", $form_state["input"]["pl_id"]);
 			$query->execute();
 				
 			//aggiungo il movimento alla lista movimenti
 			$query = db_insert("fanta_squads_movements");
-			$query->fields(array("t_id" => $form_state["input"]["t_id"], "pl_id" => $form_state["input"]["pl_id"], "status" => 1, "timestamp" => time(), "value" => $player->getQuotation(), "temporary" => !($team->isSquadComplete())));
+			$query->fields(array("t_id" => $t_id, "pl_id" => $pl_id, "status" => 1, "timestamp" => time(), "value" => $player->getQuotation(), "temporary" => !($team->isSquadComplete())));
 			$query->execute();
 				
 			drupal_set_message(t("Acquisto completato"), "status");
@@ -923,4 +956,17 @@ function fantacalcio_squad_movements($t_id)
 	);
 
 	return theme("movements-list", $content);
+}
+
+function fantacalcio_user_can_add_team() {
+	global $user;
+	
+	$teams_max_teams = Team::getMaxNumberForUser($user->uid);
+	$teams_for_user = count(Team::allByUser($user->uid));
+
+	if ($teams_for_user < $teams_max_teams)
+		return TRUE;
+	else 
+		return FALSE;
+	
 }

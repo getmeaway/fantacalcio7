@@ -93,7 +93,7 @@ class Player {
 					$available = drupal_render($buy_player_form);//"<button class=\"btn btn-sm btn-success buy-player\" id=\"buy-" . $player->id . "\">" . t("Compra") . "</button>";
 				}
 				else {
-					$available = "<button class=\"btn btn-sm btn-success buy-player\" onclick=\"buyPlayer('" . $player->id . "');\" id=\"buy-" . $player->id . "\">" . t("Compra") . "</button><i class=\"hidden fa fa-check-circle fa-2x text-primary player-bought\"></i>";
+					$available = "<button class=\"btn btn-sm btn-success buy-player\" onclick=\"buyPlayer(" . $player->id . ", " . $t_id . ");\" id=\"buy-" . $player->id . "\">" . t("Compra") . "</button><i class=\"hidden fa fa-check-circle fa-2x text-primary player-bought\"></i>";
 				}
 			}
 			$list_rows[$player->id] = array("data" => array(

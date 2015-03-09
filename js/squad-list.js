@@ -2,7 +2,15 @@
 var roles = ["P", "D", "C", "A"];
 	
 	//compra
-	function buyPlayer(pl_id) {
+	function buyPlayer(pl_id, t_id) {
+		console.log(pl_id)
+				
+		jQuery.ajax({
+			type: "POST",
+			url: "./../../mie/" + t_id + "/movimenti/buy/" + pl_id,
+			//data: {id: pl_id},			
+			success: function() {
+			
 
 		if(!checkBuy(pl_id))
 			return;
@@ -30,7 +38,12 @@ var roles = ["P", "D", "C", "A"];
 		
 		//inserisco la riga nella tabella 
 		//TODO trovare punto in cui inserire (ordine per ruolo, nome)
-		jQuery("#my-squad tbody").prepend(jQuery(tr));
+		if (jQuery("#my-squad tbody").find("tr.squad-player-role-" + player.role).length > 0)
+			jQuery("#my-squad tbody").find("tr.squad-player-role-" + player.role).first().before(jQuery(tr));
+		else 
+			jQuery("#my-squad tbody").find("tr.player").first().before(jQuery(tr));
+		
+		jQuery(tr).css("border", "1px solid #C00").delay(500).css("border", "none");
 		
 		//nascondo pulsante COMPRA
 		jQuery("#players-list tbody tr#pl-" + pl_id).find(".buy-player").hide();
@@ -55,14 +68,18 @@ var roles = ["P", "D", "C", "A"];
 		jQuery("#progress-credits span.sr-only").html((credits - player.quotation));
 		
 		checkComplete();
-		
+			}
+		});
 	}
 	
 	//vendi
-	function sellPlayer(pl_id) {
+	function sellPlayer(pl_id, t_id) {
 		
-		if(!checkSell(pl_id))
-			return;
+		jQuery.ajax({
+			type: "POST",
+			url: "./../../mie/" + t_id + "/movimenti/sell/" + pl_id,
+			//data: {id: pl_id},			
+			success: function() {
 	
 		var tr = jQuery("#my-squad tbody tr#squad-pl-" + pl_id);
 		var player = {name: jQuery(tr).attr("data-name"), team: jQuery(tr).attr("data-team"), role: jQuery(tr).attr("data-role"), quotation: jQuery(tr).attr("data-quotation")};
@@ -95,7 +112,8 @@ var roles = ["P", "D", "C", "A"];
 		jQuery("#progress-credits").css("width", ((credits + parseInt(player.quotation)) / maxCredits * 100) + "%" );
 		jQuery("#progress-credits span.value").html((credits + parseInt(player.quotation)));
 		jQuery("#progress-credits span.sr-only").html((credits + parseInt(player.quotation)));
-				
+			}
+		});		
 	}
 		
 	function checkBuy(pl_id) {
@@ -120,10 +138,10 @@ var roles = ["P", "D", "C", "A"];
 		var maxNumberForRoles_3 = parseInt(jQuery("#progress-role-3 span.max").html());
 
 		if(credits >= 0 
-				&& numberForRoles_0 == maxNumberForRoles_0 
-				&& numberForRoles_1 == maxNumberForRoles_1 
-				&& numberForRoles_2 == maxNumberForRoles_2 
-				&& numberForRoles_3 == maxNumberForRoles_3) {
+			&& numberForRoles_0 == maxNumberForRoles_0 
+			&& numberForRoles_1 == maxNumberForRoles_1 
+			&& numberForRoles_2 == maxNumberForRoles_2 
+			&& numberForRoles_3 == maxNumberForRoles_3) {
 			//squadra completa
 			showModalSquadComplete();
 		}

@@ -187,6 +187,15 @@ function fantacalcio_menu () {
 			'file' => 'fantacalcio.teams.inc',
 			'file path' => drupal_get_path('module', 'fantacalcio')
 	);
+
+	$items ['mie/add'] = array(
+			'title' => t('Aggiungi squadra'),
+			'page callback' => 'fantacalcio_team_manager_add',
+			'access arguments' => array('access team'),
+			'type' => MENU_NORMAL_ITEM,
+			'file' => 'fantacalcio.teams.inc',
+			'file path' => drupal_get_path('module', 'fantacalcio')
+	);
 	
 	$items ['mie/%/dati'] = array(
 			'title' => t('Gestione squadre'),
@@ -228,9 +237,29 @@ function fantacalcio_menu () {
 			'file path' => drupal_get_path('module', 'fantacalcio')
 	);
 	
+	$items ['mie/%/movimenti/buy/%'] = array(
+			'title' => t('Gestione squadre'),
+			'page callback' => 'fantacalcio_buy_player_ajax',
+			'page arguments' => array(1, 4),
+			'access arguments' => array('access team'),
+			'type' => MENU_NORMAL_ITEM,
+			'file' => 'fantacalcio.teams.inc',
+			'file path' => drupal_get_path('module', 'fantacalcio')
+	);
+
+	$items ['mie/%/movimenti/sell/%'] = array(
+			'title' => t('Gestione squadre'),
+			'page callback' => 'fantacalcio_sell_player_ajax',
+			'page arguments' => array(1, 4),
+			'access arguments' => array('access team'),
+			'type' => MENU_NORMAL_ITEM,
+			'file' => 'fantacalcio.teams.inc',
+			'file path' => drupal_get_path('module', 'fantacalcio')
+	);
+		
 	$items ['formazioni'] = array(
 			'title' => 'Formazioni',
-			'page callback' => '_fantacalcio_formazioni',
+			'page callback' => '_fantacalcio_lineup',
 			'access arguments' => array('access fantacalcio'),
 			'type' => MENU_NORMAL_ITEM,
 			'file' => 'fantacalcio.lineups.inc',
@@ -248,7 +277,7 @@ function fantacalcio_menu () {
 	
 	$items ['formazioni/view'] = array(
 			'title' => 'Formazioni',
-			'page callback' => '_fantacalcio_formazioni_view',
+			'page callback' => '_fantacalcio_lineup_view',
 			'page arguments' => array(2, 3, 4),
 			'access arguments' => array(
 					'access fantacalcio' 
@@ -260,7 +289,7 @@ function fantacalcio_menu () {
 	
 	$items ['formazioni/box'] = array(
 			'title' => 'Formazioni',
-			'page callback' => '_fantacalcio_formazioni_box',
+			'page callback' => '_fantacalcio_lineup_box',
 			'page arguments' => array(
 					2,
 					3,
@@ -276,7 +305,7 @@ function fantacalcio_menu () {
 	
 	$items ['formazioni/insert'] = array(
 			'title' => 'Inserisci Formazione',
-			'page callback' => 'fantacalcio_formazione_insert_start_user',
+			'page callback' => 'fantacalcio_lineup_insert_start_user',
 			'page arguments' => array(
 					2 
 			),
@@ -304,7 +333,7 @@ function fantacalcio_menu () {
 	
 	$items ['formazioni/admin'] = array(
 			'title' => 'Amministra Formazioni',
-			'page callback' => 'fantacalcio_admin_formazione',
+			'page callback' => 'fantacalcio_admin_lineup',
 			'page arguments' => array(
 					2,
 					3 

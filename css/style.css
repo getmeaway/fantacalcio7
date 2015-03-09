@@ -517,3 +517,7 @@ div.home-wall-picture{
 	width: 60px;
 	display: block;
 }
+
+.added {
+	border: 1px solid #C00; 
+}

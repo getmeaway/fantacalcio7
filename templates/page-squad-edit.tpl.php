@@ -135,7 +135,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="" style="height: 200px; overflow-y: auto">
+				<div class="" style="height: 200px; overflow-y: auto; overflow-x: hidden">
 				<?php print render($players_list); ?>
 				</div>
 			</div>

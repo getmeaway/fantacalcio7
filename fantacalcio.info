@@ -6,7 +6,6 @@ author = Sauro Ruggeri
 version = 7.x-1.0
 core = 7.x
 
-files[] = fantacalcio.common.inc
 files[] = fantacalcio.admin.inc
 files[] = fantacalcio.teams.inc
 files[] = fantacalcio.calendar.inc
@@ -18,7 +17,5 @@ files[] = fantacalcio.stats.teams.inc
 files[] = fantacalcio.stats.images.inc
 files[] = fantacalcio.stats.topflop.inc
 files[] = fantacalcio.stats.players.inc
-files[] = fantacalcio.home.inc
 files[] = fantacalcio.block.inc
 files[] = fantacalcio.curl.inc
-

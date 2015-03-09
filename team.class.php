@@ -60,6 +60,7 @@ class Team {
 		foreach ( $result as $row ) {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
+			$teams[$row->t_id]->completed_date = $row->completed_date;
 		}
 	
 		return $teams;
@@ -76,6 +77,7 @@ class Team {
 		foreach ( $result as $row ) {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
+			$teams[$row->t_id]->completed_date = $row->completed_date;
 		}
 		
 		return $teams;
@@ -95,12 +97,13 @@ class Team {
 		foreach ( $result as $row ) {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
+			$teams[$row->t_id]->completed_date = $row->completed_date;
 		}
 	
 		return $teams;
 	}
 	
-	static function allByUser ($u_id) {
+	static function allByUser($u_id) {
 		$teams = array();
 		$query = db_select("fanta_teams", "t");
 		//$query->join("fanta_teams_groups", "g", "g.t_id =  t.t_id");
@@ -111,9 +114,25 @@ class Team {
 		foreach ( $result as $row ) {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
+			$teams[$row->t_id]->completed_date = $row->completed_date;
 		}
 	
 		return $teams;
+	}
+	
+	static function getMaxNumberForUser($u_id) {
+		$max_teams = 0;
+		$query = db_select("fanta_users", "u");
+		$query->condition("uid", $u_id);
+		$query->fields("u");
+		
+		$result = $query->execute();
+		
+		while ( $row = $result->fetchObject() ) {
+			$max_teams = $row->allowed_teams;
+		}
+		
+		return $max_teams;
 	}
 
 	function getSquad () {
@@ -414,6 +433,7 @@ class Team {
 		$query = db_select("fanta_squads_movements", "s");
 		$query->condition("s.t_id", $this->id);
 		$query->condition("s.status", 1);
+		$query->condition("s.temporary", 0);
 		$query->fields("s", array("pl_id"));
 		$result = $query->execute();
 		
