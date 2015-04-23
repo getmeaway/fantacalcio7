@@ -220,6 +220,8 @@ function fantacalcio_team_form_submit ($form, &$form_state) {
 // 		$result = db_query($sql, $team_name, $team_coach, $team_stadium, $team_shirt, $user->uid);
 		return drupal_set_message(t("Squadra creata con successo"));
 	}
+	
+	drupal_goto("mie");
 }
 
 function fantacalcio_get_title_team () {
@@ -246,49 +248,34 @@ function fantacalcio_teams_manager () {
 
 	$teams = Team::allByUser($user->uid);
 
-	//zero squadre --> Avviso
-	if (count($teams) == 0)
-		return t("Non hai ancora nessuna squadra");
+$own_teams_rows = array();
 
-// 	//1 squadra --> redirect
-// 	if (count($teams) == 1)
-// 		drupal_goto("mie/" . $teams[0]->id);
-
-	//+1 squadre --> scelta
-	if (count($teams) >= 1) {
-		$own_teams_rows = array();
-
-		foreach($teams as $t_id => $team) {
-			$classes = array();
-			$row = array();
-			if ($team->isSquadComplete())
-				array_push($classes, "bold");
-			array_push($row, l($team->name, "mie/" . $team->id)); 
-			array_push($row, l(t("Dati"), "mie/" . $team->id . "/dati", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info")))) . " " .
-					l(t("Rosa"), "mie/" . $team->id . "/rosa", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info")))) . " " .
-					l(t("Movimenti"), "mie/" . $team->id . "/movimenti", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info")))) . " " .
-					l(t("Lista movimenti"), "mie/" . $team->id . "/lista-movimenti", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info"))))	
-			);
-			array_push($own_teams_rows, array("data" => $row, "class" => $classes, "data-name" => $team->name));
-		}
-				
-		$prefix = "";
-		if (variable_get("fantacalcio_user_can_create_team", 1) == 1 
-				&& (count($teams) < variable_get("fantacalcio_user_teams_limit", 0) || variable_get("fantacalcio_user_teams_limit", 0) == 0)) 
-			$prefix = "<a href=\"mie/add\" class=\"btn btn-sm btn-success\">" . t("Aggiungi squadra") . "</a>";
-
-		return array(
-				"#prefix" => $prefix,
-				"#rows" => $own_teams_rows,
-				"#attributes" => array("class" => array("table", "table-responsive")),
-				"#theme" => "table",
+	foreach($teams as $t_id => $team) {
+		$classes = array();
+		$row = array();
+		if ($team->isSquadComplete())
+			array_push($classes, "bold");
+		array_push($row, l($team->name, "mie/" . $team->id)); 
+		array_push($row, l(t("Dati"), "mie/" . $team->id . "/dati", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info")))) . " " .
+				l(t("Rosa"), "mie/" . $team->id . "/rosa", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info")))) . " " .
+				l(t("Movimenti"), "mie/" . $team->id . "/movimenti", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info")))) . " " .
+				l(t("Lista movimenti"), "mie/" . $team->id . "/lista-movimenti", array("attributes" => array("class" => array("btn", "btn-sm", "btn-info"))))	
 		);
+		array_push($own_teams_rows, array("data" => $row, "class" => $classes, "data-name" => $team->name));
 	}
+			
+	$prefix = "";
+	if (variable_get("fantacalcio_user_can_create_team", 1) == 1 
+			&& (count($teams) < variable_get("fantacalcio_user_teams_limit", 0) || variable_get("fantacalcio_user_teams_limit", 0) == 0)) 
+		$prefix = "<a href=\"mie/add\" class=\"pull-left btn btn-sm btn-success\">" . t("Aggiungi squadra") . "</a>";
+
+	return $prefix . theme("table", array("rows" => $own_teams_rows, "attributes" => array("class" => array("table", "table-responsive")), "header" => array("", ""), "empty" => t("Non hai ancora nessuna squadra")));
+
 }
 
 function fantacalcio_team_manager_add () {
 	
-	if (fantacalcio_user_can_add_team()) {
+	if (variable_get("fantacalcio_user_can_create_team", 0) == 1 && fantacalcio_user_can_add_team()) {
 		return drupal_get_form("fantacalcio_team_form", null);
 	}
 	else {
@@ -660,7 +647,10 @@ function fantacalcio_squad_edit($t_id)
 	if(variable_get("fantacalcio_league_type", 1) != LEAGUE_TYPE_GP)
 		drupal_goto("mie/" . $t_id . "/lista-movimenti");
 	
-	drupal_add_js(drupal_get_path("module", "fantacalcio"). "/js/squad-list.js");
+	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/squad-list.js");
+	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.tablesorter.js");
+	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.metadata.js");
+	drupal_add_js("jQuery(window).ready(function() {jQuery(\"#players-list\").tablesorter({cssAsc: \"sort-asc\", cssDesc: \"sort-desc\", cssHeader: \"sort-header\"});})", "inline");
 
 	global $user;
 
@@ -960,11 +950,14 @@ function fantacalcio_squad_movements($t_id)
 
 function fantacalcio_user_can_add_team() {
 	global $user;
+
 	
-	$teams_max_teams = Team::getMaxNumberForUser($user->uid);
+	$max_teams_for_user = variable_get("fantacalcio_user_teams_limit", 0) > 0 ? variable_get("fantacalcio_user_teams_limit", 0) : PHP_INT_MAX;
+	$max_teams_for_user = min(Team::getMaxNumberForUser($user->uid), $max_teams_for_user);
+
 	$teams_for_user = count(Team::allByUser($user->uid));
 
-	if ($teams_for_user < $teams_max_teams)
+	if ($teams_for_user < $max_teams_for_user)
 		return TRUE;
 	else 
 		return FALSE;

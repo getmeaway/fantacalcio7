@@ -23,7 +23,7 @@ function fantacalcio_send_formazioni_email() {
   }
 }
 
-function fantacalcio_results() {
+function fantacalcio_results_cron() {
 /*
   $votes_round = variable_get("fantacalcio_results_round", 0);
   $sql = "SELECT end_date FROM {fanta_rounds} WHERE round = :round";

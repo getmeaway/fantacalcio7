@@ -736,22 +736,6 @@ function get_teams_group_options($g_id) {
   return $teams;
 }
 
-function get_teams_group_options_checked($g_id) {
-  $teams = array();
-  $sql = "SELECT * FROM {fanta_teams} t 
-      INNER JOIN {fanta_teams_groups} g
-	  ON g.t_id = t.t_id 
-      WHERE t.active = 1
-	  AND g.g_id = :g_id
-      ORDER BY t.name";
-  $result = db_query($sql, array(":g_id" => $g_id));
-  foreach ($result as $row) {
-    $t_id = $row->t_id;
-    $teams[$t_id] = $row->t_id;
-  }
-  return $teams;
-}
-
 function get_rounds_options($all = FALSE) {
   $sql = "SELECT round FROM {fanta_rounds} ";
   if (!$all) $sql .= "WHERE status = 1";

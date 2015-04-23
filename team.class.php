@@ -31,6 +31,24 @@ class Team {
 		return $team;
 	}
 	
+	static function getByName ($name) {
+		$team = null;
+		$query = db_select("fanta_teams", "t");
+		$query->condition("name", $name);
+		$query->fields("t");
+		$result = $query->execute();
+		foreach ( $result as $row ) {
+			$team = new Team($row->t_id, $row->name, $row->uid);
+			$team->coach = $row->coach;
+			$team->stadium = $row->stadium;
+			$team->shirt = $row->shirt;
+			$team->register_date = $row->register_date;
+			$team->completed_date = $row->completed_date;
+		}
+	
+		return $team;
+	}
+	
 	static function exists($t_id) {
 		return self::get($t_id) != null;
 	}
@@ -68,12 +86,15 @@ class Team {
 
 	static function allByGroup ($g_id) {
 		$teams = array();
+		
 		$query = db_select("fanta_teams", "t");
 		$query->join("fanta_teams_groups", "g", "g.t_id =  t.t_id");
 		$query->fields("t");
 		$query->condition("g_id", $g_id);
 		$query->orderBy("t.name");
+		
 		$result = $query->execute();
+		
 		foreach ( $result as $row ) {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
@@ -84,7 +105,9 @@ class Team {
 	}
 	
 	static function allByGroupLineups ($c_id, $g_id, $round) {
+		
 		$teams = array();
+		
 		$query = db_select("fanta_teams", "t");
 		$query->join("fanta_teams_groups", "g", "g.t_id =  t.t_id");
 		$query->join("fanta_lineups", "l", "l.t_id =  t.t_id");
@@ -93,7 +116,9 @@ class Team {
 		$query->condition("l.c_id", $c_id);
 		$query->condition("l.round", $round);
 		$query->orderBy("t.name");
+		
 		$result = $query->execute();
+		
 		foreach ( $result as $row ) {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
@@ -177,6 +202,41 @@ class Team {
 	
 	function isSquadComplete() {
 		return $this->completed_date != null && $this->completed_date > 0;
+	}
+	
+	function inCompetition($c_id) {
+		$query = db_select("fanta_teams_groups", "tg");
+		$query->join("fanta_groups", "g", "g.g_id = tg.g_id");
+		$query->fields("tg");
+		$query->condition("tg.t_id", $this->id);
+		$query->condition("g.c_id", $c_id);
+		$query->condition("tg.active", 1);
+		$query->condition("g.active", 1);
+		
+		$result = $query->execute();
+		
+		return $result->rowCount() == 1;
+	}
+	
+	function hasMatch($c_id, $round) {
+		
+		$groups = Competition::get($c_id)->groups;
+		$group_ids = array();
+		foreach($groups as $g_id => $group)
+			array_push($group_ids, $g_id);	
+		
+		$query = db_select("fanta_matches", "m");
+		
+		$db_or = db_or()->condition('t1_id', $this->id)->condition('t2_id', $this->id);
+
+		$query->fields("m", array("m_id"));
+		$query->condition($db_or);
+		$query->condition("round", $round);
+		$query->condition("g_id", $group_ids,'IN');
+		
+		$result = $query->execute();
+		
+		return $result->rowCount() == 1;
 	}
 	
 	function getMovements() {
@@ -383,6 +443,16 @@ class Team {
 			
 		$result = $query->execute();
 		return $result->fetchObject()->n;
+	}
+	
+	function seasonPoints($competition_id) {
+		$query = db_select("fanta_teams_rounds", "tr");
+		$query->condition("t_id", $this->id);
+		$query->condition("c_id", $competition_id);
+		$query->addExpression("SUM(points)", "sum");
+			
+		$result = $query->execute();
+		return $result->fetchObject()->sum;
 	}
 	
 	function getSeasonPosition($competition_id) {

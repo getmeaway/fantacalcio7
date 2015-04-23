@@ -29,18 +29,22 @@ function _fantacalcio_lineup_view($competition_name, $round_number =  null, $t_i
   
   foreach($competitions as $c_id => $competition) {
   	
-  	$round_number = (!isset($round_number) || $round_number == null) ? Round::getLast($c_id) : $round_number;
+  	$round_number = (!isset($round_number) || $round_number == null || !Round::existsInCompetition($round_number, $c_id)) ? Round::getLastLineup($c_id) : $round_number;
 
-  	$main_round_number = Round::getRoundByCompetitionRound($round_number, $competition->id);
+//   	$main_round_number = Round::getRoundByCompetitionRound($round_number, $competition->id);
   	
-  	$competition_round = Round::getCompetitionRound($main_round_number, $c_id);
-//   	print_r($competition_round);
+//   	$round = Round::getCompetitionRound($main_round_number, $c_id);
+  	
+  	$round = Round::getByCompetitionRound($round_number, $competition->id);print_r($round);echo "<br>";
+  	
+  	if ($round == null)
+  		$round = Round::getLastLineups($competition->id);
   	
   	$teams_list = array();
-  	
+
   	foreach($competition->groups as $g_id => $group) {
   	
-  		$teams = Team::allByGroupLineups($c_id, $g_id, $competition_round->competition_round);
+  		$teams = Team::allByGroupLineups($c_id, $g_id, $round->competition_round);
   	
   		$expanded = false;
   			
@@ -55,7 +59,7 @@ function _fantacalcio_lineup_view($competition_name, $round_number =  null, $t_i
   				$expanded = true;
   			}
   				
-  			array_push($teams_group_list, array("data" => l($team->name, "formazioni/view/" .$competition->name . "/" . $competition_round->competition_round . "/" . $team->id), "class" => $classes, "data-name" => $team->name));
+  			array_push($teams_group_list, array("data" => l($team->name, "formazioni/view/" .$competition->name . "/" . $round->competition_round . "/" . $team->id), "class" => $classes, "data-name" => $team->name));
   		}
   	
   		$teams_list[$g_id] = array("group_name" => $group->name,
@@ -64,11 +68,12 @@ function _fantacalcio_lineup_view($competition_name, $round_number =  null, $t_i
   	}
   	
   	$columns_output["teams_list"] = $teams_list;
+  	
   	if ($selected_competition == $competition && Team::exists($t_id))
-  		$columns_output["main_output"] = show_lineup(Team::get($t_id), $selected_competition, $competition_round);
+  		$columns_output["main_output"] = show_lineup(Team::get($t_id), $selected_competition, $round);
   	
   	$choose_rounds = array();
-  	$max_round = 15;//TODO
+  	$max_round = 19;//TODO
   	for($i = 1; $i <= $max_round; $i++) {
   		$choose_rounds[$i] = base_path() . "formazioni/view/" . strtolower($competition->name) . "/" . $i;
   	}
@@ -82,7 +87,7 @@ function _fantacalcio_lineup_view($competition_name, $round_number =  null, $t_i
   
   $output = array();
   $output["competitions"] = $competitions;
-  $output["active"] = 1;
+  $output["active"] = 1;//TODO
   
   return theme("lineup-view", $output);
 }
@@ -121,8 +126,8 @@ function show_lineup($team, $competition, $round) {
     $out = "<h3 class='team_name'>" . $team->name . "</h3><br>";
 
     $out .= "<div class='shirt'><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></div>";
-    
-    $lineup = Lineup::get($team->id, $competition->id, $round->competition_round);
+        
+    $lineup = Lineup::get($competition->id, $team->id, $round->competition_round);
 
     if ($lineup) {
 
@@ -133,25 +138,31 @@ function show_lineup($team, $competition, $round) {
       $names = array();
       $module = array(0, 0, 0, 0);
 
-      foreach ($lineup->regulars as $starting_player) {
+      foreach ($lineup->positions[1] as $starting_player) {
         $module[$starting_player->role]++;
         $roles[] = $starting_player->role;
         $names[] = $starting_player->name;
       }
 
-      array_multisort($roles, SORT_ASC, $names, SORT_ASC, $lineup->regulars);
+      array_multisort($roles, SORT_ASC, $names, SORT_ASC, $lineup->positions[1]);
 
       #ordino le riserve(ruolo, posizione, nome)
       #ordino i titolari(ruolo, nome)
       $roles = array();
       $names = array();
+      
+      $reserves = array();
+      foreach ($lineup->positions as $position => $players_positions) {
+      	if($position > 1)
+     		$reserves = array_merge($reserves, $players_positions);
+      }
 
-      foreach ($lineup->reserves as $reserve_player) {
+      foreach ($reserves as $reserve_player) {
         $roles[] = $reserve_player->role;
         $names[] = $reserve_player->name;
       }
 
-      array_multisort($roles, SORT_ASC, $names, SORT_ASC, $lineup->reserves);
+      array_multisort($roles, SORT_ASC, $names, SORT_ASC, $reserves);
 
       //modulo
       if ($module) {
@@ -166,17 +177,17 @@ function show_lineup($team, $competition, $round) {
 
       #titolari
       $header_startings = array( array("data" => t("Titolari"), "colspan" => 5) );
-      $rows_startings = show_position($lineup->regulars, $show_penalties);
+      $rows_startings = show_position($lineup->positions[1], $show_penalties);
 
       #riserve
       $header_reserves = array(array("data" => t("Riserve"), "colspan" => 5));
-      $rows_reserves = show_position($lineup->reserves);
+      $rows_reserves = show_position($reserves);
 
       $out .= theme_table(array("header" => $header_startings, "rows" => $rows_startings, "attributes" => array("class" => "table table-responsive"), "colgroups" => array(), "sticky" => "", "caption" => "", "empty" => "" ));
       $out .= theme_table(array("header" => $header_reserves, "rows" => $rows_reserves , "attributes" => array("class" => "table table-responsive"), "colgroups" => array(), "sticky" => "", "caption" => "", "empty" => "" ));
 
     } 
-    else $out .= "<p>" . t("lineup non trovata") . "</p>";
+    else $out .= "<p>" . t("Formazione non trovata") . "</p>";
 
   } 
   
@@ -189,7 +200,8 @@ function show_position($position, $show_penalties = FALSE) {
 
 	$rows = array();
 	
-  if ($position) {  
+  if ($position) {
+  	$positions = array();
     foreach ($position as $pl_id => $player) {
       $roles[] = $player->role;
       $names[] = $player->name;
@@ -210,7 +222,7 @@ function show_position($position, $show_penalties = FALSE) {
                       "<a href=\"#\" data-toggle=\"modal\" data-target=\"#player-stats-modal\" class=\"player-stats\" id=\"player-stat-" . $pl_id . "\"><i class=\"fa fa-bar-chart\"></i></a>",
                       $show_penalties ? "<span title='Ordine rigoristi'>(" . ($player->penalty_position + 12) . ")</span>" : ""
                       ),
-              "class" => array("role_" . $player->role)
+              "class" => array("role-" . $player->role)
               );
 
     }
@@ -227,22 +239,82 @@ function show_position($position, $show_penalties = FALSE) {
 /* inserimento      */
 /************************/
 
-function fantacalcio_lineup_insert_start_user($competition_name = '') {
+function fantacalcio_lineup_insert_start($team_id = "", $competition_name = "") {
   global $user;
-
-  $t_id = 7;//TODO Team::get($user->uid);
-  return fantacalcio_lineup_insert_start($competition_name, $t_id, TRUE);
+  
+  //teams
+  $teams = array();
+  if (!empty($team_id) && Team::exists($team_id)) {
+  	$team = Team::get($team_id);
+  	array_push($teams, $team);
+  }
+  else  
+  	$teams = Team::allByUser($user->uid);
+  
+  //competizioni attive nella giornata
+  $round = Round::getLast() + 1;
+  
+  //competitions
+  if (!empty($competition_name) && $competition_name != null && Competition::getByName($competition_name) != null) {
+  	$competition = Competition::getByName($competition_name);
+  	$round_competitions = Competition::allForRound($round, $competition->id);
+  }
+  else
+  	$round_competitions = Competition::allForRound($round);
+  
+  $lineups_to_insert = array();
+  foreach($round_competitions as $c_id => $competition) {
+  	foreach($teams as $t_id => $team) {
+  		if ($team->inCompetition($c_id) && (!$competition->has_matches || ($competition->has_matches && $team->hasMatch($c_id, $competition->competition_round)) )) {
+  			$lineups_to_insert[] = (object) array("team" => $team, "competition" => $competition);
+  		}
+  	}
+  }
+  
+  //zero squadre --> Avviso
+  if (count($lineups_to_insert) == 0)
+  	return t("Non hai ancora nessuna squadra");
+  
+//   1 squadra --> redirect
+  if (count($lineups_to_insert) == 1)
+  	return fantacalcio_lineup_insert($competition, $team, $competition->competition_round, $is_admin = FALSE);
+  
+  //+1 squadre --> scelta
+  if (count($lineups_to_insert) >= 1) {
+  	$own_teams_rows = array();
+  
+  	foreach($lineups_to_insert as $lineup_to_insert) {
+  		$classes = array();
+  		$row = array();
+  		if ($lineup_to_insert->team->isSquadComplete())
+  			array_push($classes, "bold");
+  			array_push($row, l($lineup_to_insert->team->name, "formazioni/insert/" . $lineup_to_insert->team->id . "/" . $lineup_to_insert->competition->sanitized_name) );
+  			if (Lineup::exists($lineup_to_insert->team->id, $lineup_to_insert->competition->id, $lineup_to_insert->competition->competition_round))
+  				$class = "fa fa-check-circle";
+  			else 
+  				$class = "fa fa-minus-circle";
+  			array_push($row, "<i class='" . $class . "'></i>");
+  			array_push($row, $lineup_to_insert->competition->name . " - " . $lineup_to_insert->competition->round_label . "" );
+  		array_push($own_teams_rows, array("data" => $row, "class" => $classes, "data-name" => $lineup_to_insert->team->name));
+  	}
+  
+  	return array(  				
+  		"#rows" => $own_teams_rows,
+  		"#attributes" => array("class" => array("table", "table-responsive")),
+  		"#theme" => "table",
+  	);
+  }
+  
 }
 
-function fantacalcio_lineup_insert_start_admin($competition_name = '', $t_id) {
-  return fantacalcio_lineup_insert_start($competition_name, $t_id, TRUE);
+function fantacalcio_lineup_insert_start_admin($t_id, $competition_name = '') {
+  return fantacalcio_lineup_insert_choose_competition($t_id, $competition_name, TRUE);
 }
-
-function fantacalcio_lineup_insert_start($competition_name = '', $t_id = NULL, $is_admin = FALSE) {
+/*
+function fantacalcio_lineup_insert_choose_competition($t_id, $competition_name = "", $is_admin = FALSE) {
 
   global $user;
 
-  $competitions = Competition::all();
   $team = Team::get($t_id);
 
   if ($team->user != $user->uid) 
@@ -253,7 +325,16 @@ function fantacalcio_lineup_insert_start($competition_name = '', $t_id = NULL, $
   if (empty ($competition_name) || $competition == null) {
   
     #controllo quante formazioni vanno inserite per la giornata
-    $vote_round = Round::getLast() + 1;
+    $round = Round::getLast() + 1;
+    
+    //competizioni attive nella giornata
+    $competitions = Competition::allForRound($round);
+    
+    $inserted_lineups = array();
+	foreach ($competitions as $c_id => $competition) {
+// 		foreach($teams)
+	}
+    
     
     $sql = "SELECT * FROM {fanta_rounds_competitions} WHERE round = :round";
     $result = db_query($sql, array(":round" => $vote_round));
@@ -294,26 +375,28 @@ function fantacalcio_lineup_insert_start($competition_name = '', $t_id = NULL, $
       foreach ($lineups as $c_id => $round) $competition_name = $competitions[$c_id]->name;
 
       //return insert_lineup($competition_name);
-      return fantacalcio_insert_lineup(Competition::get(variable_get("fantacalcio_main_competition", 1)), $team, $is_admin);
+      return fantacalcio_lineup_insert(Competition::get(variable_get("fantacalcio_main_competition", 1)), $team, $is_admin);
     }
-    else return fantacalcio_insert_lineup(Competition::get(variable_get("fantacalcio_main_competition", 1)), $team, $is_admin);
+    else return fantacalcio_lineup_insert(Competition::get(variable_get("fantacalcio_main_competition", 1)), $team, $is_admin);
   }
 
-  else return fantacalcio_insert_lineup(Competition::getByName($competition_name), $team, $is_admin);
+  else return fantacalcio_lineup_insert(Competition::getByName($competition_name), $team, $is_admin);
 
 }
-
+*/
 //fantacalcio_lineup_insert_start
-function fantacalcio_insert_lineup($competition, $team, $is_admin = FALSE) {
+function fantacalcio_lineup_insert($competition, $team, $competition_round, $is_admin = FALSE) {
 	
 	global $user;
 	
 	$output = array();
   
-	$round = Round::getNextForCompetition($competition->id);
+	$round = Round::getByCompetitionRound($competition_round, $competition->id);
+	
+	drupal_set_title(t("Inserisci formazione") . " / " . $team->name . " - " . $competition->name);
 	
   	#lineup inserita in orario
-  	if ($round->date > time() || $is_admin) {
+  	if ($round->date != time() || $is_admin) {
 
     	$output["competition_name"] = ucwords($competition->name);
     	$output["round"] = $round->label;
@@ -323,32 +406,31 @@ function fantacalcio_insert_lineup($competition, $team, $is_admin = FALSE) {
 // 	      'c_id' => $competition->id,
 // 	      'round' => $round,
 // 	    );
-    	
+    	//print_r($team);die();
     	$lineup_form = (drupal_get_form('fantacalcio_lineup_form', $competition, $team, $round));
-
+    	$output["lineup_form"] = $lineup_form;
+    	
     	//$args_confirm = get_args_confirm($args);
 
     	//$out .= confirm_lineup($args_confirm);
       
 		$lineup = Lineup::get($competition->id, $team->id, $round->competition_round);
     	if ($lineup != null)
-    		$output["lineup-check"] = show_line_up_check($lineup->check());
+    		$output["lineup_check"] = show_line_up_check($lineup->check());
     		  
     	//$out .= "<div id='_lineup_form'>" . drupal_render($lineup_form) . "</div>";
     
 		  
 	    //link lineup avversario
-	    $out .= "\n<div class='ui-block-b'>"
+	    $out = "\n<div class='ui-block-b'>"
 	          . l("lineup avversario", "formazioni/box/" . $competition->name . "/" . $round->competition_round . "/" . get_opponent($team->id, $competition->id, $round->competition_round), array("html" => TRUE, "attributes" => array("rel" => "lightframe[box|width:500px;]")))
 	          . "</div>";
-	
-    
-    	$output["lineup"] = make_lineup($team, $competition, $round);
-    
+	    
+    	$output = array_merge($output, make_lineup($team, $competition, $round));
   }
   else {
-	fantacalcio_lineup_insert_players('old', $t_id, $c_id, $round);
-    drupal_goto(base_path() . "formazioni/view/" . get_competition_name($c_id) . "/" . $round . "/" . $t_id);
+	fantacalcio_lineup_insert_players('old', $team->id, $competition->id, $round->competition_round);
+    drupal_goto("formazioni/view/" . $competition->name . "/" . $round->competition_round . "/" . $team->id);
   }
   
   return theme("lineup-insert", $output);
@@ -361,6 +443,7 @@ function fantacalcio_lineup_form($form, &$form_state, $competition, $team, $roun
 
   $lineup = Lineup::get($competition->id, $team->id, $round->competition_round);
   
+  $checks = array("regulars_number" => false, "regulars_module" => false, "reserves_number" => false, "reserves_module" => false);
   if($lineup)
   	$checks = $lineup->check();
 
@@ -389,15 +472,16 @@ function fantacalcio_lineup_form($form, &$form_state, $competition, $team, $roun
     '#value' => $round->round
   );
 
-  $form['line_up'] = array(
+  $form['lineup'] = array(
     '#type' => 'hidden',
-    '#value' => json_encode(Lineup::get($competition->id, $team->id, $round->competition_round)),
+    '#value' => json_encode(Lineup::getForForm($competition->id, $team->id, $round->competition_round)),
+  	'#id' => "tmp-lineup",
   );
   
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => 'Invia',
-    '#disabled' => ($checks['number_1'] == 1 && $checks['module_1'] == 1 && $checks['number_2_3'] == 1 && $checks['module_2_3'] == 1),
+    '#disabled' => ($checks['regulars_number'] == 1 && $checks['regulars_module'] == 1 && $checks['reserves_number'] == 1 && $checks['reserves_module'] == 1),
     '#validate' => array('fantacalcio_lineup_form_validate'),
     '#id' => "line_up_submit",
 	'#prefix' => "<div class='ui-grid-a'><div class='ui-block-a'>",
@@ -427,32 +511,45 @@ function fantacalcio_lineup_form_submit($form, &$form_state) {
   $c_id = $form_state['values']['c_id'];
   $round = $form_state['values']['round'];
 
-  $ts_match = get_timestamp_match($c_id, $round);
+//   $ts_match = get_timestamp_match($c_id, $round);
 
   #lineup inviata in orario
-  if ($ts_match > time()) {
+  if (Round::get($round, $c_id)->date > time() || true) {
 
-    $line_up = json_decode($form_state['clicked_button']['#post']['line_up']);
+    $lineup = json_decode($form_state['input']['lineup']);
 
     //cancello la vecchia lineup
-    $sql = "DELETE FROM {fanta_lineups} WHERE t_id = '%d' AND c_id = '%d' AND round = '%d'";
-    db_query($sql, $t_id, $c_id, $round);
+//     $sql = "DELETE FROM {fanta_lineups} WHERE t_id = '%d' AND c_id = '%d' AND round = '%d'";
+//     db_query($sql, $t_id, $c_id, $round);
+    
+    $query = db_delete("fanta_lineups");
+    $query->condition("t_id", $t_id);
+    $query->condition("c_id", $c_id);
+    $query->condition("round", $round);
+    $query->execute();
 
-    foreach($line_up as $pl_id => $player) {
+    foreach($lineup as $pl_id => $player) {
       //insert
       if ($player->position > 0) {
         $sql = "INSERT INTO {fanta_lineups} (t_id, pl_id, c_id, round, position, timestamp, uid) VALUES ('%d', '%d', '%d', '%d', '%d', '%d', '%d')";
-        db_query($sql, $t_id, $pl_id, $c_id, $round, $player->position, time(), $user->uid);
+//         db_query($sql, $t_id, $pl_id, $c_id, $round, $player->position, time(), $user->uid);
+        
+        $query = db_insert("fanta_lineups");
+        $query->fields(array("t_id" => $t_id, "pl_id" => $pl_id, "c_id" => $c_id, "round" => $round, "position" => $player->position, "timestamp" => time(), "uid" => $user->uid));
+        $query->execute();
       }
     }
 
     fantacalcio_lineup_insert_players('new', $t_id, $c_id, $round);
-    drupal_set_message('lineup inserita correttamente.');    
+    
+    drupal_set_message(t("Formazione inserita correttamente."));
+
+    drupal_goto("formazioni/view/" . Competition::get($c_id)->name . "/" . $round . "/" . $t_id);
   }
   #lineup inviata in ritardo -> giornata precedente
   else {
     fantacalcio_lineup_insert_players('old', $t_id, $c_id, $round);
-    drupal_set_message('Tempo scaduto. Userai la lineup della giornata precedente');
+    drupal_set_message(t("Tempo scaduto. Userai la lineup della giornata precedente"));
   }
 
   return;
@@ -461,76 +558,104 @@ function fantacalcio_lineup_form_submit($form, &$form_state) {
 function fantacalcio_lineup_form_clear($form, &$form_state) {
 
   #cancella la lineup inserita
-  $sql = "DELETE FROM {fanta_lineups} " .
-  "WHERE c_id = '%d' " .
-  "AND round = '%d' " .
-  "AND t_id = '%d'";
-  $result = db_query($sql, $form_state['values']['c_id'], $form_state['values']['round'], $form_state['values']['t_id']);
+  
+  $query = db_delete("fanta_lineups");
+  $query->condition("t_id", $form_state['values']['t_id']);
+  $query->condition("c_id", $form_state['values']['c_id']);
+  $query->condition("round", $form_state['values']['round']);
+  $query->execute();
+  
+  $query = db_delete("fanta_lineups_inserts");
+  $query->condition("t_id", $form_state['values']['t_id']);
+  $query->condition("c_id", $form_state['values']['c_id']);
+  $query->condition("round", $form_state['values']['round']);
+  $query->execute();
 
-  $sql = "DELETE FROM {fanta_lineups_inserts} " .
-      "WHERE c_id = '%d' " .
-      "AND round = '%d' " .
-      "AND t_id = '%d'";
-  $result = db_query($sql, $form_state['values']['c_id'], $form_state['values']['round'], $form_state['values']['t_id']);
+  drupal_set_message(t("Formazione cancellata"));
+  
+  watchdog('fantacalcio', '@team: formazione cancellata', array('@team' => Team::get([$form_state['values']['t_id']])->name), WATCHDOG_NOTICE);
 
-  drupal_set_message('lineup cancellata');
-  $teams = get_teams();
-  watchdog('fantacalcio', '@team: lineup cancellata', array('@team' => $teams[$form_state['values']['t_id']]->name), WATCHDOG_NOTICE);
   return $form_state['rebuild'] = TRUE;
 }
 
 function fantacalcio_lineup_form_validate($form, &$form_state) {
 
-  $t_id = $form_state['values']['t_id'];
-  $c_id = $form_state['values']['c_id'];
-  $round = $form_state['values']['round'];
+  $t_id = $form_state['input']['t_id'];
+  $c_id = $form_state['input']['c_id'];
+  $round = $form_state['input']['round'];
 
-  $line_up = json_decode($form_state['clicked_button']['#post']['line_up']);
-  //print_r($line_up);die();
+  $tmp_lineup = json_decode($form_state['input']['lineup']);
+  print_r($tmp_lineup);
+  
+  $positions = array();
+  foreach($tmp_lineup as $pl_id => $lineup_player) {
+  	$player = new Player($pl_id, "", $lineup_player->role);
+  	$positions[$lineup_player->position][$pl_id] = $player;
+  }
+  
+  $lineup = new Lineup();
+	$lineup->round = $form_state['values']['round'];
+	$lineup->team = Team::get($form_state['values']['t_id']);
+	$lineup->competition = Competition::get($form_state['values']['c_id']);
+	$lineup->positions = $positions;	
+  
 
   //check giocatori in rosa
-  $check_players_in_team = true;
-  foreach($line_up as $pl_id => $player) {
-    $sql = "SELECT * FROM {fanta_squads} WHERE pl_id = '%d' ANd t_id = '%d' AND in_team = 1";
-    $result = db_query($sql, $pl_id, $t_id);
-    if (db_affected_rows($result) == 0) {
-        form_set_error("", t("Errore nella lineup"));
-    }
+  $check_players_in_team = true; 
+  foreach($lineup->positions as $position => $positions) {
+  	if($position != 0) {
+	  	foreach($positions as $pl_id => $player) {
+	// 	    $sql = "SELECT * FROM {fanta_squads} WHERE pl_id = '%d' ANd t_id = '%d' AND in_team = 1";
+		    
+		    $query = db_select("fanta_squads", "s");
+		    $query->condition("pl_id", $pl_id);
+		    $query->condition("t_id", $t_id);
+		    $query->condition("status", 1);
+		    $query->fields("s");
+		    
+		    $result = $query->execute();
+		    if ($result->rowCount() == 0) {
+		    	echo "ROSA ".$pl_id;
+		        form_set_error("", t("Errore nella formazione"));
+		    }
+	  	}
+  	}
   }
 
   if ($check_players_in_team) {
     //check ruolo giocatori
     $check_players_role = true;
-    foreach($line_up as $pl_id => $player) {
-      $sql = "SELECT * FROM {fanta_players} WHERE pl_id = '%d'";
-      $result = db_query($sql, $pl_id);
-      while($row = db_fetch_object($result)) {
-        if ($row->role != $player->role)
-          form_set_error("", t("Errore nella lineup"));
-      }
+    foreach($lineup->positions as $position => $positions) {
+	  	foreach($positions as $pl_id => $player) {
+	    	if (Player::get($pl_id)->role != $player->role) {	    		
+	          form_set_error("", t("Errore nella formazione"));
+	    	}
+	    }
     }
 
     if ($check_players_role) {
       //check modulo
-      $checks = fantacalcio_lineup_check($line_up);//print_r($line_up); print_r($checks);die();
+      $checks = $lineup->check();//print_r($line_up); print_r($checks);die();
 
-      if (!$checks['number_1'] && $checks['number_1'] != 1)
-        form_set_error("", t("Errore nella lineup: Numero titolari errato - Numero titolari consentito: 11"));
-      if (!$checks['module_1'] && $checks['module_1'] != 1)
-        form_set_error("", t("Errore nella lineup: Modulo titolari errato - Moduli titolari consentiti: " . variable_get("fantacalcio_moduli_titolari", "")));    
-      if (!$checks['number_2_3'] && $checks['number_2_3'] != 1)
-        form_set_error("", t("Errore nella lineup: Numero riserve errato - Numero riserve consentite: 7"));
-      if (!$checks['module_2_3'] && $checks['module_2_3'] != 1)
-        form_set_error("", t("Errore nella lineup: Modulo riserve errato - Moduli riserve consentiti: " . variable_get("fantacalcio_moduli_riserve", "")));    
+      if (!$checks['regulars_number'] && $checks['regulars_number'] != 1)
+        form_set_error("", t("Errore nella formazione: Numero titolari errato - Numero titolari consentito: 11"));
+      if (!$checks['regulars_module'] && $checks['regulars_module'] != 1)
+        form_set_error("", t("Errore nella formazione: Modulo titolari errato - Moduli titolari consentiti: " . variable_get("fantacalcio_moduli_titolari", "")));    
+      if (!$checks['reserves_number'] && $checks['reserves_number'] != 1)
+        form_set_error("", t("Errore nella formazione: Numero riserve errato - Numero riserve consentite: 7"));
+      if (!$checks['reserves_module'] && $checks['reserves_module'] != 1)
+        form_set_error("", t("Errore nella formazione: Modulo riserve errato - Moduli riserve consentiti: " . variable_get("fantacalcio_moduli_riserve", "")));    
     }
     else {
       //error
-      form_set_error("", t("Errore nella lineup"));
+    	echo "MDOULO";
+      form_set_error("", t("Errore nella formazione"));
     }
   }
   else {
     //error
-    form_set_error("", t("Errore nella lineup"));
+  	echo "ELSE";
+    form_set_error("", t("Errore nella formazione"));
   }
 }
 
@@ -538,44 +663,12 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
   
   global $user;
 
-//   drupal_add_css('sites/all/plugins/interface/interface.css', 'themes', 'all', TRUE);
-//   drupal_add_js('sites/all/plugins/interface/jquery.js', 'footer');
-//   drupal_add_js('sites/all/plugins/interface/interface.js', 'footer');
-//   drupal_add_js('sites/all/plugins/interface/compressed/idrag.js', 'footer');
-//   drupal_add_js('sites/all/plugins/interface/compressed/idrop.js', 'footer');
-//   drupal_add_js('sites/all/plugins/interface/compressed/isortables.js', 'footer');
-//   drupal_add_js('sites/all/modules/fantacalcio/js/lineup_insert.js', 'footer');
-
-//   $players = get_players(get_round_by_competition_round($round, $c_id));
-
   $lineup = array();
   $regulars = array();
   $reserves = array();
   
-  $sql = "SELECT * FROM {fanta_lineups} " .
-  "WHERE round = :round " .
-  "AND c_id = :c_id " .
-  "AND t_id = :t_id " .
-  "AND position != 0";
-  
-  $result = db_query($sql, array(":c_id" => $competition->id, ":round" => $round->competition_round, ":t_id" => $team->id));
-  
-  foreach ($result as $row) {
-    $lineup[$row->pl_id] = $row;
-    if ($row->position == 1)
-      array_push($regulars, $row);
-    elseif ($row->position > 1) array_push($reserves[$row->position - 1], $row);
-    
-  }
-  
   $lineup = Lineup::get($competition->id, $team->id, $round->competition_round);
-
-//   $sql = "SELECT * FROM {fanta_squads} WHERE t_id = :t_id AND status = 1";
-//   $result = db_query($sql, array(":t_id" => $team->id));
-//   foreach ($result as $row) {
-//     $rose[] = $row;
-//   }
-  print_r($team);
+  
   $squad = $team->getSquad();
 
   if ($squad) {
@@ -586,142 +679,197 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
   
   array_multisort($roles, SORT_ASC, $names, SORT_ASC, $squad);
 
-  #rosa
-  $out_rosa = "";
+  //rosa
+  $out_squad = "";
+  
+  $lineup_player_ids = array();
+  if (isset($lineup->positions)) {
+	  foreach($lineup->positions as $positions) {
+	  	foreach($positions as $player)
+	  		$lineup_player_ids[$player->id] = $player->id;
+	  }
+  }
+  
+  foreach ($squad as $player) {
+    if (!array_key_exists($player->pl_id, $lineup_player_ids)) {
 
-  $i = 0;
-  foreach ($rose as $player) {
-    if (!array_key_exists($player->pl_id, $lineup)) {
-      $pl_id = $player->pl_id;
-      $rosa->$pl_id = $player;
+      $classes = array("role_" . $player->role);
 
-      $class = "role_" . $players[$pl_id]->role;
+//       $out_squad .= "\n<div  class='groupItem' id='$pl_id' name='" . $player->role . "_" . $competition->id . "_" . $team->id . "'>" .
+//       "\n<div  class='itemHeader'>\n" ;
 
-      $out_rosa .= "\n<div  class='groupItem' id='$pl_id' name='" . $players[$pl_id]->role . "_" . $c_id . "_" . $t_id . "'>" .
-      "\n<div  class='itemHeader'>\n" ;
-
-      $out_rosa .= "\n<table width='100%'>" .
-      "\n<tr class='$class'>" .
-      "\n<td class='role' width='10%'>" . convert_role($players[$pl_id]->role) . "</td>" .
-      "\n<td width='50%'>" . $players[$pl_id]->name . "</td>" .
-      "\n<td width='35%'>" . ucwords(strtolower($players[$pl_id]->team)) . "</td>" .
-      "\n<td><a rel='lightframe[" . $t_id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $pl_id . "' title='Dettagli giocatore'>" .
+//       $out_squad .= "\n<table width='100%'>" .
+//       "\n<tr class=''>" .
+//       "\n<td class='role' width='10%'>" . Player::convertRole($player->role) . "</td>" .
+//       "\n<td width='50%'>" . $player->name . "</td>" .
+//       "\n<td width='35%'>" . ucwords(strtolower($player->team)) . "</td>" .
+//       "\n<td><a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $pl_id . "' title='Dettagli giocatore'>" .
+//       "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .
+//       "</a></td>".
+//       "\n</tr>" .
+//       "\n</table>";
+      
+      $row_data = array();
+      
+      $row_data[] = array("data" => "<span class='fa-stack'>
+						<i class='fa fa-square fa-stack-2x role-" . $player->role . "'></i>
+						<i class='fa fa-stack-1x' style='color: white;'><span class='font-normal'>" . Player::convertRole($player->role) . "</span></i>
+					</span>", "class" => $classes);
+      $row_data[] = array("data" => $player->name);
+      $row_data[] = array("data" => ucwords(strtolower($player->team)));
+      $row_data[] = array("data" => "<a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $player->pl_id . "' title='Dettagli giocatore'>" .
       "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .
-      "</a></td>".
-      "\n</tr>" .
-      "\n</table>";
+      "</a>");
+      
+      $squad_rows[] = array("data" => $row_data, "class" => $classes, "data-id" => $player->pl_id, "data-name" => $player->name, "data-role" => $player->role);
 
-        $out_rosa .= "\n</div>"
-          # . "\n<div class='itemContent'>\n"
-          #   . "\n</div>"
-           . "\n</div>";
+//         $out_squad .= "\n</div>"
+//           # . "\n<div class='itemContent'>\n"
+//           #   . "\n</div>"
+//            . "\n</div>";
 
-      $i++;
+//       $i++;
     }
   }
+  
+  $out_squad = theme_table(array(
+  			"header" => array(), 
+  			"rows" => $squad_rows, 
+  			"attributes" => array("id" => "lineup-squad", "class" => array("table", "table-responsive", "lineup-group"), "data-position" => 0), 
+  			"sticky" => TRUE, 
+  			"caption" => "" , 
+  			"colgroups" => array(),
+  			"empty" => ""
+  ));
 
   #titolari
-  $roles = array(); $names = array();
-  foreach ($titolari as $titolare) {
-    $roles[] = $players[$titolare['pl_id']]->role;
-    $names[] = $players[$titolare['pl_id']]->name;
+  $regulars_rows = array();
+  
+  if (isset($lineup->positions)) {
+	  $roles = array(); $names = array();
+	  foreach ($lineup->positions[1] as $regular) {
+	    $roles[] = $regular->role;
+	    $names[] = $regular->name;
+	  }
+	
+	  array_multisort($roles, SORT_ASC, $names, SORT_ASC, $lineup->positions[1]);
+  
+  
+  
+	  
+	  foreach ($lineup->positions[1] as $regular) {
+	    $class = "role_" . $regular->role;
+	
+	//     $out_regulars .= "\n<div  class='groupItem' id='$pl_id' name='" . $regular->role . "_" . $competition->id . "_" . $team->id . "'>" .
+	//       "\n<div  class='itemHeader'>\n";
+	    
+	//     $out_regulars .= "\n<table width='100%'>" .
+	//     "\n<tr class='$class'>" .
+	//     "\n<td class='role' width='10%'>" . Player::convertRole($regular->role) . "</td>" .
+	//     "\n<td width='50%'>" . $regular->name . "</td>" .
+	//     "\n<td width='35%'>" . ucwords(strtolower($regular->team)) . "</td>" .
+	//     "\n<td width='5%' style='padding-left:5px;'>".
+	//     "\n<td><a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $regular->id . "' title='Dettagli giocatore'>" .
+	//     "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .
+	//     "</a></td>".
+	//     "\n</td>" .
+	//     "\n</tr>" .
+	//     "\n</table>";
+	    
+	//     $out_regulars .= "\n</div>"
+	//       # . "\n<div class='itemContent'>\n"
+	//       #   . "\n</div>"
+	//        . "\n</div>";
+	    $row_data = array();
+	    
+	    $row_data[] = array("data" => "<span class='fa-stack'>
+							<i class='fa fa-square fa-stack-2x role-" . $regular->role . "'></i>
+							<i class='fa fa-stack-1x' style='color: white;'><span class='font-normal'>" . Player::convertRole($regular->role) . "</span></i>
+						</span>", "class" => $classes);
+	    $row_data[] = array("data" => $regular->name);
+	    $row_data[] = array("data" => ucwords(strtolower($regular->team)));
+	    $row_data[] = array("data" => "<a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $regular->id . "' title='Dettagli giocatore'>" .
+	    		"<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .   		
+	    		"</a>");          
+	       
+	    $regulars_rows[] = array("data" => $row_data, "class" => $classes, "data-id" => $regular->id, "data-name" => $regular->name, "data-role" => $regular->role);
+	
+	  }
   }
 
-  array_multisort($roles, SORT_ASC, $names, SORT_ASC, $titolari);
+  	$regulars_rows[] = array("data" => array(""), "class" => array("empty-row"));
 
-  $out_titolari = "";
-
-  foreach ($titolari as $titolare) {
-    $pl_id = $titolare['pl_id'];
-    $class = "role_" . $players[$pl_id]->role;
-
-    $out_titolari .= "\n<div  class='groupItem' id='$pl_id' name='" . $players[$pl_id]->role . "_" . $c_id . "_" . $t_id . "'>" .
-      "\n<div  class='itemHeader'>\n";
-    
-    $out_titolari .= "\n<table width='100%'>" .
-    "\n<tr class='$class'>" .
-    "\n<td class='role' width='10%'>" . convert_role($players[$pl_id]->role) . "</td>" .
-    "\n<td width='50%'>" . $players[$pl_id]->name . "</td>" .
-    "\n<td width='35%'>" . ucwords(strtolower($players[$pl_id]->team)) . "</td>" .
-    "\n<td width='5%' style='padding-left:5px;'>".
-    "\n<td><a rel='lightframe[" . $t_id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $pl_id . "' title='Dettagli giocatore'>" .
-    "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .
-    "</a></td>".
-    "\n</td>" .
-    "\n</tr>" .
-    "\n</table>";
-    
-    $out_titolari .= "\n</div>"
-      # . "\n<div class='itemContent'>\n"
-      #   . "\n</div>"
-       . "\n</div>";
-
-  }
+  
+  $out_regulars = theme_table(array(
+  		"header" => array(),
+  		"rows" => $regulars_rows,
+  		"attributes" => array("id" => "lineup-regulars", "class" => array("table", "table-responsive", "lineup-group"), "data-position" => 1),
+  		"sticky" => TRUE,
+  		"caption" => "" ,
+  		"colgroups" => array(),
+  		"empty" => ""
+  ));
 
   #riserve
-  $riserve = array_merge($riserve_1, $riserve_2);
-
-  $roles = array(); $names = array(); $positions = array();
-  foreach ($riserve as $riserva) {
-    $roles[] = $players[$riserva['pl_id']]->role;
-    $names[] = $players[$riserva['pl_id']]->name;
-    $positions[] = $riserva['position'];
-  }
-
-  array_multisort($roles, SORT_ASC, $positions, SORT_ASC, $names, SORT_ASC, $riserve);
-
-  $out_riserve = "";
-
-  foreach ($riserve as $riserva) {
-    $pl_id = $riserva['pl_id'];
-    $class = "role_" . $players[$pl_id]->role;
-
-    $out_riserve .= "\n<div  class='groupItem' id='$pl_id' name='" . $players[$pl_id]->role . "_" . $c_id . "_" . $t_id . "'>" ;
-    
-    $out_riserve .= "\n<div  class='itemHeader'>\n".
-    "\n<table width='100%'>" .
-    "\n<tr class='$class'>" .
-    "\n<td class='role' width='10%'>" . convert_role($players[$pl_id]->role) . "</td>" .
-    "\n<td width='50%'>" . $players[$pl_id]->name . "</td>" .
-    "\n<td width='35%'>" . ucwords(strtolower($players[$pl_id]->team)) . "</td>" .
-    "\n<td width='5%' style='padding-left:5px;'>".
-    "\n<td><a rel='lightframe[" . $t_id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $pl_id . "' title='Dettagli giocatore'>" .
-    "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .
-    "</a></td>".
-    "\n</td>" .
-    "\n</tr>" .
-    "\n</table></div>";
-
-    $out_riserve .= "\n</div>";
-
-  }
-
-
-  $div_class = ($admin) ? "groupWrapperAdmin" : "groupWrapper";
-
-  $out = "<div id='lineup-web'>";
-
-  #rosa
-  $out .= "<div id='pos_0' class='" . $div_class . "'>" .
-    $out_rosa .
-    "</div>";
-
-  #titolari
-  $out .= "<div id='pos_1' class='" . $div_class . "'>" .
-    "<h4>Titolari</h4>" .
-    $out_titolari .
-    "</div>";
-
-  #riserve
-  $out .= "<div id='pos_2' class='" . $div_class . "'>" .
-    "<h4>Riserve</h4>" .
-    $out_riserve .
-    "</div>";
+  $reserves_rows = array();
+  
+  if (isset($lineup->positions)) {
+  
+	  $reserves = array();
+	  foreach($lineup->positions as $position => $reserve_positions) {
+	  	if ($position != 1)
+	  		$reserves[$position] = $reserve_positions;
+	  }
+	
+	  $roles = array(); $names = array(); $positions = array(); $tmp_reserves = array();
+	  foreach ($reserves as $position => $position_reserves) {
+	  	foreach ($position_reserves as $reserve) {
+	    	$roles[] = $reserve->role;
+	    	$names[] = $reserve->name;
+	    	$positions[] = $position;
+	    	$tmp_reserves[] = $reserve;
+	  	}
+	  }
+	  
+	  $reserves = $tmp_reserves;
+	
+	  array_multisort($roles, SORT_ASC, $positions, SORT_ASC, $names, SORT_ASC, $reserves);
+	  
+	  foreach ($reserves as $reserve) {
+	    $class = array("role_" . $reserve->role);
+	    
+	    $row_data = array();
+	    
+	    $row_data[] = array("data" => "<span class='fa-stack'>
+							<i class='fa fa-square fa-stack-2x role-" . $reserve->role . "'></i>
+							<i class='fa fa-stack-1x' style='color: white;'><span class='font-normal'>" . Player::convertRole($reserve->role) . "</span></i>
+						</span>", "class" => $classes);
+	    $row_data[] = array("data" => $reserve->name);
+	    $row_data[] = array("data" => ucwords(strtolower($reserve->team)));
+	    $row_data[] = array("data" => "<a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $reserve->id . "' title='Dettagli giocatore'>" .
+	    		"<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .
+	    		"</a>");
+	
+	    $reserves_rows[] = array("data" => $row_data, "class" => $classes, "data-id" => $reserve->id, "data-name" => $reserve->name, "data-role" => $reserve->role);
+	  }
   }
   
-  $out .= "</div>";
+	$reserves_rows[] = array("data" => array(""), "class" => array("empty-row"));
   
-  return $out;
+  
+  $out_reserves = theme_table(array(
+  		"header" => array(),
+  		"rows" => $reserves_rows,
+  		"attributes" => array("id" => "lineup-reserves", "class" => array("table", "table-responsive", "lineup-group"), "data-position" => 2),
+  		"sticky" => TRUE,
+  		"caption" => "" ,
+  		"colgroups" => array(),
+  		"empty" => ""
+  ));
+
+  }
+  
+  return array("squad" => $out_squad, "regulars" => $out_regulars, "reserves" => $out_reserves);
 }
 
 function make_lineup_mobile($t_id, $c_id, $round, $admin = FALSE) {
@@ -795,14 +943,19 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
 
   if ($type == 'new') {
     #registrazione lineup
-    $sql = "INSERT INTO {fanta_lineups_inserts} (t_id, c_id, round, status, timestamp) VALUES ('%d', '%d', '%d', 1, '%d')";
-    $result = db_query($sql, $t_id, $c_id, $round, time());
-    $teams = get_teams();
-    watchdog('fantacalcio', '@team: lineup inserita correttamente', array('@team' => $teams[$t_id]->name), WATCHDOG_NOTICE);
+//     $sql = "INSERT INTO {fanta_lineups_inserts} (t_id, c_id, round, status, timestamp) VALUES ('%d', '%d', '%d', 1, '%d')";
+//     $result = db_query($sql, $t_id, $c_id, $round, time());
+//     $teams = get_teams();
+    
+    $query = db_insert("fanta_lineups_inserts");
+    $query->fields(array("t_id" => $t_id, "c_id" => $c_id, "round" => $round, "timestamp" => time(), "status" => 1 ));
+    $query->execute();
+    
+    watchdog('fantacalcio', '@team: lineup inserita correttamente', array('@team' => Team::get($t_id)->name), WATCHDOG_NOTICE);
   }
   elseif ($type == 'old') {
 
-    if (fantacalcio_lineup_exists($t_id, $c_id, $round)) {
+    if (Lineup::exists($t_id, $c_id, $round)) {
       drupal_set_message("Hai già inserito la lineup");
     }
     else{
@@ -1323,31 +1476,6 @@ function get_round_formazioni($c_id) {
     return array();
 }
 
-function get_line_up($c_id, $t_id, $round){
-  $line_up = array();
-
-  $sql = "SELECT * FROM {fanta_squads} r, {fanta_players} p 
-          WHERE r.pl_id = p.pl_id
-          AND r.t_id = :t_id
-          AND r.in_team = 1
-          ORDER BY p.role";
-  $result = db_query($sql, array( ":t_id" => $t_id));
-  foreach ($result as $row) {
-    $line_up[$row->pl_id] = array("role" => $row->role, "position" => "0");
-  }
-
-  $sql = "SELECT * FROM {fanta_lineups} f, {fanta_players} p 
-          WHERE f.pl_id = p.pl_id
-          AND f.c_id = :c_id AND f.t_id = :t_id AND f.round = :round
-          ORDER BY f.position, p.role";
-  $result = db_query($sql, array(":t_id" => $t_id, ":c_id" => $c_id, ":round" => $round));
-  foreach ($result as $row) {
-    $line_up[$row->pl_id] = (Object) array("role" => $row->role, "position" => $row->position);
-  }
-
-  return $line_up;
-}
-
 function position_button($pl_id, $t_id, $c_id, $role, $position = "") {
   $positions = array("Tribuna", "Titolare", "Riserva 1", "Riserva 2");
   $position = ($position == "") ? 0 : $position;
@@ -1365,17 +1493,17 @@ function position_button($pl_id, $t_id, $c_id, $role, $position = "") {
   return $out;
 }
 
-function fantacalcio_lineup_exists($t_id, $c_id, $round) {
+// function fantacalcio_lineup_exists($t_id, $c_id, $round) {
 
-  $sql = "SELECT * FROM {fanta_lineups} " .
-      "WHERE t_id = '%d' " .
-      "AND c_id = '%d' " .
-      "AND round = '%d'";
-  $result = db_query($sql, $t_id, $c_id, $round);
-  if (db_affected_rows($result) > 0) return TRUE;
-  else return FALSE;
+//   $sql = "SELECT * FROM {fanta_lineups} " .
+//       "WHERE t_id = '%d' " .
+//       "AND c_id = '%d' " .
+//       "AND round = '%d'";
+//   $result = db_query($sql, $t_id, $c_id, $round);
+//   if (db_affected_rows($result) > 0) return TRUE;
+//   else return FALSE;
 
-}
+// }
 
 // function fantacalcio_lineup_check($line_up){
 //   //massima posizione
@@ -1460,30 +1588,30 @@ function check_lineup_insert($t_id, $c_id, $round) {
 
 function show_line_up_check($checks) {
 
-  if (false) {
-    $out = "<ul data-role='listview' >
-			<li><img id='check_number_1' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["number_1"]) . "' class='ui-li-icon'>Numero Titolari</li>
-			<li><img id='check_module_1' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["module_1"]) . "' class='ui-li-icon'>Modulo Titolari</li>
-			<li><img id='check_number_2_3' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["number_2_3"]) . "' class='ui-li-icon'>Numero Riserve</li>
-			<li><img id='check_module_2_3' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["module_2_3"]) . "' class='ui-li-icon'>Modulo Riserve</li>
-			<li data-role='list-divider'>" . t("Legenda") . "</li>
-			<li><img class='legenda legenda-titolare ui-li-icon' src=''>" . t("Titolare") . "</li>
-			<li><img class='legenda legenda-riserva-1 ui-li-icon' src=''>" . t("Prima riserva") . "</li>
-			<li><img class='legenda legenda-riserva-2 ui-li-icon' src=''>" . t("Seconda riserva") . "</li>
-			<li><img class='legenda legenda-tribuna ui-li-icon' src=''>" . t("Tribuna") . "</li>
-		</ul>";
+//   if (false) {
+//     $out = "<ul data-role='listview' >
+// 			<li><img id='check_number_1' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["number_1"]) . "' class='ui-li-icon'>Numero Titolari</li>
+// 			<li><img id='check_module_1' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["module_1"]) . "' class='ui-li-icon'>Modulo Titolari</li>
+// 			<li><img id='check_number_2_3' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["number_2_3"]) . "' class='ui-li-icon'>Numero Riserve</li>
+// 			<li><img id='check_module_2_3' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["module_2_3"]) . "' class='ui-li-icon'>Modulo Riserve</li>
+// 			<li data-role='list-divider'>" . t("Legenda") . "</li>
+// 			<li><img class='legenda legenda-titolare ui-li-icon' src=''>" . t("Titolare") . "</li>
+// 			<li><img class='legenda legenda-riserva-1 ui-li-icon' src=''>" . t("Prima riserva") . "</li>
+// 			<li><img class='legenda legenda-riserva-2 ui-li-icon' src=''>" . t("Seconda riserva") . "</li>
+// 			<li><img class='legenda legenda-tribuna ui-li-icon' src=''>" . t("Tribuna") . "</li>
+// 		</ul>";
 		
-    return $out;
-  }
-  else {
+//     return $out;
+//   }
+//   else {
     $rows = array();
-//     $rows[0] = array("data" => array(t("Numero Titolari"), "<img id='check_number_1' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["number_1"]) . "'>", 
-//                                    t("Numero Riserve"),  "<img id='check_number_2_3' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["number_2_3"]) . "'>" ));
-//     $rows[1] = array("data" => array(t("Modulo Titolari"), "<img id='check_module_1' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["module_1"]) . "'>", 
-//                                    t("Modulo Riserve"), "<img id='check_module_2_3' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["module_2_3"]) . "'>" ));					   
+    $rows[] = array("data" => array(t("Numero Titolari"), "<span id=\"regulars_number\"><i class='fa " . ($checks["regulars_number"] ? "fa-check-circle" : "fa-delete") . "'></i></span>", 
+                                   t("Numero Riserve"),  "<span id=\"reserves_number\"><i class='fa " . ($checks["reserves_number"] ? "fa-check-circle" : "fa-delete") . "'></i></span>" ));
+    $rows[] = array("data" => array(t("Modulo Titolari"), "<span id=\"regulars_module\"><i class='fa " . ($checks["regulars_module"] ? "fa-check-circle" : "fa-delete") . "'></i></span>", 
+                                   t("Modulo Riserve"), "<span id=\"reserves_module\"><i class='fa " . ($checks["reserves_module"] ? "fa-check-circle" : "fa-delete") . "'></i></span>" ));					   
 								   
-    return theme_table(array("header" => array(), "rows" => $rows, "attributes" => array(), "colgroups" => array(), "sticky" => "", "empty" => "", "caption" => ""));
-  }
+    return theme_table(array("header" => array(), "rows" => $rows, "attributes" => array("class" => array("table", "table-responsive")), "colgroups" => array(), "sticky" => "", "empty" => "", "caption" => ""));
+  
 }
 
 function _get_image_check($bool) {

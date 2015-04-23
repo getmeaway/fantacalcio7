@@ -4,35 +4,46 @@ class Competition {
 	
 	var $id;
 	var $name;
+	var $active;
 	var $type;
 	var $has_matches;
 	var $has_standings;
 	var $has_newsletters;
 	var $groups;
 
-	function __construct($id, $name, $type, $has_matches, $has_standings, $has_lineups, $has_newsletters) {
+	function __construct($id, $name, $active, $type, $has_matches, $has_standings, $has_lineups, $has_newsletters) {
 		$this->id = $id;
 		$this->name = $name;
+		$this->active = $active;
 		$this->type = $type;
 		$this->has_matches = $has_matches;
 		$this->has_standings = $has_standings;
 		$this->has_lineups = $has_lineups;
 		$this->has_newsletters = $has_newsletters;
+		$this->sanitized_name = self::sanitize($this->name);
 	}
 	
 	static function get($id) {
+		
+		$competition = null;
+		
 		$query = db_select("fanta_competitions", "c");
 		$query->condition("c_id", $id);
 		$query->fields("c");
 		$result = $query->execute();
 		foreach($result as $row) {
-			$competition = new Competition($row->c_id, $row->name, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
+			$competition = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
 			$competition->groups = Group::allByCompetition($row->c_id);
+			$competition->sanitized_name = self::sanitize($competition->name);
 		}
 		
 		return $competition;
 	}
 
+	static function exists($c_id) {
+		return self::get($c_id) != null;
+	}
+	
 	static function getByName($name) {
 		
 		$competition = null;
@@ -42,11 +53,34 @@ class Competition {
 		$query->fields("c");
 		$result = $query->execute();
 		foreach($result as $row) {
-			$competition = new Competition($row->c_id, $row->name, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
+			$competition = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
 			$competition->groups = Group::allByCompetition($row->c_id);
+			$competition->sanitized_name = self::sanitize($competition->name);
 		}
 	
 		return $competition;
+	}
+	
+	function getTeams() {
+		$teams = array();
+		
+		$query = db_select("fanta_teams", "t");
+		$query->join("fanta_teams_groups", "tg", "tg.t_id = t.t_id");
+		$query->join("fanta_groups", "g", "tg.g_id = g.g_id");
+		$query->condition("g.c_id", $this->id);
+		$query->condition("tg.active", 1);
+		$query->fields("t");
+		$query->distinct();
+		
+		$result = $query->execute();
+		
+		foreach($result as $row) {
+			$team = new Team($row->t_id, $row->name, $row->uid);
+			
+			array_push($teams, $team);
+		}
+		
+		return $teams;
 	}
 	
 	static function all($args = array()) {
@@ -61,10 +95,36 @@ class Competition {
 		$query->fields("c");
 		$result = $query->execute();
 		foreach($result as $row) {
-			$competitions[$row->c_id] = new Competition($row->c_id, $row->name, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
+			$competitions[$row->c_id] = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
 			$competitions[$row->c_id]->groups = Group::allByCompetition($row->c_id);
+			$competitions[$row->c_id]->sanitized_name = self::sanitize($row->name);
 		}
 	
+		return $competitions;
+	}
+	
+	static function allForRound($round, $competition_id = null) {
+		$competitions = array();
+		
+		$query = db_select("fanta_competitions", "c");
+		$query->join("fanta_rounds_competitions", "rc", "rc.c_id = c.c_id");		
+		$query->condition("rc.round", $round);
+		
+		if($competition_id != null)
+			$query->condition("c.c_id", $competition_id);
+		
+		$query->fields("c");
+		$query->fields("rc");
+				
+		$result = $query->execute();
+		
+		foreach($result as $row) {
+			$competitions[$row->c_id] = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
+			$competitions[$row->c_id]->competition_round = $row->competition_round;
+			$competitions[$row->c_id]->round_label = empty($row->round_label) ? $row->competition_round . t("&ordf; giornata") : $row->round_label;
+			$competitions[$row->c_id]->sanitized_name = self::sanitize($row->name);
+		}
+
 		return $competitions;
 	}
 	
@@ -84,5 +144,13 @@ class Competition {
 		}
 	
 		return theme_item_list(array("items" => $items, "attributes" => array("class" => array("list-group")), "type" => "ul", "title" => ""));
+	}
+	
+	static function sanitize($name) {
+		$sanitized_name = strtolower($name);
+		$sanitized_name = preg_replace('@[\s]+@', '-', $sanitized_name);
+		$sanitized_name = preg_replace('@[^a-z0-9-_\s]+@', '', $sanitized_name);
+		
+		return $sanitized_name;
 	}
 }

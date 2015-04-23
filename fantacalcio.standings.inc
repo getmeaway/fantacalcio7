@@ -14,7 +14,7 @@ function fantacalcio_standings($name = '', $round = null) {
   else {
     drupal_set_title(check_plain(t("Classifica") . " - " . ucwords($name)));
     
-    if (variable_get("fantacalcio_league_type", 1) == LEAGUE_TYPE_GP)
+    if ($competition->type == LEAGUE_TYPE_GP)
     	return get_standing_table_gp($competition, null);
     else 
     	return get_standing_table_sd($competition);
@@ -23,6 +23,10 @@ function fantacalcio_standings($name = '', $round = null) {
 }
 
 function get_standing_table_sd($competition) {
+	
+	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.tablesorter.js");
+	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.metadata.js");
+	drupal_add_js("jQuery(window).ready(function() {jQuery(\".standings	\").tablesorter({cssAsc: \"sort-asc\", cssDesc: \"sort-desc\", cssHeader: \"sort-header\"});})", "inline");
 
   global $user;
   
@@ -90,7 +94,7 @@ function get_standing_table_sd($competition) {
 	
 		}
 	  	
-		$group->output = theme_table(array("header" => $header, "rows" => $rows, "attributes" => array("class" => "table table-responsive tablesorter tablesorter-blue classifica", "id" => "classifica_" . $g_id), "caption" => "", "sticky" => "", "empty" => "", "colgroups" => array()));
+		$group->output = theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("class" => "table table-responsive standings", "id" => "classifica_" . $g_id), "sticky" => "", "empty" => ""));
 	  	$group->active = (isset($user_group) && $g_id == $user_group) || $index == 1;
 	  		
 	  	$groups[$g_id] = $group;
@@ -104,6 +108,10 @@ function get_standing_table_sd($competition) {
 
 function get_standing_table_gp($competition, $round = '') {
 
+	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.tablesorter.js");
+	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.metadata.js");
+	drupal_add_js("jQuery(window).ready(function() {jQuery(\".standings	\").tablesorter({cssAsc: \"sort-asc\", cssDesc: \"sort-desc\", cssHeader: \"sort-header\"});})", "inline");
+	
 	global $user;
 	
 	$index = 0;
@@ -188,7 +196,7 @@ function get_standing_table_gp($competition, $round = '') {
 		
 			}
 			
-			$group->output = theme_table(array("header" => $header, "rows" => $rows, "attributes" => array("class" => "table table-responsive tablesorter tablesorter-blue classifica", "id" => "classifica_" . $g_id), "caption" => "", "sticky" => "", "empty" => "", "colgroups" => array()));
+			$group->output = theme_table(array("header" => $header, "rows" => $rows, "attributes" => array("class" => "table table-responsive standings", "id" => "standings-" . $g_id), "caption" => "", "sticky" => "", "empty" => "", "colgroups" => array()));
 			$group->active = (isset($user_group) && $g_id == $user_group) || $index == 1;
 			
 			$groups[$g_id] = $group;
