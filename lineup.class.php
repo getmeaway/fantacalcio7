@@ -82,18 +82,18 @@ class Lineup {
 		return $lineup;
 	}
 	
-	static function allForRound($round, $competition) {
+	static function allForRound($competition_round, $competition) {
 		$lineups = array();
 		
 		$query = db_select("fanta_lineups", "l");
 		$query->condition("c_id", $competition->id);
-		$query->condition("round", $round->competition_round);
+		$query->condition("round", $competition_round);
 		$query->fields("l");
 		
 		$result = $query->execute();
 		
 		foreach ($result as $row) {
-			$lineups[$row->t_id] = self::get($competition->id, $row->t_id, $round->competition_round);
+			$lineups[$row->t_id] = self::get($competition->id, $row->t_id, $competition_round);
 		}
 		
 		return $lineups;

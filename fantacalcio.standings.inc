@@ -14,7 +14,7 @@ function fantacalcio_standings($name = '', $round = null) {
   else {
     drupal_set_title(check_plain(t("Classifica") . " - " . ucwords($name)));
     
-    if ($competition->type == LEAGUE_TYPE_GP)
+    if ($competition->type == COMPETITION_TYPE_GP)
     	return get_standing_table_gp($competition, null);
     else 
     	return get_standing_table_sd($competition);
@@ -77,27 +77,28 @@ function get_standing_table_sd($competition) {
 			
 		    	$team_class = ($team->user == $user->uid) ? " class=bold" : "";
 		
-		    	$rows[$t_id][] = $i;
-			    $rows[$t_id][] = array("data" => l($team->name, "squadre/" . $team->id), "attributes" => array("class" => $team_class));
-			    $rows[$t_id][] = $team->pts;
-			    $rows[$t_id][] = $team->n_win;
-			    $rows[$t_id][] = $team->n_lost;
-			    $rows[$t_id][] = $team->n_draw;
-			    $rows[$t_id][] = $team->goals_in;
-			    $rows[$t_id][] = $team->goals_against;
-			    $rows[$t_id][] = ($team->goals_in - $team->goals_against);
-			    $rows[$t_id][] = $team->points_in;
-			    $rows[$t_id][] = $team->points_against;
-			    $rows[$t_id][] = ($team->points_in - $team->points_against);
+		    	$rows[$t_id][] = array("data" => $i, "data-title" => t("Posizione"));
+			    $rows[$t_id][] = array("data" => l($team->name, "squadre/" . $team->id), "data-title" => t("Squadra"), "class" => $team_class);
+			    $rows[$t_id][] = array("data" => $team->pts, "data-title" => t("Punti"));
+			    $rows[$t_id][] = array("data" => $team->n_win, "data-title" => t("Vinte"));
+			    $rows[$t_id][] = array("data" => $team->n_lost, "data-title" => t("Perse"));
+			    $rows[$t_id][] = array("data" => $team->n_draw, "data-title" => t("Pari"));
+			    $rows[$t_id][] = array("data" => $team->goals_in, "data-title" => t("gol f."));
+			    $rows[$t_id][] = array("data" => $team->goals_against, "data-title" => t("Gol s."));
+			    $rows[$t_id][] = array("data" => ($team->goals_in - $team->goals_against), "data-title" => t("Diff. Gol"));
+			    $rows[$t_id][] = array("data" => $team->points_in, "data-title" => t("Pti f."));
+			    $rows[$t_id][] = array("data" => $team->points_against, "data-title" => t("Pti s."));
+			    $rows[$t_id][] = array("data" => ($team->points_in - $team->points_against), "data-title" => t("Diff. Pti"));
 		
 			}
 	
 		}
 	  	
-		$group->output = theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("class" => "table table-responsive standings", "id" => "classifica_" . $g_id), "sticky" => "", "empty" => ""));
+		$group->output = theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("class" => "collapse-table table table-responsive standings", "id" => "classifica_" . $g_id), "sticky" => "", "empty" => ""));
 	  	$group->active = (isset($user_group) && $g_id == $user_group) || $index == 1;
 	  		
 	  	$groups[$g_id] = $group;
+	  	
   		}
 	}
    
@@ -178,25 +179,25 @@ function get_standing_table_gp($competition, $round = '') {
 					$team_class = (isset($user) && $team->user == $user->uid) ? " class=bold" : "";
 		
 					if ($standing_round) {
-						$rows[$t_id][] = $teams[$t_id]->round_position;
-						$rows[$t_id][] = array("data" => l($team->name, "squadre/" . $team->id), "attributes" => array("class" => $team_class));
-						$rows[$t_id][] = $team->points;
-						$rows[$t_id][] = $teams[$t_id]->season_position;
+						$rows[$t_id][] = array("data" => $teams[$t_id]->round_position, "data-title" => t("Posizione"));
+						$rows[$t_id][] = array("data" => l($team->name, "squadre/" . $team->id), "class" =>$team_class, "data-title" => t("Squadra"));
+						$rows[$t_id][] = array("data" => $team->points, "data-title" => t("Punti"));
+						$rows[$t_id][] = array("data" => $teams[$t_id]->season_position, "data-title" => t("Posizione Stagione"));
 		
 					}
 					else {
-						$rows[$t_id][] = $teams[$t_id]->season_position;
-						$rows[$t_id][] = array("data" => l($team->name, "squadre/" . $team->id), "attributes" => array("class" => $team_class));
-						$rows[$t_id][] = $team->points;
-						$rows[$t_id][] = $team->points_max;
-						$rows[$t_id][] = $team->points_min;
+						$rows[$t_id][] = array("data" => $teams[$t_id]->season_position, "data-title" => t("Posizione"));
+						$rows[$t_id][] = array("data" => l($team->name, "squadre/" . $team->id), "attributes" => array("class" => $team_class), "data-title" => t("Squadra"));
+						$rows[$t_id][] = array("data" => $team->points, "data-title" => t("Punti"));
+						$rows[$t_id][] = array("data" => $team->points_max, "data-title" => t("Punteggio Massimo"));
+						$rows[$t_id][] = array("data" => $team->points_min, "data-title" => t("Punteggio Minimo"));
 					}
 		
 				}
 		
 			}
 			
-			$group->output = theme_table(array("header" => $header, "rows" => $rows, "attributes" => array("class" => "table table-responsive standings", "id" => "standings-" . $g_id), "caption" => "", "sticky" => "", "empty" => "", "colgroups" => array()));
+			$group->output = theme_table(array("header" => $header, "rows" => $rows, "attributes" => array("class" => "collapse-table table table-responsive standings", "id" => "standings-" . $g_id), "caption" => "", "sticky" => "", "empty" => "", "colgroups" => array()));
 			$group->active = (isset($user_group) && $g_id == $user_group) || $index == 1;
 			
 			$groups[$g_id] = $group;

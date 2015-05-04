@@ -1141,13 +1141,40 @@ $schema['fanta_votes'] = array(
 
 
     
-  return $schema;
+  return array();//$schema;
 }
 
 #Installa il Plug In
 function fantacalcio_install() {
-  //drupal_install_schema('fantacalcio');
+	
+	//allenatore
+	$role = new stdClass();
+	$role->name = 'coach';
+	user_role_save($role);
+	
+	$coach_role = user_role_load_by_name('coach');
+	$coach_rid = $coach_role->rid;
+
+	$coach_permissions = array(
+			'access fantacalcio' => TRUE,
+			'manage team' => TRUE,
+	);
+// 	user_role_change_permissions($coach_rid, $coach_permissions);
   
+	//amministratore di lega
+	$role = new stdClass();
+	$role->name = 'league administrator';
+	user_role_save($role);
+	
+// 	$administrator_role = user_role_load_by_name('league administrator');
+// 	$administrator_rid = $administrator_role->rid;
+	
+// 	$administrator_permissions = array(
+// 			'access fantacalcio' => TRUE,
+// 			'administer fantacalcio' => TRUE,
+// 	);
+// 	user_role_change_permissions($administrator_rid, $administrator_permissions);
+	
   //variabili di sistema
   variable_set("fantacalcio_riserve_fisse", 0);
   variable_set("fantacalcio_coppa_competition", "2");

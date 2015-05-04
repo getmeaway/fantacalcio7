@@ -172,8 +172,6 @@ class Round
 		$query->addField("rc", "round");
 		$result = $query->execute();
 		
-// 		while($row = $result-)
-		
 		return $result->fetchField();
 	}
 	
@@ -197,7 +195,7 @@ class Round
 		return $result->rowCount() > 0;
 	}
 
-	static function getLast () {
+	static function getLast() {
 		$query = db_select("fanta_votes", "r");
 		$query->addExpression("MAX(round)");
 		$result = $query->execute();
@@ -205,6 +203,17 @@ class Round
 		if ($result->rowCount() == 0)
 			return 0;
 		
+		return $result->fetchField();
+	}
+	
+	static function getLastQuotation() {
+		$query = db_select("fanta_players_rounds", "pr");
+		$query->addExpression("MAX(round)");
+		$result = $query->execute();
+	
+		if ($result->rowCount() == 0)
+			return 0;
+	
 		return $result->fetchField();
 	}
 	

@@ -286,7 +286,7 @@ function fantacalcio_lineup_insert_start($team_id = "", $competition_name = "") 
   	foreach($lineups_to_insert as $lineup_to_insert) {
   		$classes = array();
   		$row = array();
-  		if ($lineup_to_insert->team->isSquadComplete())
+  		if ($lineup_to_insert->team->isConfirmed())
   			array_push($classes, "bold");
   			array_push($row, l($lineup_to_insert->team->name, "formazioni/insert/" . $lineup_to_insert->team->id . "/" . $lineup_to_insert->competition->sanitized_name) );
   			if (Lineup::exists($lineup_to_insert->team->id, $lineup_to_insert->competition->id, $lineup_to_insert->competition->competition_round))
@@ -573,7 +573,7 @@ function fantacalcio_lineup_form_clear($form, &$form_state) {
 
   drupal_set_message(t("Formazione cancellata"));
   
-  watchdog('fantacalcio', '@team: formazione cancellata', array('@team' => Team::get([$form_state['values']['t_id']])->name), WATCHDOG_NOTICE);
+  watchdog('fantacalcio', '@team: formazione cancellata', array('@team' => Team::get($form_state['values']['t_id'])->name), WATCHDOG_NOTICE);
 
   return $form_state['rebuild'] = TRUE;
 }

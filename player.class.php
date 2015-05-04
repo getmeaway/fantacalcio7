@@ -60,7 +60,7 @@ class Player {
 	
 	static function allWithQuotation($round = null) {
 		$players = array();
-		$round = ($round != null && is_numeric($round)) ? $round : 1;//TODO Round::getNext();
+		$round = ($round != null && is_numeric($round)) ? $round : Round::getLastQuotation();
 		$query = db_select("fanta_players", "p");
 		$query->join("fanta_players_rounds", "r", "r.pl_id = p.pl_id");
 		$query->join("fanta_real_teams", "rt", "rt.rt_id = r.rt_id");
@@ -88,23 +88,20 @@ class Player {
 			if (array_key_exists($player->id, $squad))
 				$available = "<i class=\"fa fa-check-circle fa-2x text-primary player-bought\"></i>";
 			else {
-				if ($is_squad_complete) {
-					$buy_player_form = drupal_get_form("fantacalcio_buy_player_form", $t_id, $player->id);
-					$available = drupal_render($buy_player_form);//"<button class=\"btn btn-sm btn-success buy-player\" id=\"buy-" . $player->id . "\">" . t("Compra") . "</button>";
-				}
-				else {
-					$available = "<button class=\"btn btn-sm btn-success buy-player\" onclick=\"buyPlayer(" . $player->id . ", " . $t_id . ");\" id=\"buy-" . $player->id . "\">" . t("Compra") . "</button><i class=\"hidden fa fa-check-circle fa-2x text-primary player-bought\"></i>";
-				}
+				$buy_player_form = drupal_get_form("fantacalcio_buy_player_form", $t_id, $player->id);
+				$available = drupal_render($buy_player_form);//"<button class=\"btn btn-sm btn-success buy-player\" id=\"buy-" . $player->id . "\">" . t("Compra") . "</button>";
 			}
 			$list_rows[$player->id] = array("data" => array(
 					"<span class='fa-stack'>
-						<i class='fa fa-square fa-stack-2x role-" . $player->role . "'></i>
+						<i class='fa fa-square fa-stack-2x squad-player-role-" . $player->role . "'></i>
 						<i class='fa fa-stack-1x' style='color: white;'><span class='font-normal'>" . self::convertRole($player->role) . "</span></i>
 					</span>",
-					$player->name,
-					ucfirst($player->team),
-					$player->quotation,
-					$available),
+					array("data" =>$player->name, "class" => array("player-list-text")),
+					array("data" =>ucfirst($player->team), "class" => array("player-list-text")),
+					array("data" =>$player->quotation, "class" => array("player-list-text")),
+					"<a href=\"#\" data-toggle=\"modal\" data-target=\"#player-stats-modal\" class=\"player-stats\" id=\"player-stat-" . $pl_id . "\"><i class=\"fa fa-bar-chart\"></i></a>",
+					$available,
+						),
 					"class" => array("role-" . $player->role, "show-player-role", "show-player-team", "show-player-name"),
 					"data-name" => $player->name,
 					"data-team" => $player->team,
@@ -124,7 +121,7 @@ class Player {
 	}
 	
 	function getQuotation($round = null) {
-		$round = (Round::exists($round)) ? $round : Round::getLast();
+		$round = (Round::exists($round)) ? $round : Round::getLastQuotation();
 		
 		$query = db_select("fanta_players_rounds", "r");
 		$query->condition("pl_id", $this->id);

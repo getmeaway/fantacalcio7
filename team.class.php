@@ -84,13 +84,13 @@ class Team {
 		return $teams;
 	}
 
-	static function allByGroup ($g_id) {
+	static function allByCompetition ($c_id) {
 		$teams = array();
 		
 		$query = db_select("fanta_teams", "t");
 		$query->join("fanta_teams_groups", "g", "g.t_id =  t.t_id");
 		$query->fields("t");
-		$query->condition("g_id", $g_id);
+		$query->condition("g_id", array_keys(Group::allByCompetition($c_id)), "IN");
 		$query->orderBy("t.name");
 		
 		$result = $query->execute();
@@ -101,6 +101,26 @@ class Team {
 			$teams[$row->t_id]->completed_date = $row->completed_date;
 		}
 		
+		return $teams;
+	}
+	
+	static function allByGroup ($g_id) {
+		$teams = array();
+	
+		$query = db_select("fanta_teams", "t");
+		$query->join("fanta_teams_groups", "g", "g.t_id =  t.t_id");
+		$query->fields("t");
+		$query->condition("g_id", $g_id);
+		$query->orderBy("t.name");
+	
+		$result = $query->execute();
+	
+		foreach ( $result as $row ) {
+			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
+			$teams[$row->t_id]->register_date = $row->register_date;
+			$teams[$row->t_id]->completed_date = $row->completed_date;
+		}
+	
 		return $teams;
 	}
 	
@@ -145,6 +165,25 @@ class Team {
 		return $teams;
 	}
 	
+	static function getTeamsForRound($competition_id, $competition_round) {
+		
+		$teams = array();
+		
+		$query = db_select("fanta_matches", "m");
+		$query->condition("m.round", $competition_round);
+		$query->condition("m.g_id", array_keys(Group::allByCompetition($competition_id)), "IN");
+		$query->fields("m", array("t1_id", "t2_id"));
+		
+		$result = $query->execute();
+		
+		foreach($result as $row) {
+			array_push($teams, Team::get($row->t1_id));
+			array_push($teams, Team::get($row->t2_id));
+		}
+		
+		return $teams;
+	}
+	
 	static function getMaxNumberForUser($u_id) {
 		$max_teams = 0;
 		$query = db_select("fanta_users", "u");
@@ -163,7 +202,7 @@ class Team {
 	function getSquad () {
 		$squad = array();
 		
-		$round = Round::getLast();
+		$round = Round::getLastQuotation();
 		
 		$selled_players = array();
 		$query = db_select("fanta_squads", "s");
@@ -200,8 +239,81 @@ class Team {
 		return $squad;
 	}
 	
-	function isSquadComplete() {
+	function getNumberPlayers() {
+		
+		$query = db_select("fanta_squads", "s");
+		$query->join("fanta_players", "p", "p.pl_id = s.pl_id");
+		$query->condition("t_id", $this->id);
+		$query->fields("s");
+		$query->fields("p");
+		
+		$result = $query->execute();
+		
+		$players = array();
+		
+		foreach($result as $row) {
+			if (!isset($players[$row->role]))
+				$players[$row->role] = 0;
+			
+			$players[$row->role]++;
+		}
+		
+		return $players;
+	}
+	
+	function getExpense() {
+		$query = db_select("fanta_squads_movements", "sm");
+		$query->condition("t_id", $this->id);
+		$query->fields("sm");
+		
+		$result = $query->execute();
+		
+		$expense = 0;
+		
+		foreach($result as $row) {
+			$expense += ($row->value * $row->status);
+		}
+		
+		return $expense;
+	}
+	
+	function getCredits() {
+		return variable_get("fantacalcio_credits", 0) - $this->getExpense();
+	}
+	
+	function isConfirmed() {
 		return $this->completed_date != null && $this->completed_date > 0;
+	}
+	
+	function canConfirm() {
+		return ($this->completed_date == null || $this->completed_date == 0) && $this->isSquadComplete();
+	}
+	
+	function setConfirmed() {
+		$query = db_update("fanta_teams");
+		$query->fields(array("completed_date" => time()));
+		$query->condition("t_id", $this->id);
+		
+		$query->execute();
+	}
+	
+	function isSquadComplete() {
+		$squad = $this->getSquad();
+		
+		$result = false;
+		
+		$num_players = array();
+		foreach($squad as $player) {
+			if (!isset($num_players[$player->role]))
+				$num_players[$player->role] = 0;
+			
+			$num_players[$player->role]++;
+		}
+		
+		return $num_players[0] == variable_get("fantacalcio_number_role_0", 0) 
+			&& $num_players[1] == variable_get("fantacalcio_number_role_1", 0)
+			&& $num_players[2] == variable_get("fantacalcio_number_role_2", 0)
+			&& $num_players[3] == variable_get("fantacalcio_number_role_3", 0);
 	}
 	
 	function inCompetition($c_id) {
@@ -238,7 +350,7 @@ class Team {
 		
 		return $result->rowCount() == 1;
 	}
-	
+		
 	function getMovements() {
 		$movements = array();
 
@@ -266,7 +378,7 @@ class Team {
 				$credits = "+" . $row->cost;
 			}
 			array_push($movements, array("<span class='fa-stack'>
-						<i class='fa fa-square fa-stack-2x role-" . $row->role . "'></i>
+						<i class='fa fa-square fa-stack-2x squad-player-role-" . $row->role . "'></i>
 						<i class='fa fa-stack-1x' style='color: white;'><span class='font-normal'>" . Player::convertRole($row->role) . "</span></i>
 					</span>", $row->name, $row->team, date("d/m/Y - H:i", $row->timestamp), $movement, $credits));
 		}

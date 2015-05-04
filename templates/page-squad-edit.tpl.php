@@ -10,7 +10,7 @@
 					<li role="presentation"><a
 						href="<?php print base_path();?>mie/<?php print $t_id; ?>/rosa"><?php print t("Rosa"); ?></a>
 					</li>
-					<?php if (variable_get("fantacalcio_league_type", 1) == LEAGUE_TYPE_GP): ?>
+					<?php if (variable_get("fantacalcio_free_market", 1)): ?>
 				  	<li role="presentation" class="active"><a
 						href="<?php print base_path();?>mie/<?php print $t_id; ?>/movimenti"><?php print t("Movimenti"); ?></a>
 					</li>
@@ -135,6 +135,10 @@
 						</div>
 					</div>
 				</div>
+				<div class="row">
+					<div class="clearfix">					
+					</div>
+				</div>
 				<div class="" style="height: 200px; overflow-y: auto; overflow-x: hidden">
 				<?php print render($players_list); ?>
 				</div>
@@ -167,6 +171,15 @@
 		</div>
 	</div>
 </div>
+
+<?php if($is_team_complete): ?> 
+<script>
+(function ($) {
+	$("#squad-complete-modal").modal();
+}(jQuery));
+
+</script>
+<?php endif; ?>
 
 <script>
 (function ($) {

@@ -14,7 +14,7 @@ function fantacalcio_calendar($name = '', $round = null) {
 	else {
 		drupal_set_title(check_plain(t("Calendario") . " - " . ucwords($name)));
 
-		if (variable_get("fantacalcio_league_type", 1) != LEAGUE_TYPE_GP)
+		if (variable_get("fantacalcio_league_type", 1) != COMPETITION_TYPE_GP)
 			return get_matches_table($competition);
 		else
 			return get_matches_table($competition);

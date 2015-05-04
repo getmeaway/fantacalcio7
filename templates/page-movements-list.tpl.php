@@ -10,7 +10,7 @@
 					<li role="presentation">
 						<a href="<?php print base_path();?>mie/<?php print $t_id; ?>/rosa"><?php print t("Rosa"); ?></a>
 					</li>
-					<?php if (variable_get("fantacalcio_league_type", 1) == LEAGUE_TYPE_GP): ?>
+					<?php if (variable_get("fantacalcio_free_market", 1)): ?>
 				  	<li role="presentation">
 				  		<a href="<?php print base_path();?>mie/<?php print $t_id; ?>/movimenti"><?php print t("Movimenti"); ?></a>
 				  	</li>

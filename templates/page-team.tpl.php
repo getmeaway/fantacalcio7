@@ -1,7 +1,7 @@
- <div role="tabpanel" class="collapse navbar-collapse">
+ <div role="tabpanel" class="navbar-collapse">
 
 			<!-- Nav tabs -->
-	<ul class="nav nav-pills" role="tablist">
+	<ul class="nav nav-pills responsive" role="tablist">
 		<li role="presentation" class="active"><a href="#squad"
 			aria-controls="squad" role="tab" data-toggle="tab">
 			<?php print t("Rosa"); ?>
@@ -26,7 +26,7 @@
 	</ul>
 
 	<!-- Tab panes -->
-	<div class="tab-content">
+	<div class="tab-content responsive">
 		<div role="tabpanel" class="tab-pane active" id="squad">
 		<?php print render($squad); ?>
 		</div>

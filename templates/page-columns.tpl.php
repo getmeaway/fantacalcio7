@@ -1,5 +1,5 @@
 <div class="row">
-	<div id='teams_list' class="col-sm-3 col-xs-hidden">
+	<div id='teams_list' class="col-xs-12 col-sm-3">
 
 		<?php if (isset($choose_rounds) ) : ?> 
 		<!-- scegli giornata TODO -->
@@ -72,7 +72,7 @@
 	</div>
 
 	<!-- output -->
-	<div id='team_data' class="col-sm-9 col-xs-12">
+	<div id='team_data' class="col-xs-12 col-sm-9">
 		<?php if (isset($main_output) && $main_output != null): ?>
 		<?php print render($main_output); ?>
 		<?php endif; ?>
@@ -106,6 +106,10 @@
         $("#teams-list li").not(".mine").slideUp();
         $("#teams-list li.mine").slideDown();
     });
+      
 }(jQuery));
 
+(function($) {
+    fakewaffle.responsiveTabs(['xs', 'sm']);
+})(jQuery);
 </script>

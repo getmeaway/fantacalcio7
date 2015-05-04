@@ -11,16 +11,16 @@ var roles = ["P", "D", "C", "A"];
 			//data: {id: pl_id},			
 			success: function() {
 			
-
-		if(!checkBuy(pl_id))
-			return;
+				//acquisto non andato a buon fine
+				if(!checkBuy(pl_id))
+					return;
 		
 		//aggiorno rosa
 		jQuery("#my-squad tbody .empty.message").hide();
 		
 		var tr = jQuery("#players-list tbody tr#pl-" + pl_id);
 		var player = {name: jQuery(tr).attr("data-name"), team: jQuery(tr).attr("data-team"), role: jQuery(tr).attr("data-role"), quotation: jQuery(tr).attr("data-quotation")};
-		var role_class = "role_" + player.role;
+		var role_class = "squad-player-role-" + player.role;
 				
 		//creo riga da inserire nella tabella #my-squad
 		var tr = "<tr id=\"squad-pl-" + pl_id + "\" class=\"player " + role_class + " \" data-name=\"" + player.name + "\" data-team=\"" + player.team + "\" data-role=\"" + player.role + "\" data-quotation=\"" + player.quotation + "\">"
@@ -87,7 +87,7 @@ var roles = ["P", "D", "C", "A"];
 		//aggiorno rosa
 		jQuery(tr).remove();
 		
-		//msotro pulsante COMPRA
+		//mostro pulsante COMPRA
 		jQuery("#players-list tbody tr#pl-" + pl_id).find(".buy-player").show();
 		//nascondo spunta per giocatore comprato
 		jQuery("#players-list tbody tr#pl-" + pl_id).find(".player-bought").addClass("hidden");

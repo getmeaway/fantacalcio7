@@ -203,54 +203,18 @@ function fantacalcio_results_lineup_check($vote_round) {
   $out = "";
   
   foreach ($competitions as $c_id => $competition) {
-//     $result = db_query("SELECT c.competition_round, r.date 
-//               FROM {fanta_rounds} r, {fanta_rounds_competitions} c
-//               WHERE c.round = r.round
-//               AND c.c_id = '%d' 
-//               AND c.round = '%d'", $c_id, $vote_round);
-//     while ($row = db_fetch_object($result)) {
-//       $last_round = $row->competition_round;
-//       $ts_round = $row->date;
-//     }
 
   	$competition->groups = Group::allByCompetition($competition->id);
     
     $round = Round::getCompetitionRound($vote_round, $competition->id);
     
-    //if (db_affected_rows($result) > 0) {
-    
-//       $lineups = array();
-      
+     
       //squadre per competizione
       $teams = array();
       
       foreach($competition->groups as $group) {
       	$teams = array_merge($teams, Team::allByGroup($group->id));
       }
-      
-//       $sql = "SELECT * FROM {fanta_matches} " .
-//           "WHERE g_id IN (SELECT g_id FROM {fanta_groups WHERE c_id = '%d') " .
-//           "AND round = '%d'";
-//       $result = db_query($sql, $c_id, $last_round);
-//       while ($row = db_fetch_object($result)) {
-//         $competition_teams[$c_id][] = $row->t1_id;
-//         $competition_teams[$c_id][] = $row->t2_id;
-//       }
-
-//       $lineups = Lineup::allForRound($round, $competition);
-
-//       $sql = "SELECT * FROM {fanta_lineups} f
-//           INNER JOIN {fanta_lineups_inserts} i
-//           ON f.c_id = i.c_id
-//           AND f.round = i.round
-//           AND f.t_id = i.t_id
-//           WHERE  f.c_id = '%d' 
-//           AND f.round = '%d'
-//           AND i.i_id = (SELECT MAX(i_id) FROM {fanta_lineups_inserts} WHERE c_id = '%d' AND round = '%d' AND t_id = f.t_id)";
-//       $result = db_query($sql, $c_id, $last_round, $c_id, $last_round);
-//       while ($row = db_fetch_object($result)) {
-//         $lineups[$row->t_id][] = $row;
-//       }
       
       $rows = array();
       
@@ -264,26 +228,13 @@ function fantacalcio_results_lineup_check($vote_round) {
 				
 	        if ($lineup != null) {
 				
-				//echo gettype($lineup);die();
-	
 				$module = array();
-	          
-// 				if($t_id == 7)
-// 	          		print_r($lineup);
-	
-	//             foreach ($lineup as $player) {
-	//               if ($player->position > 0) $module[$player->position]++;
-	//             }
 	
 	            if ($lineup->check())//($module == array(1 => 11, 2 => 4, 3 => 3))  
  	            	$status = "<span style='color: green;'><i class='fa fa-check-circle'></i></span>";
 	            else 
  	            	$status = "<span style='color: red; font-weight:bold;'><i class='fa fa-minus-circle'></i></span>";
 	            
-	            //ksort($module);
-	            
-	            //$ts = ($player->timestamp < $round->date ) ? date('d-m-Y H:i:s', $player->timestamp) : "<span style='color: red; font-weight:bold;'>" . date('d-m-Y H:i:s', $player->timestamp) . "</span>";
-	
 	            $rows[$t_id] = array(l($team->name, "formazioni/admin/" . $t_id), $status, implode("-", $lineup->getModuleRegulars()) . " / " . implode("-", $lineup->getModuleReserves()), date("d/m/Y H:i:s", $lineup->getInsertTime()) );
 			}
 	          
@@ -292,10 +243,11 @@ function fantacalcio_results_lineup_check($vote_round) {
 	
 		}
 
-        $out .= theme("table", array("rows" => $rows, "header" => array()));
+        $out .= theme("table", array("rows" => $rows, "header" => array(t("Squadra"), t("Valida"), t("Modulo"), t("Data inserimento"))));
 	}
 	}
-  //}
+	
+	import_lineups($vote_round);
 
   return $out;
 }
@@ -513,6 +465,45 @@ function insert_formazione_admin($competition_name, $t_id) {
 
   return $out;
 
+}
+
+function import_lineups($vote_round) {
+	
+	//elenco competizioni
+	
+	$round = Round::getByRound($vote_round);
+	
+	//per ogni competizione
+	foreach(Competition::all() as $competition) {
+		
+// 		foreach($competition->groups as $group) {
+		if (isset($round->competitions[$competition->id])) {	
+		
+			//formazioni mancanti
+			if ($competition->type == COMPETITION_TYPE_SD)
+				$teams = Team::getTeamsForRound($competition->id, $round->competitions[$competition->id]->competition_round);
+			if ($competition->type == COMPETITION_TYPE_GP)
+				$teams = Team::allByCompetition($competition->id);
+			
+			$lineups = Lineup::allForRound($round->competitions[$competition->id]->competition_round, $competition);
+// 			echo $group->name. " " . count($teams) . " " . count($lineups) . "<br>";
+			
+			$missing_lineups = array();
+			foreach($teams as $team) {
+				if (!array_key_exists($team->id, $lineups))
+					array_push($missing_lineups, $team);
+			}
+			
+			//per ogni formazione
+			$i = 0;
+			foreach ($missing_lineups as $team) {
+				$i++;
+				//importo formazione (giornata precedente / default)
+			}
+			//echo $i."%";
+		}
+			
+	}
 }
 
 /************************/
@@ -1458,7 +1449,7 @@ function fantacalcio_get_totals($vote_round) {
   	$competition = Competition::get($c_id);
   	$competition_round = $round_competition->competition_round;
   	
-  	if ($competition->type == LEAGUE_TYPE_SD) {
+  	if ($competition->type == COMPETITION_TYPE_SD) {
 
   		$matches = $round->getMatches($c_id);
   		
@@ -1519,7 +1510,7 @@ function fantacalcio_get_totals($vote_round) {
   		$out .= theme("table", array("header" => $header, "rows" => $rows, "empty" => t("Nessuna partita"), "attributes" => array("classes" => array("table", "table-responsive", "table-striped"))));
   	}
   	
-  	if ($competition->type == LEAGUE_TYPE_GP) {
+  	if ($competition->type == COMPETITION_TYPE_GP) {
   		
   		$header = array(t("Squadra"), t("Tot"), t("Posizione giornata"), t("Posizione Stagione"));
   		

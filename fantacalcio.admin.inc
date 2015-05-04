@@ -1276,6 +1276,9 @@ function theme_fantacalcio_admin_matches_calendar($form) {
 /************************/
 
 function fantacalcio_admin_competitions_list() {
+	
+  $competition_types = array(COMPETITION_TYPE_GP => t("Gran Premio"), COMPETITION_TYPE_SD => t("Scontri diretti"));
+	
   $out = "";
   
   $out .= l("Aggiungi competizione", "admin/fantacalcio/competitions/add") . "<br/><br/>";
@@ -1285,6 +1288,7 @@ function fantacalcio_admin_competitions_list() {
     $header = array(t("Competizione"), t("Attiva"), t("Calendario"), t("Classfica"), t("Formazioni"), t("Newsletter"));
     foreach ($competitions as $c_id => $competition) {
       $rows[] = array(l($competition->name, "admin/fantacalcio/competitions/" . $c_id),
+      			$competition_types[$competition->type],
                 "<i class=\"fa " . ($competition->active ? "fa-check-circle text-success" : "fa-minus-circle text-danger") . "\"></i>",
       			"<i class=\"fa " . ($competition->has_matches ? "fa-check-circle text-success" : "fa-minus-circle text-danger") . "\"></i>",
       			"<i class=\"fa " . ($competition->has_standings ? "fa-check-circle text-success" : "fa-minus-circle text-danger") . "\"></i>",
@@ -1331,7 +1335,15 @@ function fantacalcio_admin_competition($form, &$form_state, $c_id = "") {
     '#required' => TRUE,
     '#default_value' => $competition_data->name, 
   );
-    
+
+  $form['type'] = array(
+  		'#type' => 'select',
+  		'#title' => t('Tipo'),
+  		'#required' => TRUE,
+  		'#options' => array(COMPETITION_TYPE_GP => t("Gran Premio"), COMPETITION_TYPE_SD => t("Scontri diretti")),
+  		'#default_value' => $competition_data->type,
+  );
+  
   $form['active'] = array(
     '#type' => 'checkbox',
     '#title' => t('Attiva'),
@@ -1386,6 +1398,7 @@ function fantacalcio_admin_competition_submit($form, &$form_state) {
     db_update('fanta_competitions')
   ->fields(array(
     'name' => $form_state["values"]["name"],
+    'type' => $form_state["values"]["type"],
     'active' => $form_state["values"]["active"],
     'has_matches' => $form_state["values"]["matches"],
     'has_standings' => $form_state["values"]["standings"],
@@ -1402,6 +1415,7 @@ function fantacalcio_admin_competition_submit($form, &$form_state) {
     $c_id = db_insert('fanta_competitions')
   ->fields(array(
     'name' => $form_state["values"]["name"],
+  	'type' => $form_state["values"]["type"],
     'active' => $form_state["values"]["active"],
     'has_matches' => $form_state["values"]["matches"],
     'has_standings' => $form_state["values"]["standings"],
