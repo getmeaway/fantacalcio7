@@ -18,7 +18,9 @@ class Team {
 		$query = db_select("fanta_teams", "t");
 		$query->condition("t_id", $id);
 		$query->fields("t");
+		
 		$result = $query->execute();
+		
 		foreach ( $result as $row ) {
 			$team = new Team($row->t_id, $row->name, $row->uid);
 			$team->coach = $row->coach;
@@ -26,6 +28,7 @@ class Team {
 			$team->shirt = $row->shirt;
 			$team->register_date = $row->register_date;
 			$team->completed_date = $row->completed_date;
+			$team->active = $row->active;
 		}
 		
 		return $team;
@@ -44,6 +47,7 @@ class Team {
 			$team->shirt = $row->shirt;
 			$team->register_date = $row->register_date;
 			$team->completed_date = $row->completed_date;
+			$team->active = $row->active;
 		}
 	
 		return $team;
@@ -62,6 +66,7 @@ class Team {
 		foreach ( $result as $row ) {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
+			$teams[$row->t_id]->active = $row->active;
 		}
 		
 		return $teams;
@@ -79,6 +84,7 @@ class Team {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
 			$teams[$row->t_id]->completed_date = $row->completed_date;
+			$teams[$row->t_id]->active = $row->active;
 		}
 	
 		return $teams;
@@ -99,6 +105,7 @@ class Team {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
 			$teams[$row->t_id]->completed_date = $row->completed_date;
+			$teams[$row->t_id]->active = $row->active;
 		}
 		
 		return $teams;
@@ -119,6 +126,7 @@ class Team {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
 			$teams[$row->t_id]->completed_date = $row->completed_date;
+			$teams[$row->t_id]->active = $row->active;
 		}
 	
 		return $teams;
@@ -143,6 +151,7 @@ class Team {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
 			$teams[$row->t_id]->completed_date = $row->completed_date;
+			$teams[$row->t_id]->active = $row->active;
 		}
 	
 		return $teams;
@@ -160,6 +169,7 @@ class Team {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
 			$teams[$row->t_id]->completed_date = $row->completed_date;
+			$teams[$row->t_id]->active = $row->active;
 		}
 	
 		return $teams;
@@ -314,6 +324,29 @@ class Team {
 			&& $num_players[1] == variable_get("fantacalcio_number_role_1", 0)
 			&& $num_players[2] == variable_get("fantacalcio_number_role_2", 0)
 			&& $num_players[3] == variable_get("fantacalcio_number_role_3", 0);
+	}
+	
+	function getCompetitions() {
+		
+		$competitions = array();
+		
+		$query = db_select("fanta_teams_groups", "tg");
+		$query->join("fanta_groups", "g", "g.g_id = tg.g_id");
+		$query->join("fanta_competitions", "c", "c.c_id = g.c_id");
+		$query->fields("tg");
+		$query->fields("g");
+		$query->addField("c", "name", "competition_name");
+		$query->condition("tg.t_id", $this->id);
+		$query->condition("tg.active", 1);
+		$query->condition("g.active", 1);
+	
+		$result = $query->execute();
+		
+		foreach($result as $row) {
+			$competitions[$row->g_id] = $row->competition_name . " - " . $row->name;
+		}
+	
+		return $competitions;
 	}
 	
 	function inCompetition($c_id) {

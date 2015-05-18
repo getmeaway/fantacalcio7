@@ -62,6 +62,30 @@ class Round
 		return $rounds;
 	}
 	
+	static function allPlayed() {
+		$rounds = array();
+	
+		$query = db_select("fanta_rounds_competitions", "rc");
+		$query->join("fanta_rounds", "r", "r.round = rc.round");
+		$query->fields("rc");
+		$query->fields("r");
+		$query->condition("status", 1);
+		$result = $query->execute();
+	
+		while ($row = $result->fetchObject()) {
+			$competition_round = new Round();
+			$competition_round->competition_round= $row->competition_round;
+			$competition_round->round= $row->round;
+			$competition_round->label = (empty($row->round_label) ? $row->competition_round . t("ª giornata") : $row->round_label);
+			$competition_round->next = $row->next;
+			$competition_round->date = $row->date;
+	
+			array_push($rounds, $competition_round);
+		}
+	
+		return $rounds;
+	}
+	
 	static function get($round, $competition_id) {
 		$query = db_select("fanta_rounds_competitions", "rc");
 		$query->join("fanta_rounds", "r", "r.round = rc.round");
@@ -242,16 +266,16 @@ class Round
 	}
 	
 	static function getLastLineups($competition_id) {
-		$round = self::getLast();echo $round;
+		$round = self::getLast();
 	
 		$query = db_select("fanta_lineups", "l");
 		$query->condition("c_id", $competition_id);		
 		$query->addExpression("MAX(round)", "max");
 		$result = $query->execute();
 	
-		$max_round = $result->fetchField()->max;
+		$max_round = $result->fetchField();
 		
-		return self::get($max_round, $competition_id);
+		return self::getByCompetitionRound($max_round, $competition_id);
 	}
 	
 	static function listForStandings($competition_id) {

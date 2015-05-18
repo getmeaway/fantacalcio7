@@ -413,7 +413,7 @@ function fantacalcio_admin_users_list() {
 	
 	$users = User::all();
 	
-	$out = l(t("Aggiungi utente"), "admin/fantacalcio/users/add", array("attributes" => array("class" => array("btn-sm", "btn-default")))) . "<br>";
+	$out = l(t("Aggiungi utente"), "admin/fantacalcio/users/add", array("attributes" => array("class" => array("btn", "btn-info")))) . "<br>";
 	
     $header = array("Nome", "Numero massimo squadre", "Numero squadre", "Squadre", "");
     foreach ($users as $user) {
@@ -574,28 +574,30 @@ function fantacalcio_admin_user_add_form_submit($form, &$form_state) {
 /************************/
 
 function fantacalcio_admin_teams_list() {
-  $out = l("Aggiungi squadra", "admin/fantacalcio/teams/add") . "<br/><br/>";
+  $out = l("Aggiungi squadra", "admin/fantacalcio/teams/add", array("attributes" => array("class" => "btn btn-info"))) . "<br/><br/>";
   
-  $teams = get_all_teams();
-  $users = get_users();
-  $groups = get_groups();
-  $competitions = get_competitions();
+  $teams = Team::all();
+
   if ($teams) {
-    $header = array("Nome", "Utente", "Gironi", "Attiva");
+    
+  	$header = array("Nome", "Utente", "Gironi", "Attiva");
+    
     foreach ($teams as $t_id => $team) {
-      $groups_team = "";
-      foreach ($team->groups as $g_id) {
-if ($g_id > 10 || $g_id < 1)	echo $g_id."=";
-        $groups_team .= /*$competitions[$groups[$g_id]->c_id]->name; . " - " . */$groups[$g_id]->name . "<br>";
+
+    	$user = User::get($team->user);
+    	
+    	$groups_team = "";
+      foreach ($team->getCompetitions() as $competition) {
+        $groups_team .= $competition . "<br>";
       }
       $rows[] = array(
             l($team->name, "admin/fantacalcio/teams/" . $t_id),
-            $users[$team->uid]->name,
+            $user != null ? $user->name : "",
             $groups_team,
-            "<img src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($team->active) . "'>"
+            "<i class=\"fa " . ($team->active ? "fa-check-circle text-success" : "fa-minus-circle text-danger") . "\"></i>"
             );
     }
-    $out .= theme_table(array("header" => $header, "rows" => $rows, "attributes" => array(), "colgroups" => array(), "sticky" => TRUE, "empty" => "", "caption" => ""));
+    $out .= theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("class" => array("table table-responsive")), "sticky" => TRUE, "empty" => t("Nessuna squadra"), ));
   }
   
   return $out;
@@ -611,15 +613,14 @@ function fantacalcio_admin_team($form, &$form_state, $t_id = "") {
     $groups_checkboxes_default = array(); 
     $title = "Crea squadra";
     $team_data = (object) array("name" => "", "uid" => "", "active" => "");
-    if (!empty($t_id) && team_exists($t_id)) {
-      $team_data = get_team_data($t_id);
+    if (!empty($t_id) && Team::exists($t_id)) {
+      $team_data = Team::get($t_id);
       $action = "edit";
-      $account = user_load(array('uid' => check_plain($team_data->uid)));
-      $username = $account->name;
+      $username = User::get($team_data->user) != null ? User::get($team_data->user)->name :  "";
       $groups_checkboxes_default = get_groups_checkboxes_default($t_id);
       $title = "Modifica squadra";
     }
-    else $form['#redirect'] = 'admin/fantacalcio/teams';
+//     else $form['#redirect'] = 'admin/fantacalcio/teams';
     
     $form['#prefix'] = '<h3>' . $title . '</h3>';
     
@@ -643,7 +644,7 @@ function fantacalcio_admin_team($form, &$form_state, $t_id = "") {
     $form['user'] = array(
       '#type' => 'textfield',
       '#title' => t('Utente'),
-      '#required' => TRUE,
+//       '#required' => TRUE,
       '#autocomplete_path' => 'user/autocomplete', 
       '#default_value' => $username,
     );
@@ -678,14 +679,14 @@ function fantacalcio_admin_team($form, &$form_state, $t_id = "") {
     return $form;
   }
   else {
-    drupal_set_message("Devi prima creare un girone");
+    drupal_set_message(t("Devi prima creare un girone"));
     drupal_goto("admin/fantacalcio/groups/add");
   }
 }
 
 function fantacalcio_admin_team_submit($form, &$form_state) {
   
-  $account = user_load(array('name' => check_plain($form_state["values"]["user"])));
+  $account = User::getByName($form_state["values"]["user"]);// user_load(array('name' => check_plain($form_state["values"]["user"])));
   
   $out = $form_state["values"]["name"] . $account->uid . $form_state["values"]["t_id"];
   
@@ -718,20 +719,22 @@ function fantacalcio_admin_team_submit($form, &$form_state) {
     drupal_set_message("Squadra creata");
   }
   
+  drupal_goto("admin/fantacalcio/teams");
+  
 }
 
 function fantacalcio_admin_team_clear($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
 }
 
-function fantacalcio_admin_team_delete($form_state, $t_id = "") {
+function fantacalcio_admin_team_delete($form, $form_state, $t_id = "") {
 
   $form['#redirect'] = 'admin/fantacalcio/teams';
   
-  $teams = get_all_teams();
-  $t_name = $teams[$t_id]->name;
+//   $teams = get_all_teams();
+//   $t_name = $teams[$t_id]->name;
   
-  $form['#prefix'] = 'Sicuro di volere eliminare la squadra <em>' . $t_name . '</em>?';
+  $form['#prefix'] = 'Sicuro di volere eliminare la squadra <em>' . Team::get($t_id)->name . '</em>?';
   
   $form['action'] = array(
     '#type' => 'hidden',
@@ -762,6 +765,8 @@ function fantacalcio_admin_team_delete_submit($form, &$form_state) {
     db_delete("fanta_teams_groups")->condition('t_id', $form_state["values"]["t_id"])->execute();
     
     drupal_set_message("Squadra eliminata");
+    
+    drupal_goto("admin/fantacalcio/teams");
   }
 }
 
@@ -776,7 +781,7 @@ function fantacalcio_admin_team_delete_submit($form, &$form_state) {
 function fantacalcio_admin_groups_list() {
   $out = "";
   
-  $out .= l("Aggiungi girone", "admin/fantacalcio/groups/add") . "<br/><br/>";
+  $out .= l("Aggiungi girone", "admin/fantacalcio/groups/add", array("attributes" => array("class" => "btn btn-info"))) . "<br/><br/>";
   
   $groups = Group::all();
   $competitions = Competition::all();
@@ -1281,7 +1286,7 @@ function fantacalcio_admin_competitions_list() {
 	
   $out = "";
   
-  $out .= l("Aggiungi competizione", "admin/fantacalcio/competitions/add") . "<br/><br/>";
+  $out .= l("Aggiungi competizione", "admin/fantacalcio/competitions/add", array("attributes" => array("class" => "btn btn-info"))) . "<br/><br/>";
   
   $competitions = Competition::all();
   if ($competitions) {
@@ -1992,7 +1997,7 @@ function theme_fantacalcio_update_matches($form) {
   $g_id = arg(4);
   $round = arg(5);
   
-  $out = l("Aggiungi partite", "admin/fantacalcio/matches/" . $g_id . "/" . $round . "/add") . "<br/><br/>";
+  $out = l("Aggiungi partite", "admin/fantacalcio/matches/" . $g_id . "/" . $round . "/add", array("attributes" => array("class" => "btn btn-info"))) . "<br/><br/>";
   
   
   $matches = get_round_matches($round, $g_id);
@@ -2068,7 +2073,7 @@ function theme_fantacalcio_add_matches($form) {
 function fantacalcio_admin_rounds_list() {
   $out = "";
   
-  $out .= l("Aggiungi giornata", "admin/fantacalcio/rounds/add") . "<br/><br/>";
+  $out .= l("Aggiungi giornata", "admin/fantacalcio/rounds/add", array("attributes" => array("class" => "btn btn-info"))) . "<br/><br/>";
   
   $rounds = get_all_rounds();
   $round_statuses = get_round_statuses();
@@ -2387,7 +2392,7 @@ function fantacalcio_admin_round_delete_submit($form, &$form_state) {
 function fantacalcio_admin_players_list() {
   $out = l("Aggiorna lista", "admin/fantacalcio/players/list") . "<br/>";
   
-  $players = get_all_players();
+  $players = Player::all();
 
   if ($players) {
   
@@ -2401,18 +2406,18 @@ function fantacalcio_admin_players_list() {
     array_multisort($names, SORT_ASC, $roles, SORT_ASC, $players);
   
     foreach ($players as $pl_id => $player) {
-      $rows[] = array("data" => array(  $player->pl_id, l($player->name, "admin/fantacalcio/players/" . $player->pl_id), 
-                    convert_role($player->role) ));
+      $rows[] = array("data" => array(  $player->id, l($player->name, "admin/fantacalcio/players/" . $player->id), 
+                    Player::convertRole($player->role) ));
     }
   
-    $out .= theme_table($header, $rows);
+    $out .= theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("class" => array("table", "table-responsive"))));
   }
   return $out;
 }
 
 function fantacalcio_admin_players_list_player($pl_id = "") {
   if ($pl_id) {
-    $player = get_player_by_id($pl_id);
+    $player = Player::get($pl_id);
     if ($player) {
       return drupal_get_form("fantacalcio_admin_players_list_player_form", $player);
     }
@@ -2421,10 +2426,13 @@ function fantacalcio_admin_players_list_player($pl_id = "") {
   else drupal_goto("admin/fantacalcio/players");
 }
 
-function fantacalcio_admin_players_list_player_form($form_state, $player) {
+function fantacalcio_admin_players_list_player_form($form, $form_state, $player) {
 
-  $player_rounds = get_player_rounds($player->pl_id);
-  $real_teams_list = get_real_teams_options();
+  $player_rounds = $player->getPlayerRounds();
+  
+  $real_teams_list = RealTeam::all();
+  foreach ($real_teams_list as $real_team)
+  	$real_teams_options[$real_team->id] = $real_team->name;
 
   $form['#redirect'] = 'admin/fantacalcio/players';
   $form['#theme'] = "fantacalcio_admin_players_list_player";
@@ -2432,13 +2440,13 @@ function fantacalcio_admin_players_list_player_form($form_state, $player) {
   $form['pl_id'] = array(
     '#type' => 'hidden',
     '#length' => 30,
-    '#default_value' => $player->pl_id,
+    '#default_value' => $player->	id,
   );
   
   $form['round'] = array(
     '#type' => 'hidden',
     '#length' => 30,
-    '#default_value' => $player->round,
+//     '#default_value' => $player->round,
   );
   
   $form['name'] = array(
@@ -2462,7 +2470,7 @@ function fantacalcio_admin_players_list_player_form($form_state, $player) {
       '#type' => 'select',
       '#length' => 30,
       '#default_value' => $player->rt_id,
-      '#options' => $real_teams_list
+      '#options' => $real_teams_options
     );
 
     $form['active_' . $round] = array(
@@ -2471,8 +2479,6 @@ function fantacalcio_admin_players_list_player_form($form_state, $player) {
     );
   }
 
-  //
-  
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Carica')
@@ -2487,24 +2493,27 @@ function fantacalcio_admin_players_list_player_form($form_state, $player) {
   return $form;
 }
 
-function theme_fantacalcio_admin_players_list_player($form) {
+function theme_fantacalcio_admin_players_list_player($variables) {
+	
+	$form = $variables['form'];
   $header = array(
           array("data" => "Giornata"), 
           array("data" => "Squadra"), 
           array("data" => "Attivo")
           );
   
-  $pl_id = arg(4);
+  $pl_id = arg(3);
+  $player = Player::get($pl_id);
     
-  $player_rounds = get_player_rounds($pl_id);
-
-  $out = drupal_render($form["pl_id"]);
+  $player_rounds = $player->getPlayerRounds();
+  $out = "";
+  $out .= drupal_render($form["pl_id"]);
   $out .= drupal_render($form["round"]);
   $out .= drupal_render($form["name"]);
   $out .= drupal_render($form["role"]);
   
   if ($player_rounds) {  
-    foreach ($player_rounds as $round => $player) {
+    foreach ($player_rounds as $round => $player_round) {
       $rows[$round]= array(  
               $round, 
               drupal_render($form["team_" . $round]),
@@ -2512,11 +2521,11 @@ function theme_fantacalcio_admin_players_list_player($form) {
           );
     }
     
-    $rows[][] = array("data" => drupal_render($form),
+    $rows[][] = array("data" => drupal_render_children($form),
             "colspan" => 5
             );    
     
-    return $out . theme_table($header, $rows);
+    return $out . theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("table", "table-responsive")));
   }
   else 
       return $out;
@@ -2532,19 +2541,32 @@ function fantacalcio_admin_players_list_player_form_submit($form, &$form_state) 
   $name = $form_state["values"]["name"];
 
   //aggiorna dati giocatore
-  $sql = "UPDATE {fanta_players} SET name = '" . $form_state["values"]["name"] . "', 
-      role = " . $form_state["values"]["role"] . "
-      WHERE pl_id = " . $form_state["values"]["pl_id"];
-  $result = db_query($sql);
+//   $sql = "UPDATE {fanta_players} SET name = '" . $form_state["values"]["name"] . "', 
+//       role = " . $form_state["values"]["role"] . "
+//       WHERE pl_id = " . $form_state["values"]["pl_id"];
+//   $result = db_query($sql);
+  
+  $query = db_update("fanta_players");
+  $query->fields(array("name" => $form_state["values"]["name"], "role" => $form_state["values"]["role"]));
+  $query->condition("pl_id", $form_state["values"]["pl_id"]);
+  
+  $result = $query->execute();
   
   $player_rounds = get_player_rounds($form_state["values"]["pl_id"]);
   foreach ($player_rounds as $round => $player) {
-    $sql = "UPDATE {fanta_players_teams} 
-        SET team = '%s',
-            active = '%d'
-        WHERE pl_id = '%d' 
-        AND round = '%d'";
-    $result = db_query($sql, $form_state["values"]["team_" . $round], $form_state["values"]["active_" . $round], $form_state["values"]["pl_id"], $round);
+//     $sql = "UPDATE {fanta_players_teams} 
+//         SET team = '%s',
+//             active = '%d'
+//         WHERE pl_id = '%d' 
+//         AND round = '%d'";
+//     $result = db_query($sql, $form_state["values"]["team_" . $round], $form_state["values"]["active_" . $round], $form_state["values"]["pl_id"], $round);
+    
+    $query = db_update("fanta_players_rounds");
+    $query->fields(array("team" => $form_state["values"]["team_" . $round], "active" => $form_state["values"]["active_" . $round]));
+    $query->condition("pl_id", $form_state["values"]["pl_id"]);
+    $query->condition("round", $round);
+    
+    $result = $query->execute();
   }
 
   drupal_set_message('Giocatore aggiornato');
@@ -2588,10 +2610,18 @@ function fantacalcio_admin_players_list_update_submit($form, &$form_state) {
 
   $text = $form_state["values"]["text"];
 
-  $sql = "select max(round) from {fanta_votes};";
-  $result = db_query($sql);
-  $round = db_result($result) ;
-  if (!$round) $round = 0;
+//   $sql = "select max(round) from {fanta_votes};";
+//   $result = db_query($sql);
+//   $round = db_result($result);
+  
+  $query = db_select("fanta_votes");
+  $query->addExpression("MAX(round)", "AS max");
+  $result = $query->execute();
+  
+  $round = $result->fetchField()->max;
+  
+  if (!$round) 
+  	$round = 0;
 
   insert_players($text, $round + 1);
   
@@ -2671,8 +2701,14 @@ function fantacalcio_admin_players_add() {
   return drupal_get_form("fantacalcio_admin_players_add_form");
 }
 
-function fantacalcio_admin_players_add_form($form_state) {
-  $real_teams_list = get_real_teams_options();
+function fantacalcio_admin_players_add_form($form, $form_state) {
+	
+  $real_teams_list = RealTeam::all();
+  foreach ($real_teams_list as $real_team)
+  	$real_teams_options[$real_team->id] = $real_team->name;
+  
+  foreach (Round::allPlayed() as $round)
+  	$rounds_options[$round->round] = $round->round; 
   
   $form['#redirect'] = 'admin/fantacalcio/players';
     
@@ -2691,7 +2727,6 @@ function fantacalcio_admin_players_add_form($form_state) {
   $form['role'] = array(
     '#type' => 'select',
     '#title' => t('Ruolo'),
-    '#default_value' => $player->role,
     '#options' => array("P", "D", "C", "A"),
   );
   
@@ -2699,14 +2734,14 @@ function fantacalcio_admin_players_add_form($form_state) {
     '#type' => 'select',
     '#length' => 30,
 	'#title' => t('Squadra'),
-    '#options' => $real_teams_list
+    '#options' => $real_teams_options
   );
   
   $form['round'] = array(
     '#type' => 'select',
     '#length' => 30,
     '#title' => t('Giornata'),
-	'#options' => get_all_rounds_played(),
+	'#options' => $rounds_options,
   );
   
   $form['submit'] = array(
@@ -2821,7 +2856,7 @@ function competitions_count() {
 }
 
 function groups_count() {
-  $groups = get_groups();
+  $groups = Group::all();
   if (count($groups) > 0 ) return TRUE;
   return FALSE;
 }

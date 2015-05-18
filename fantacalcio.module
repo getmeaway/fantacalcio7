@@ -31,6 +31,7 @@ include "round.class.php";
 include "user.class.php";
 // include "fantacalcio.common.inc";
 include "fantacalcio.block.inc";
+include "fantacalcio.tooltip.inc";
 
 define("COMPETITION_TYPE_GP", 1);
 define("COMPETITION_TYPE_SD", 2);
@@ -1136,12 +1137,8 @@ function fantacalcio_menu () {
 	$items ['admin/fantacalcio/players/%'] = array(
 			'title' => 'Lista Giocatori',
 			'page callback' => 'fantacalcio_admin_players_list_player',
-			'page arguments' => array(
-					4 
-			),
-			'access arguments' => array(
-					'administer fantacalcio' 
-			),
+			'page arguments' => array(3),
+			'access arguments' => array('administer fantacalcio'),
 // 			'type' => MENU_LOCAL_TASK,
 			'weight' => 0,
 			'file' => 'fantacalcio.admin.inc',
@@ -1281,9 +1278,7 @@ function fantacalcio_theme ($existing, $type, $theme, $path) {
 					) 
 			),
 			'fantacalcio_admin_players_list_player' => array(
-					'arguments' => array(
-							"form" => NULL 
-					) 
+					'render element' => 'form' 
 			),
 			'fantacalcio_admin_round' => array(
 					'arguments' => array(

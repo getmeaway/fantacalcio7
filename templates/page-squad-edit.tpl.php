@@ -10,7 +10,7 @@
 					<li role="presentation"><a
 						href="<?php print base_path();?>mie/<?php print $t_id; ?>/rosa"><?php print t("Rosa"); ?></a>
 					</li>
-					<?php if (variable_get("fantacalcio_free_market", 1)): ?>
+					<?php if (variable_get("fantacalcio_free_movements", 1)): ?>
 				  	<li role="presentation" class="active"><a
 						href="<?php print base_path();?>mie/<?php print $t_id; ?>/movimenti"><?php print t("Movimenti"); ?></a>
 					</li>
@@ -102,22 +102,28 @@
 								</div>
 							</div>
 						</div>
+						
 					</div>
 				</div>
 				<div class='row'>
 					<div class='col-xs-12'>
 						<div class="input-group input-group-sm">
-							<span class="input-group-btn btn-group-custom"
-								data-toggle="buttons"> <label class="btn btn-default"> <input
-									type="checkbox" autocomplete="off" id="filter-role-0" />P
-							</label> <label class="btn btn-default" id="filter-role-1-label">
+							<input type="hidden" id="search-string" value="<?php print $search_string; ?>" />
+							<span class="input-group-btn btn-group-custom" data-toggle="buttons"> 
+								<label class="btn btn-default filter-role-label" id="filter-role-0-label"> 
+									<input type="checkbox" autocomplete="off" id="filter-role-0" />P
+								</label> 
+								<label class="btn btn-default filter-role-label" id="filter-role-1-label">
 									<input type="checkbox" autocomplete="off" id="filter-role-1" />D
-							</label> <label class="btn btn-default" id="filter-role-2-label">
+								</label> 
+								<label class="btn btn-default filter-role-label" id="filter-role-2-label">
 									<input type="checkbox" autocomplete="off" id="filter-role-2" />C
-							</label> <label class="btn btn-default" id="filter-role-3-label">
+								</label> 
+								<label class="btn btn-default filter-role-label" id="filter-role-3-label">
 									<input type="checkbox" autocomplete="off" id="filter-role-3" />A
-							</label>
-							</span> <span class="input-group-btn btn-group" role="group">
+								</label>
+							</span> 
+							<span class="input-group-btn btn-group" role="group">
 								<button type="button" class="btn btn-default dropdown-toggle"
 									data-toggle="dropdown" aria-expanded="false">
 									<span id="filter-team">Squadre</span> <span class="caret"></span>
@@ -184,21 +190,60 @@
 <script>
 (function ($) {
 	
-	$(function(){
+	$(document).ready(function(){
+				
+		function setSearchString() {
+			var s = "";
+
+			var role = "";
+			$(".filter-role-label.role-active").each(function() {
+				role += $(this).attr("id").split("-")[2] + "-";
+			});
+
+			var team = "";
+			$("#real-teams-list.dropdown-menu li a.team-active").each(function() {
+				team = $(this).attr("id").split("-")[2];
+			})
+
+			var text = $("#filter-name").val();
+
+			var orderAsc = "";
+			if ($("#players-list .sort-asc").length == 1)
+				orderAsc = "asc-" + $("#players-list .sort-asc").data("id");
+			
+			var orderDesc = "";
+			if ($("#players-list .sort-desc").length == 1)
+				orderDesc = "desc-" + $("#players-list .sort-desc").data("id");
+
+			console.log(orderDesc)
+			console.log(orderAsc)
+
+			s = role + "_" + team + "_" + text + "~" + orderAsc + orderDesc;
+
+			console.log(s);
+
+			//var end = location.href.indexOf("?") > -1 ? location.href.indexOf("?") : location.href.length; 
+			//history.pushState(null, null, location.href.substring(0, end) + "?s=" + s);
+
+			$(".search-string").val(s);
+		}
 
 		$("#clearSearch").click(function() {
-	    	$("#filter-role-0").prop('checked', false);
-		    $("#filter-role-1").prop('checked', false);
-		    $("#filter-role-2").prop('checked', false);
-		    $("#filter-role-3").prop('checked', false);
+			
+	    	$(".filter-role-label").removeClass('role-active').removeClass("active");		    
 	    	$("#filter-name").val("")
 	    	$("#filter-team").text("Squadre");
 	    	$("#filter-team").val($(this).text());
 	    	$("#players-list tbody tr").addClass("show-player").addClass("show-player-name").addClass("show-player-team").addClass("show-player-role").show();
+
+			setSearchString();
 		});
 
 	    $("#real-teams-list.dropdown-menu li a").click(function(){
 
+	    	$("#real-teams-list.dropdown-menu li a").removeClass("team-active");
+		    $(this).addClass("team-active");
+	    	
 	        if($(this).text() == " - ") {
 		    	$("#filter-team").text("Squadre");
 		    	$("#filter-team").val($(this).text());
@@ -215,9 +260,12 @@
 		       		return $(this).attr("data-team") === team;
 				}).addClass("show-player-team").show();
 	        }
+
+	    	setSearchString();
 	   });
 
 		$("#filter-name").keyup(function() {
+			
 		    var search = $(this).val().toLowerCase();
 		    if(search == "") {
 		       $("#players-list tbody tr.show-player-team.show-player-role").addClass("show-player-name").show();
@@ -231,44 +279,100 @@
 		       		return $(this).attr("data-name").toLowerCase().substring(0, search.length) === search;
 				}).addClass("show-player-name").show();        
 		    }
+		    
+			setSearchString();
 		});
 
-// 		$("#filter-role-0-label, #filter-role-1-label, #filter-role-2-label, #filter-role-3-label").click(function() {
-// 			$(this).find("input").trigger("click");
-// 		});
+		$(".filter-role-label").click(function() {
 
-		$("#filter-role-0, #filter-role-1, #filter-role-2, #filter-role-3").click(function() {
+			$(this).toggleClass("role-active")
+			
+			console.log($("#filter-role-0-label").hasClass("role-active") 
+					+ "|" +$("#filter-role-1-label").hasClass("role-active") 
+					+ "|" + $("#filter-role-2-label").hasClass("role-active") 
+					+ "|" + $("#filter-role-3-label").hasClass("role-active")); 
 	
-			if( !($("#filter-role-0").is(":checked")) 
-	    	    &&  !($("#filter-role-1").is(":checked")) 
-	    	    &&  !($("#filter-role-2").is(":checked")) 
-	    	    &&  !($("#filter-role-3").is(":checked")) )
+			if( !($("#filter-role-0-label").hasClass("role-active")) 
+	    	    &&  !($("#filter-role-1-label").hasClass("role-active")) 
+	    	    &&  !($("#filter-role-2-label").hasClass("role-active")) 
+	    	    &&  !($("#filter-role-3-label").hasClass("role-active")) )
 	    	{
+		    	console.log("ALL")
 		    	$("#players-list tr.show-player-team.show-player-name").addClass("show-player-role").show()
 			}
 		    else {
-			    if( $("#filter-role-0").is(":checked")){
-			        $("#players-list tr.role-0.show-player-team.show-player-name").addClass("show-player-role").show();}
+			    if( $("#filter-role-0-label").hasClass("role-active")){
+			        console.log("P");
+			        $("#players-list tr.role-0.show-player-team.show-player-name").addClass("show-player-role").show();
+			    }
 			    else
 			        $("#players-list tr.role-0.show-player-team.show-player-name").removeClass("show-player-role").hide();
 			    
-			    if( $("#filter-role-1").is(":checked"))
+			    if( $("#filter-role-1-label").hasClass("role-active")) {
+			        console.log("D");
 			        $("#players-list tr.role-1.show-player-team.show-player-name").addClass("show-player-role").show();
+			    }
 			    else
 			        $("#players-list tr.role-1.show-player-team.show-player-name").removeClass("show-player-role").hide();
 			    
-			    if( $("#filter-role-2").is(":checked"))
+			    if( $("#filter-role-2-label").hasClass("role-active")){
+			        console.log("C");
 			        $("#players-list tr.role-2.show-player-team.show-player-name").addClass("show-player-role").show();
+			    }
 			    else
 			        $("#players-list tr.role-2.show-player-team.show-player-name").removeClass("show-player-role").hide();
 			 
-			    if( $("#filter-role-3").is(":checked"))
+			    if( $("#filter-role-3-label").hasClass("role-active")){
+			        console.log("A");					    
 			        $("#players-list tr.role-3.show-player-team.show-player-name").addClass("show-player-role").show();
+			    }
 			    else
 			        $("#players-list tr.role-3.show-player-team.show-player-name").removeClass("show-player-role").hide();
 	        }
+
+			setSearchString();
 		});
 
+		$("#players-list th.sort-header").click(function() {
+			setSearchString();
+		})
+
+	});
+
+	$(document).ready(function(){
+
+		var q = $("#search-string").val()
+		
+		var s = q.split("~")[0];
+		var order = q.split("~")[1];
+
+		if (s.length > 0) {
+			//role
+			var role = s.split("_")[0];
+			for(var i = 0; i < role.split("-").length; i++) {
+				$("#filter-role-" + role.split("-")[i] + "-label").trigger("click");
+			}
+			
+			//team
+			var team = s.split("_")[1];
+			$("#real-teams-list.dropdown-menu li a#link-rt-" + team).trigger("click");
+			
+			//text
+			var text = s.split("_")[2];
+			$("#filter-name").val(text).trigger("keyup");
+		}
+
+		if (order.length > 0) {
+			var sort = order.split("-")[0];console.log(sort);
+			var field = order.split("-")[1];console.log(field);
+
+			$("#players-list th[data-id='" + field + "']").trigger("click");
+
+			if (!$("#players-list th[data-id='" + field + "']").hasClass("sort-" + sort)) {
+				$("#players-list th[data-id='" + field + "']").trigger("click");
+				console.log("d")
+			}
+		}
 	});
 
 	$(".buy-player").click(function() {

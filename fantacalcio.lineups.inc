@@ -23,7 +23,7 @@ function _fantacalcio_lineup_view($competition_name, $round_number =  null, $t_i
 
 	global $user;
 	  
-  $selected_competition = Competition::getByName($competition_name);
+  $selected_competition = Competition::getByName($competition_name); 
   
   $competitions = Competition::all(array("has_lineups" => 1));
   
@@ -35,15 +35,15 @@ function _fantacalcio_lineup_view($competition_name, $round_number =  null, $t_i
   	
 //   	$round = Round::getCompetitionRound($main_round_number, $c_id);
   	
-  	$round = Round::getByCompetitionRound($round_number, $competition->id);print_r($round);echo "<br>";
-  	
-  	if ($round == null)
+  	if ($selected_competition != null && $selected_competition->id == $competition->id)
+  		$round = Round::getByCompetitionRound($round_number, $competition->id);
+  	else 
   		$round = Round::getLastLineups($competition->id);
   	
   	$teams_list = array();
 
   	foreach($competition->groups as $g_id => $group) {
-  	
+  		
   		$teams = Team::allByGroupLineups($c_id, $g_id, $round->competition_round);
   	
   		$expanded = false;
@@ -387,6 +387,12 @@ function fantacalcio_lineup_insert_choose_competition($t_id, $competition_name =
 //fantacalcio_lineup_insert_start
 function fantacalcio_lineup_insert($competition, $team, $competition_round, $is_admin = FALSE) {
 	
+	//squadra non confermata --> redirect 
+	if (!$team->isSquadComplete()) {
+		drupal_set_message(t("Attenzione. Per inserire la formazione devi prima completare la ") . l(t("rosa"), "mie/" . $team->id . "/movimenti"), "error");
+		drupal_goto("formazioni/insert");
+	}
+	
 	global $user;
 	
 	$output = array();
@@ -712,7 +718,7 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
       $row_data = array();
       
       $row_data[] = array("data" => "<span class='fa-stack'>
-						<i class='fa fa-square fa-stack-2x role-" . $player->role . "'></i>
+						<i class='fa fa-square fa-stack-2x squad-player-role-" . $player->role . "'></i>
 						<i class='fa fa-stack-1x' style='color: white;'><span class='font-normal'>" . Player::convertRole($player->role) . "</span></i>
 					</span>", "class" => $classes);
       $row_data[] = array("data" => $player->name);
@@ -783,7 +789,7 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
 	    $row_data = array();
 	    
 	    $row_data[] = array("data" => "<span class='fa-stack'>
-							<i class='fa fa-square fa-stack-2x role-" . $regular->role . "'></i>
+							<i class='fa fa-square fa-stack-2x squad-player-role-" . $regular->role . "'></i>
 							<i class='fa fa-stack-1x' style='color: white;'><span class='font-normal'>" . Player::convertRole($regular->role) . "</span></i>
 						</span>", "class" => $classes);
 	    $row_data[] = array("data" => $regular->name);
@@ -841,7 +847,7 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
 	    $row_data = array();
 	    
 	    $row_data[] = array("data" => "<span class='fa-stack'>
-							<i class='fa fa-square fa-stack-2x role-" . $reserve->role . "'></i>
+							<i class='fa fa-square fa-stack-2x squad-player-role-" . $reserve->role . "'></i>
 							<i class='fa fa-stack-1x' style='color: white;'><span class='font-normal'>" . Player::convertRole($reserve->role) . "</span></i>
 						</span>", "class" => $classes);
 	    $row_data[] = array("data" => $reserve->name);
