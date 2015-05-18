@@ -114,75 +114,86 @@ class Lineup {
 			return FALSE;	
 	}
 	
-	function check(){
+	function getCheckValues() {
+
 		//massima posizione
-		$max_position = 0;
-		
-		foreach($this->positions as $position => $player) {
-			if ($position > $max_position)
-				$max_position = $position;
-		}
-	
+		$max_position = max(array_keys($this->positions));
+				
 		//inizializzo gli array
 		$positions = array();
 		for($j = 0; $j <= $max_position; $j++){
 			$positions[$j] = array(0, 0, 0, 0);
 		}
-	
+		
 		//conto gli elementi (per posizione e per ruolo)
 		foreach($this->positions as $position => $players) {
 			foreach($players as $pl_id => $player) {
-// 				$currPosition = $player['position'];
+				// 				$currPosition = $player['position'];
 				$currRole = $player->role;
 				$positions[$position][$currRole] = $positions[$position][$currRole] + 1;
 			}
 		}
-	
-		//moduli consentiti e numero giocatori
-		$check_number_1 = TRUE;
-		$check_module_1 = TRUE;
-		$check_number_2_3 = TRUE;
-		$check_module_2_3 = TRUE;
-		$modules_1 = array(array(1, 3, 4, 3), array(1, 3, 5, 2), array(1, 4, 3, 3), array(1, 4, 4, 2), array(1, 4, 5, 1), array(1, 5, 3, 2), array(1, 5, 4, 1), array(1, 6, 3, 1)); //TODO prenderli da variable_get
-		$modules_2 = array(array(1, 1, 1, 1));
-		$modules_3 = array(array(0, 1, 1, 1));
-	
-		//verifico titolari
+		
+		//titolari
+		$regulars_number = 0;
+		$regulars_module = array(0, 0, 0, 0);
+		
 		if (isset($positions[1]) && $positions[1] != null ) {
 			//numero titolari
-			$number_1 = $positions[1][0] + $positions[1][1] + $positions[1][2] + $positions[1][3];
-			if($number_1 != 11)
-				$check_number_1 = FALSE;
-	
+			$regulars_number = $positions[1][0] + $positions[1][1] + $positions[1][2] + $positions[1][3];
 			//modulo titolari
-			$module_1 = array($positions[1][0], $positions[1][1], $positions[1][2], $positions[1][3]);
-			if(!in_array($module_1, $modules_1))
-				$check_module_1 = FALSE;
+			$regulars_module = array($positions[1][0], $positions[1][1], $positions[1][2], $positions[1][3]);
 		}
-		else {
-			$check_number_1 = FALSE;
-			$check_module_1 = FALSE;
+				
+		$reserves_number = 0;
+		$reserves_role_0 = 0;
+		$reserves_role_1 = 0;
+		$reserves_role_2 = 0;
+		$reserves_role_3 = 0;
+		for($i = 2; $i <= $max_position; $i++ ) {
+			$reserves_number += $positions[$i][0] + $positions[$i][1] + $positions[$i][2] + $positions[$i][3];
+			$reserves_role_0 += $positions[$i][0];
+			$reserves_role_1 += $positions[$i][1];
+			$reserves_role_2 += $positions[$i][2];
+			$reserves_role_3 += $positions[$i][3];
 		}
+			
+		//modulo riserve
+		$reserves_module = array($reserves_role_0, $reserves_role_1, $reserves_role_2, $reserves_role_3);
+		
+		return array('regulars_number' => $regulars_number, 'regulars_module' => implode(" - ", $regulars_module), 'reserves_number' => $reserves_number, 'reserves_module' => implode(" - ", $reserves_module));
+	}
 	
-		//verifico riserve
-		if (isset($positions[2]) && $positions[2] != null && $positions[3] != null) {
-			//numero riserve
-			$number_2_3 = $positions[2][0] + $positions[2][1] + $positions[2][2] + $positions[3][3] + $positions[3][0] + $positions[3][1] + $positions[3][2] + $positions[3][3];
-			if($number_2_3 != 7)
-				$check_number_2_3 = FALSE;
-	
-			//modulo riserve
-			$module_2 = array($positions[2][0], $positions[2][1], $positions[2][2], $positions[2][3]);
-			$module_3 = array($positions[3][0], $positions[3][1], $positions[3][2], $positions[3][3]);
-			if(!in_array($module_2, $modules_2) || !in_array($module_3, $modules_3))
-				$check_module_2_3 = FALSE;
-		}
-		else {
-			$check_number_2_3 = FALSE;
-			$check_module_2_3 = FALSE;
-		}
-	
-		return array('regulars_number' => $check_number_1, 'regulars_module' => $check_module_1, 'reserves_number' => $check_number_2_3, 'reserves_module' => $check_module_2_3);
+	function check(){
+		
+		//valori
+		$check_values = $this->getCheckValues();
+		
+		//moduli consentiti
+		$regulars_modules = array(array(1, 3, 4, 3), array(1, 3, 5, 2), array(1, 4, 3, 3), array(1, 4, 4, 2), array(1, 4, 5, 1), array(1, 5, 3, 2), array(1, 5, 4, 1), array(1, 6, 3, 1)); //TODO prenderli da variable_get
+		$reserves_modules = array(array(1, 2, 2, 2));
+		
+		//verifico numero titolari
+		$check_regulars_number = true;
+		if($check_values["regulars_number"] != array_sum($regulars_modules[0]))
+			$check_regulars_number = false;
+
+		//verifico modulo titolari
+		$check_regulars_module = true;
+		if(!in_array(explode(" - ", $check_values["regulars_module"]), $regulars_modules))
+			$check_regulars_module = false;
+		
+		//verifico numero riserve
+		$check_reserves_number = true;
+		if($check_values["reserves_number"] != array_sum($reserves_modules[0]))
+			$check_reserves_number = false;
+
+		//verifico modulo riserve
+		$check_reserves_module = true;
+		if(!in_array(explode(" - ", $check_values["reserves_module"]), $reserves_modules))
+			$check_reserves_module = false;
+		
+		return array('regulars_number' => $check_regulars_number, 'regulars_module' => $check_regulars_module, 'reserves_number' => $check_reserves_number, 'reserves_module' => $check_reserves_module);
 	}
 	
 	function getModuleRegulars() {

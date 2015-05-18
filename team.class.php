@@ -320,6 +320,9 @@ class Team {
 			$num_players[$player->role]++;
 		}
 		
+		if (!isset($num_players[0]) || !isset($num_players[1]) || !isset($num_players[2]) || !isset($num_players[3]))
+			return false;
+		
 		return $num_players[0] == variable_get("fantacalcio_number_role_0", 0) 
 			&& $num_players[1] == variable_get("fantacalcio_number_role_1", 0)
 			&& $num_players[2] == variable_get("fantacalcio_number_role_2", 0)

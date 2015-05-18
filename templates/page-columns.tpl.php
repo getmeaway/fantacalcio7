@@ -51,7 +51,7 @@
 							</a>
 						</h4>
 					</div>
-					<div id="collapse-<?php print $t_id; ?>" class="panel-collapse collapse <?php print (($teams_group["expanded"]) ? "in" : ""); ?>" role="tabpanel" 
+					<div id="collapse-<?php print $t_id; ?>" class="list-group panel-collapse collapse <?php print (($teams_group["expanded"]) ? "in" : ""); ?>" role="tabpanel" 
 						aria-labelledby="heading-<?php print $t_id; ?>">
 						<?php if (count($teams_group["teams"]) > 0): ?>
 						<?php print ($teams_group["teams"]) ?>						

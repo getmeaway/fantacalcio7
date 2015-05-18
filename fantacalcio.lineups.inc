@@ -214,7 +214,7 @@ function show_position($position, $show_penalties = FALSE) {
       $rows[] = array(
               "data" => array(
                       array("data" => "<span class=\"fa-stack\">
-					<i class=\"fa fa-square fa-stack-2x role-" . $player->role . "\"></i>
+					<i class=\"fa fa-square fa-stack-2x squad-player-role-" . $player->role . "\"></i>
 					<i class=\"fa fa-stack-1x\" style=\"color: white;\"><span class=\"font-normal\">" . Player::convertRole($player->role) . "</span></i>
 				</span>", "class" => "role"),
                       array("data" => $player->name, "class" => "name"),
@@ -390,7 +390,7 @@ function fantacalcio_lineup_insert($competition, $team, $competition_round, $is_
 	//squadra non confermata --> redirect 
 	if (!$team->isSquadComplete()) {
 		drupal_set_message(t("Attenzione. Per inserire la formazione devi prima completare la ") . l(t("rosa"), "mie/" . $team->id . "/movimenti"), "error");
-		drupal_goto("formazioni/insert");
+		drupal_goto("formazioni");
 	}
 	
 	global $user;
@@ -422,8 +422,10 @@ function fantacalcio_lineup_insert($competition, $team, $competition_round, $is_
       
 		$lineup = Lineup::get($competition->id, $team->id, $round->competition_round);
     	if ($lineup != null)
-    		$output["lineup_check"] = show_line_up_check($lineup->check());
-    		  
+    		$output["lineup_check"] = show_line_up_check($lineup->check(), $lineup->getCheckValues());
+    	else 
+    		$output["lineup_check"] = show_line_up_check(array('regulars_number' => false, 'regulars_module' => false, 'reserves_number' => false, 'reserves_module' => false),
+    				array('regulars_number' => "", 'regulars_module' => "", 'reserves_number' => "", 'reserves_module' => ""));
     	//$out .= "<div id='_lineup_form'>" . drupal_render($lineup_form) . "</div>";
     
 		  
@@ -455,7 +457,7 @@ function fantacalcio_lineup_form($form, &$form_state, $competition, $team, $roun
 
   //form redirect (rigoristi se previsto il passaggio del turno)
   //if (is_passaggio_turno($args['c_id'], $args['round']) )
-    $form['#redirect'] = 'formazioni/insert/' . $competition->name . '/penalties' ;
+//     $form['#redirect'] = 'formazioni/insert/' . $competition->name . '/penalties' ;
   //else $form['#redirect'] = 'formazioni/view/' . get_competition_name($args['c_id']) . '/' . $args['round'] . '/' . $args['t_id'] ;
 
   if (isset($args['status']) && $args['status'] == 1)
@@ -481,37 +483,36 @@ function fantacalcio_lineup_form($form, &$form_state, $competition, $team, $roun
   $form['lineup'] = array(
     '#type' => 'hidden',
     '#value' => json_encode(Lineup::getForForm($competition->id, $team->id, $round->competition_round)),
-  	'#id' => "tmp-lineup",
+  	'#attributes' => array("id" => "tmp-lineup"),
   );
   
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => 'Invia',
-    '#disabled' => ($checks['regulars_number'] == 1 && $checks['regulars_module'] == 1 && $checks['reserves_number'] == 1 && $checks['reserves_module'] == 1),
-    '#validate' => array('fantacalcio_lineup_form_validate'),
-    '#id' => "line_up_submit",
-	'#prefix' => "<div class='ui-grid-a'><div class='ui-block-a'>",
-	'#suffix' => "</div>",
+//     '#disabled' => ($checks['regulars_number'] == 1 && $checks['regulars_module'] == 1 && $checks['reserves_number'] == 1 && $checks['reserves_module'] == 1),
+//     '#validate' => array('fantacalcio_lineup_form_validate'),
+    '#attributes' => array("id" => "line_up_submit", "class" => array("btn", "btn-success")),
   );
 
-  $form['clear'] = array(
-    '#type' => 'submit',
-    '#value' => 'Cancella',
-    '#validate' => array(
-      'fantacalcio_lineup_form_clear'
-    ),
-    '#attributes' => array(
-      'onclick' => "return confirm_reset_lineup()"
-    ),
-	'#prefix' => "<div class='ui-block-b'>",
-	'#suffix' => "</div></div>",
-  );
+//   $form['clear'] = array(
+//     '#type' => 'submit',
+//     '#value' => 'Cancella',
+//     '#validate' => array(
+//       'fantacalcio_lineup_form_clear'
+//     ),
+//     '#attributes' => array(
+//       'onclick' => "return confirm_reset_lineup()"
+//     ),
+// 	'#prefix' => "<div class='ui-block-b'>",
+// 	'#suffix' => "</div></div>",
+//   );
 
   return $form;
 }
 
 function fantacalcio_lineup_form_submit($form, &$form_state) {
   global $user;
+//   echo "ddd";die();
 
   $t_id = $form_state['values']['t_id'];
   $c_id = $form_state['values']['c_id'];
@@ -537,7 +538,7 @@ function fantacalcio_lineup_form_submit($form, &$form_state) {
     foreach($lineup as $pl_id => $player) {
       //insert
       if ($player->position > 0) {
-        $sql = "INSERT INTO {fanta_lineups} (t_id, pl_id, c_id, round, position, timestamp, uid) VALUES ('%d', '%d', '%d', '%d', '%d', '%d', '%d')";
+//         $sql = "INSERT INTO {fanta_lineups} (t_id, pl_id, c_id, round, position, timestamp, uid) VALUES ('%d', '%d', '%d', '%d', '%d', '%d', '%d')";
 //         db_query($sql, $t_id, $pl_id, $c_id, $round, $player->position, time(), $user->uid);
         
         $query = db_insert("fanta_lineups");
@@ -561,7 +562,7 @@ function fantacalcio_lineup_form_submit($form, &$form_state) {
   return;
 }
 
-function fantacalcio_lineup_form_clear($form, &$form_state) {
+function _fantacalcio_lineup_form_clear($form, &$form_state) {
 
   #cancella la lineup inserita
   
@@ -585,13 +586,13 @@ function fantacalcio_lineup_form_clear($form, &$form_state) {
 }
 
 function fantacalcio_lineup_form_validate($form, &$form_state) {
+// 	dpm($form_state);
+  $t_id = $form_state['values']['t_id'];
+  $c_id = $form_state['values']['c_id'];
+  $round = $form_state['values']['round'];
 
-  $t_id = $form_state['input']['t_id'];
-  $c_id = $form_state['input']['c_id'];
-  $round = $form_state['input']['round'];
-
-  $tmp_lineup = json_decode($form_state['input']['lineup']);
-  print_r($tmp_lineup);
+  $tmp_lineup = json_decode($form_state['values']['lineup']);
+//   print_r($tmp_lineup);
   
   $positions = array();
   foreach($tmp_lineup as $pl_id => $lineup_player) {
@@ -600,9 +601,9 @@ function fantacalcio_lineup_form_validate($form, &$form_state) {
   }
   
   $lineup = new Lineup();
-	$lineup->round = $form_state['values']['round'];
-	$lineup->team = Team::get($form_state['values']['t_id']);
-	$lineup->competition = Competition::get($form_state['values']['c_id']);
+	$lineup->round = $round;
+// 	$lineup->team = Team::get($t_id);
+// 	$lineup->competition = Competition::get($c_id);
 	$lineup->positions = $positions;	
   
 
@@ -610,39 +611,39 @@ function fantacalcio_lineup_form_validate($form, &$form_state) {
   $check_players_in_team = true; 
   foreach($lineup->positions as $position => $positions) {
   	if($position != 0) {
-	  	foreach($positions as $pl_id => $player) {
-	// 	    $sql = "SELECT * FROM {fanta_squads} WHERE pl_id = '%d' ANd t_id = '%d' AND in_team = 1";
+// 	  	foreach($positions as $pl_id => $player) {
+// 	// 	    $sql = "SELECT * FROM {fanta_squads} WHERE pl_id = '%d' ANd t_id = '%d' AND in_team = 1";
 		    
-		    $query = db_select("fanta_squads", "s");
-		    $query->condition("pl_id", $pl_id);
-		    $query->condition("t_id", $t_id);
-		    $query->condition("status", 1);
-		    $query->fields("s");
+// 		    $query = db_select("fanta_squads", "s");
+// 		    $query->condition("pl_id", $pl_id);
+// 		    $query->condition("t_id", $t_id);
+// 		    $query->condition("status", 1);
+// 		    $query->fields("s");
 		    
-		    $result = $query->execute();
-		    if ($result->rowCount() == 0) {
-		    	echo "ROSA ".$pl_id;
-		        form_set_error("", t("Errore nella formazione"));
-		    }
-	  	}
+// 		    $result = $query->execute();
+// 		    if ($result->rowCount() == 0) {
+// 		    	echo "ROSA ".$pl_id;
+// 		        form_set_error("", t("Errore nella formazione"));
+// 		    }
+// 	  	}
   	}
   }
 
   if ($check_players_in_team) {
     //check ruolo giocatori
     $check_players_role = true;
-    foreach($lineup->positions as $position => $positions) {
-	  	foreach($positions as $pl_id => $player) {
-	    	if (Player::get($pl_id)->role != $player->role) {	    		
-	          form_set_error("", t("Errore nella formazione"));
-	    	}
-	    }
-    }
+//     foreach($lineup->positions as $position => $positions) {
+// 	  	foreach($positions as $pl_id => $player) {
+// 	    	if (Player::get($pl_id)->role != $player->role) {	    		
+// 	          form_set_error("", t("Errore nella formazione"));
+// 	    	}
+// 	    }
+//     }
 
     if ($check_players_role) {
       //check modulo
       $checks = $lineup->check();//print_r($line_up); print_r($checks);die();
-
+// print_r($checks);
       if (!$checks['regulars_number'] && $checks['regulars_number'] != 1)
         form_set_error("", t("Errore nella formazione: Numero titolari errato - Numero titolari consentito: 11"));
       if (!$checks['regulars_module'] && $checks['regulars_module'] != 1)
@@ -654,7 +655,7 @@ function fantacalcio_lineup_form_validate($form, &$form_state) {
     }
     else {
       //error
-    	echo "MDOULO";
+    	echo "MODULO";
       form_set_error("", t("Errore nella formazione"));
     }
   }
@@ -663,6 +664,8 @@ function fantacalcio_lineup_form_validate($form, &$form_state) {
   	echo "ELSE";
     form_set_error("", t("Errore nella formazione"));
   }
+  
+  return;
 }
 
 function make_lineup($team, $competition, $round, $admin = FALSE) {
@@ -724,7 +727,7 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
       $row_data[] = array("data" => $player->name);
       $row_data[] = array("data" => ucwords(strtolower($player->team)));
       $row_data[] = array("data" => "<a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $player->pl_id . "' title='Dettagli giocatore'>" .
-      "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .
+      "<i class=\"fa fa-bar-chart\"></i>" .
       "</a>");
       
       $squad_rows[] = array("data" => $row_data, "class" => $classes, "data-id" => $player->pl_id, "data-name" => $player->name, "data-role" => $player->role);
@@ -795,7 +798,7 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
 	    $row_data[] = array("data" => $regular->name);
 	    $row_data[] = array("data" => ucwords(strtolower($regular->team)));
 	    $row_data[] = array("data" => "<a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $regular->id . "' title='Dettagli giocatore'>" .
-	    		"<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .   		
+	    		"<i class=\"fa fa-bar-chart\"></i>" .   		
 	    		"</a>");          
 	       
 	    $regulars_rows[] = array("data" => $row_data, "class" => $classes, "data-id" => $regular->id, "data-name" => $regular->name, "data-role" => $regular->role);
@@ -853,7 +856,7 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
 	    $row_data[] = array("data" => $reserve->name);
 	    $row_data[] = array("data" => ucwords(strtolower($reserve->team)));
 	    $row_data[] = array("data" => "<a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $reserve->id . "' title='Dettagli giocatore'>" .
-	    		"<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .
+	    		"<i class=\"fa fa-bar-chart\"></i>" .
 	    		"</a>");
 	
 	    $reserves_rows[] = array("data" => $row_data, "class" => $classes, "data-id" => $reserve->id, "data-name" => $reserve->name, "data-role" => $reserve->role);
@@ -930,7 +933,7 @@ function make_lineup_mobile($t_id, $c_id, $round, $admin = FALSE) {
                       array("data" => $players[$pl_id]->name, "width" => "40%"),
                       array("data" => ucwords(strtolower($players[$pl_id]->team)), "width" => "25%"),
                       array("data" => position_button($pl_id, $t_id, $c_id, $players[$pl_id]->role, $lineup[$pl_id]['position']), "width" => "25%", "id" => "button_" . $pl_id, "class" => "button"),
-                      array("data" => l("<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>", 
+                      array("data" => l("<i class=\"fa fa-bar-chart\"></i>", 
                               "scheda/giocatore/" . $pl_id,
                               array("html" => TRUE, "title" => "Dettagli giocatore", "attributes" => array("class" => "thickbox", "rel" => "lightframe", "data-role" => "button", "data-mini" => "true"))), "width" => "7%")
                       ));
@@ -1592,31 +1595,15 @@ function check_lineup_insert($t_id, $c_id, $round) {
     return "<img src='" . base_path() . drupal_get_path('module', 'fantacalcio') . "/images/no.png' title='lineup non inserita'>";
 }
 
-function show_line_up_check($checks) {
+function show_line_up_check($checks, $values) {
 
-//   if (false) {
-//     $out = "<ul data-role='listview' >
-// 			<li><img id='check_number_1' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["number_1"]) . "' class='ui-li-icon'>Numero Titolari</li>
-// 			<li><img id='check_module_1' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["module_1"]) . "' class='ui-li-icon'>Modulo Titolari</li>
-// 			<li><img id='check_number_2_3' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["number_2_3"]) . "' class='ui-li-icon'>Numero Riserve</li>
-// 			<li><img id='check_module_2_3' src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($checks["module_2_3"]) . "' class='ui-li-icon'>Modulo Riserve</li>
-// 			<li data-role='list-divider'>" . t("Legenda") . "</li>
-// 			<li><img class='legenda legenda-titolare ui-li-icon' src=''>" . t("Titolare") . "</li>
-// 			<li><img class='legenda legenda-riserva-1 ui-li-icon' src=''>" . t("Prima riserva") . "</li>
-// 			<li><img class='legenda legenda-riserva-2 ui-li-icon' src=''>" . t("Seconda riserva") . "</li>
-// 			<li><img class='legenda legenda-tribuna ui-li-icon' src=''>" . t("Tribuna") . "</li>
-// 		</ul>";
-		
-//     return $out;
-//   }
-//   else {
-    $rows = array();
-    $rows[] = array("data" => array(t("Numero Titolari"), "<span id=\"regulars_number\"><i class='fa " . ($checks["regulars_number"] ? "fa-check-circle" : "fa-delete") . "'></i></span>", 
-                                   t("Numero Riserve"),  "<span id=\"reserves_number\"><i class='fa " . ($checks["reserves_number"] ? "fa-check-circle" : "fa-delete") . "'></i></span>" ));
-    $rows[] = array("data" => array(t("Modulo Titolari"), "<span id=\"regulars_module\"><i class='fa " . ($checks["regulars_module"] ? "fa-check-circle" : "fa-delete") . "'></i></span>", 
-                                   t("Modulo Riserve"), "<span id=\"reserves_module\"><i class='fa " . ($checks["reserves_module"] ? "fa-check-circle" : "fa-delete") . "'></i></span>" ));					   
+	$rows = array();
+    $rows[] = array("data" => array(t("Numero Titolari"), "<span id=\"regulars_number_value\">" . $values["regulars_number"] . "</span>", "<span id=\"regulars_number\">" . fantacalcio_check_value($checks["regulars_number"]) . "</span>", 
+                                   t("Numero Riserve"), "<span id=\"reserves_number_value\">" . $values["reserves_number"] . "</span>", "<span id=\"reserves_number\">" . fantacalcio_check_value($checks["reserves_number"]) . "</span>" ));
+    $rows[] = array("data" => array(t("Modulo Titolari"), "<span id=\"regulars_module_value\">" . $values["regulars_module"] . "</span>", "<span id=\"regulars_module\">" . fantacalcio_check_value($checks["regulars_module"]) . "</span>", 
+                                   t("Modulo Riserve"), "<span id=\"reserves_module_value\">" . $values["reserves_module"] . "</span>", "<span id=\"reserves_module\">" . fantacalcio_check_value($checks["reserves_module"]) . "</span>" ));					   
 								   
-    return theme_table(array("header" => array(), "rows" => $rows, "attributes" => array("class" => array("table", "table-responsive")), "colgroups" => array(), "sticky" => "", "empty" => "", "caption" => ""));
+    return theme("table", array("header" => array(), "rows" => $rows, "attributes" => array("class" => array("table", "well", "table-responsive"))));
   
 }
 

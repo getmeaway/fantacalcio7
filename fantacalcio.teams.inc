@@ -934,7 +934,7 @@ function fantacalcio_buy_player_form_validate($form, &$form_state) {
 		form_set_error('', t("Impossibile completare l'operazione.") . " " . t('La squadra &egrave; gi&agrave; al completo'));
 	
 	//verifico numero giocatori del ruolo
-	if ($num_players[$player->role] >= variable_get("fantacalcio_number_role_" . $player->role	, 0))
+	if (isset($num_players[$player->role]) && $num_players[$player->role] >= variable_get("fantacalcio_number_role_" . $player->role	, 0))
 		form_set_error('', t("Impossibile completare l'operazione.") . " " . t('Il ruolo &egrave; gi&agrave; al completo'));
 	//echo $form_state["input"]["search_string"]; die();
 // 	drupal_goto("mie/" . $form_state["input"]["t_id"] . "/movimenti" , array("query" => array("s" => $form_state["input"]["search_string"])));

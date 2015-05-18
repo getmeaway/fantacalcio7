@@ -30,7 +30,7 @@ function changePosition(pl_id, t_id, c_id, role, position) {
 	var positionNames = new Array("Tribuna", "Titolare", "Riserva 1", "Riserva 2");
 
 	jQuery("#" + pl_id + '_' + position).show();
-	//$("#" + pl_id + '_' + oldPosition).children().html(positionNames[oldPosition]);
+	//jQuery("#" + pl_id + '_' + oldPosition).children().html(positionNames[oldPosition]);
 	jQuery("#" + pl_id + '_' + oldPosition).hide();		
 
 	//update arrays
@@ -147,12 +147,14 @@ jQuery(function() {
 
 			jQuery("input[name='lineup']").val("" + JSON.stringify(_line_up));
 
-			//$("#show-line-up").val(showObject(_line_up, pl_id));
+			//jQuery("#show-line-up").val(showObject(_line_up, pl_id));
 
-			var checks = [true, true, true, true];//checkLineUp(_line_up);
+			var checks = checkLineUp(_line_up);
 
-			if (checks[0] && checks[1] && checks[2] && checks[3])
+			if (checks[0] && checks[1] && checks[2] && checks[3]) {
 				jQuery("#line_up_submit").removeAttr("disabled").css("opacity", "1");
+				jQuery("#lineup-form-modal").modal();
+			}
 			else
 				jQuery("#line_up_submit").attr("disabled", "disabled").css("opacity", "0.5");
 
@@ -193,3 +195,137 @@ jQuery(function() {
     	  },
     }).disableSelection();
   });
+
+
+function inArray(needle, haystack) {
+    for(var i = 0; i < haystack.length; i++) {
+	    if(haystack[i] === needle) return true;
+    }
+    return false;
+}
+
+function inArrayTwoLevels(needle, haystack) {
+    for(var i = 0; i < haystack.length; i++) {
+		var check = true;
+		if (haystack[i].length == needle.length) {
+			for(var j = 0; j < haystack[i].length; j++) {
+				if(haystack[i][j] != needle[j]) 
+					check = false;
+			}
+			if (check)
+				return true;
+		}
+    }
+    return false;
+}
+
+//check lineup
+function checkLineUp(line_up){
+	//massima posizione
+	var maxPosition = 0;
+	for(var i = 0; i < Object.keys(line_up).length; i++){
+		var key = Object.keys(line_up)[i];
+		if (line_up[key].position > maxPosition)
+			maxPosition = line_up[key].position;
+	}
+
+	//inizializzo gli array
+	var positions = new Array();
+	for(var j = 0; j <= maxPosition; j++){
+		positions[j] = new Array(0, 0, 0, 0);
+	}
+
+	//conto gli elementi (per posizione e per ruolo)
+	
+	for(var k = 0; k < Object.keys(line_up).length; k++){
+		var key = Object.keys(line_up)[k];
+		var currPosition = parseInt(line_up[key].position);
+		var currRole = parseInt(line_up[key].role);
+		
+		positions[currPosition][currRole]++;
+	}
+
+	//moduli consentiti e numero giocatori
+	var check_regulars_number = false; 
+	var check_regulars_module = false; 
+	var check_reserves_number = false; 
+	var check_reserves_module = false;
+	
+	var regulars_modules = new Array(new Array(1, 3, 4, 3), new Array(1, 3, 5, 2), new Array(1, 4, 3, 3), new Array(1, 4, 4, 2), new Array(1, 4, 5, 1), new Array(1, 5, 3, 2), new Array(1, 5, 4, 1), new Array(1, 6, 3, 1));
+	var reserves_modules = new Array(new Array(1, 2, 2, 2));
+	//var modules_3 = new Array(new Array(0, 1, 1, 1));
+
+	//verifico titolari
+	var regulars_module = new Array(0, 0, 0, 0);
+	if (positions[1] != undefined ) {
+		//numero titolari
+		var regulars_number = positions[1][0] + positions[1][1] + positions[1][2] + positions[1][3]; 
+		if(regulars_number == 11)
+			check_regulars_number = true;
+		else 
+			check_regulars_number = false;
+			
+		//modulo titolari
+		regulars_module = new Array(positions[1][0], positions[1][1], positions[1][2], positions[1][3]);
+		if(inArrayTwoLevels(regulars_module, regulars_modules)) 
+			check_regulars_module = true;
+		else 
+			check_regulars_module = false;
+
+	}
+
+	//verifico riserve
+	//if (maxPosition > 1 ) {
+	
+		//numero riserve
+		var number_reserves = 0;
+		var reserves_role_0 = 0;
+		var reserves_role_1 = 0;
+		var reserves_role_2 = 0;
+		var reserves_role_3 = 0;
+		for(var i = 2; i <= maxPosition; i++ ) {
+			number_reserves += positions[i][0] + positions[i][1] + positions[i][2] + positions[i][3];
+			reserves_role_0 += positions[i][0];
+			reserves_role_1 += positions[i][1];
+			reserves_role_2 += positions[i][2];
+			reserves_role_3 += positions[i][3];
+		}
+	
+		if(number_reserves == 7)
+			check_reserves_number = true;
+		else 
+			check_reserves_number = false;
+
+		//modulo riserve
+		var reserves_module = new Array(reserves_role_0, reserves_role_1, reserves_role_2, reserves_role_3);
+		//var module_3 = new Array(positions[3][0], positions[3][1],positions[3][2], positions[3][3]);
+		if(inArrayTwoLevels(reserves_module, reserves_modules) ) 
+			check_reserves_module = true;
+		else 
+			check_reserves_module = false;
+	//}
+	
+	for(var i = 2; i <= maxPosition; i++ ) {
+	
+	}
+	
+	//update images	
+	jQuery("#regulars_number_value").html(regulars_number);
+	jQuery("#regulars_module_value").html(regulars_module.join(" - "));
+	jQuery("#reserves_number_value").html(number_reserves);
+	jQuery("#reserves_module_value").html(reserves_module.join(" - "));
+	
+	jQuery("#regulars_number i").removeClass("fa-check-circle").removeClass("fa-minus-circle").addClass(check_regulars_number == true ? "fa-check-circle" : "fa-minus-circle");
+	jQuery("#regulars_module i").removeClass("fa-check-circle").removeClass("fa-minus-circle").addClass(check_regulars_module == true ? "fa-check-circle" : "fa-minus-circle");
+	jQuery("#reserves_number i").removeClass("fa-check-circle").removeClass("fa-minus-circle").addClass(check_reserves_number == true ? "fa-check-circle" : "fa-minus-circle");
+	jQuery("#reserves_module i").removeClass("fa-check-circle").removeClass("fa-minus-circle").addClass(check_reserves_module == true ? "fa-check-circle" : "fa-minus-circle");
+	jQuery("#regulars_number i").removeClass("text-success").removeClass("text-danger").addClass(check_regulars_number == true ? "text-success" : "text-danger");
+	jQuery("#regulars_module i").removeClass("text-success").removeClass("text-danger").addClass(check_regulars_module == true ? "text-success" : "text-danger");
+	jQuery("#reserves_number i").removeClass("text-success").removeClass("text-danger").addClass(check_reserves_number == true ? "text-success" : "text-danger");
+	jQuery("#reserves_module i").removeClass("text-success").removeClass("text-danger").addClass(check_reserves_module == true ? "text-success" : "text-danger");
+	
+	//risultato
+	console.log(check_regulars_number, check_regulars_module, check_reserves_number, check_reserves_module);
+	
+	return new Array(check_regulars_number, check_regulars_module, check_reserves_number, check_reserves_module);
+}
