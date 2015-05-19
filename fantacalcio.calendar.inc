@@ -653,10 +653,10 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $empt
 
   $rows = array();
   $rows[] = array("Punti", $points);
-  if (variable_get("fantacalcio_modificatore_portiere", 0) ) $rows[] = array("Mod Portiere", $mod['por']);
-  if (variable_get("fantacalcio_modificatore_difesa", 0) ) $rows[] = array("Mod Difesa", $mod['dif']);
-  if (variable_get("fantacalcio_modificatore_centrocampo", 0) ) $rows[] = array("Mod Centrocampo", $mod['centr']);
-  if (variable_get("fantacalcio_modificatore_attacco", 0) ) $rows[] = array("Mod Attacco", $mod['att']);
+  if (variable_get("fantacalcio_modifier_role_0", 0) ) $rows[] = array("Mod Portiere", $mod['por']);
+  if (variable_get("fantacalcio_modifier_role_1", 0) ) $rows[] = array("Mod Difesa", $mod['dif']);
+  if (variable_get("fantacalcio_modifier_role_2", 0) ) $rows[] = array("Mod Centrocampo", $mod['centr']);
+  if (variable_get("fantacalcio_modifier_role_3", 0) ) $rows[] = array("Mod Attacco", $mod['att']);
 
   if ($bonus) $rows[] = array("Bonus", $bonus);
 

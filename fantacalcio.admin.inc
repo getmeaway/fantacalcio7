@@ -11,7 +11,7 @@
 
 function fantacalcio_admin_settings() {
 
-  $form["fantacalcio_generali"] = array(
+  $form["fantacalcio_generals"] = array(
     "#type" => "fieldset",
     "#collapsed" => TRUE,
     "#collapsible" => TRUE,
@@ -34,7 +34,7 @@ function fantacalcio_admin_settings() {
 //     '#description' => t('Competizione di Coppa per la Lega.'),
 //   );
   
-  $form["fantacalcio_generali"]['fantacalcio_credits'] = array(
+  $form["fantacalcio_generals"]['fantacalcio_credits'] = array(
     '#type' => 'textfield',
     '#title' => t('Crediti'),
     '#default_value' => variable_get('fantacalcio_credits', '350'),
@@ -43,123 +43,166 @@ function fantacalcio_admin_settings() {
     '#description' => t('Numero di crediti per creare la propria rosa.'),
   );
 
-  $form["fantacalcio_generali"]['fantacalcio_scarto'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Vittoria con scarto'),
-    '#default_value' => variable_get('fantacalcio_scarto', '0'),
-    '#description' => t('Selezionare se si assegna la vittoria ad una squadra che supera di tot punti l\'avversaria.'),
+  $form["fantacalcio_generals"]['fantacalcio_free_movements'] = array(
+  		'#type' => 'checkbox',
+  		'#title' => t('Movimenti liberi'),
+  		'#default_value' => variable_get('fantacalcio_free_movements', '0'),
+  		'#description' => t('Selezionare se ogni squadra può gestire la propria rosa autonomamente.'),
+  );
+
+  $form["fantacalcio_generals"]['fantacalcio_max_movements'] = array(
+  		'#type' => 'select',
+  		'#title' => t('Numero massimo movimenti'),
+  		'#default_value' => variable_get('fantacalcio_max_movements', '0'),
+  		'#options' => (array("-1" => "Nessun limite") + range(0, 100)),
+  		'#description' => t('Numero massimo di movimenti che ogni squadra può compiere durante la stagione.'),
+  );
+
+  $form["fantacalcio_generals"]['fantacalcio_show_teams_filter'] = array(
+  		'#type' => 'select',
+  		'#title' => t('Mostra filtro squadre'),
+  		'#default_value' => variable_get('fantacalcio_show_teams_filter', '0'),
+  		'#options' => (array("-1" => "Non mostrare") + range(0, 100)),
+  		'#description' => t('Numero minimo di squadre presenti in lista affiché venga mostrato il filtro.'),
   );
   
-  $form["fantacalcio_generali"]['fantacalcio_scarto_punti'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Differenza tra i punteggi per la vittoria'),
-    '#default_value' => variable_get('fantacalcio_scarto_punti', '0'),
-    '#description' => t('Selezionare il numero di punti minimi di differenza tra le due squadre per assegnare la vittoria.'),
-  );
-  
-  $form["fantacalcio_generali"]['fantacalcio_riserve_fisse'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Riserve fisse'),
-    '#default_value' => variable_get('fantacalcio_riserve_fisse', '0'),
-    '#description' => t('Selezionare se in formazione vanno inserite 2 riserve per ruolo (1 portiere).'),
-  );
-    
-  $form["fantacalcio_rosa"] = array(
+  $form["fantacalcio_team"] = array(
     "#type" => "fieldset",
     "#collapsed" => TRUE,
     "#collapsible" => TRUE,
-    "#title" => "Rosa",
-  );
-    
-  $form['fantacalcio_rosa']['fantacalcio_number_role_0'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Numero Portieri'),
-    '#default_value' => variable_get('fantacalcio_number_role_0', '3'),
-    '#size' => 3,
-    '#maxlength' => 3,
-    '#description' => t('Numero di portieri da inserire in rosa.'),
+    "#title" => t("Squadre"),
   );
   
-  $form['fantacalcio_rosa']['fantacalcio_number_role_1'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Numero Difensori'),
-    '#default_value' => variable_get('fantacalcio_number_role_1', '8'),
-    '#size' => 3,
-    '#maxlength' => 3,
-    '#description' => t('Numero di difensori da inserire in rosa.'),
+  $form["fantacalcio_team"]['fantacalcio_user_can_create_team'] = array(
+  		'#type' => 'checkbox',
+  		'#title' => t('Selezionare se l\'utente può creare squadre in maniera autonoma'),
+  		'#default_value' => variable_get('fantacalcio_user_can_create_team', '0'),
+  		'#description' => t('Selezionare se l\'utente può creare squadre in maniera autonoma.'),
+  );
+
+  $form['fantacalcio_team']['fantacalcio_user_teams_limit'] = array(
+  		'#type' => 'textfield',
+  		'#title' => t('Limite al numero di squadre che l\'utente può creare'),
+  		'#default_value' => variable_get('fantacalcio_user_teams_limit', '0'),
+  		'#options' => array("-1" => "Nessun limite") + range(0, 100),
+  		'#description' => t('Limite al numero di squadre che l\'utente può creare.'),
+  );
+
+  $form["fantacalcio_team"]['fantacalcio_team_change_name'] = array(
+  		'#type' => 'checkbox',
+  		'#title' => t('Selezionare se l\'utente può modificare il nome della propria squadre'),
+  		'#default_value' => variable_get('fantacalcio_team_change_name', '0'),
+  		'#description' => t('Selezionare se l\'utente può modificare il nome della propria squadre.'),
+  );
+
+  $form["fantacalcio_team"]['fantacalcio_assign_default_role'] = array(
+  		'#type' => 'checkbox',
+  		'#title' => t('Selezionare se assegnare in modo automatico il ruolo di "allenatore" agli utenti'),
+  		'#default_value' => variable_get('fantacalcio_assign_default_role', '0'),
+  		'#description' => t('Selezionare se assegnare in modo automatico il ruolo di "allenatore" agli utenti. (Consigliato in caso di leghe aperte)'),
   );
   
-  $form['fantacalcio_rosa']['fantacalcio_number_role_2'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Numero Centrocampisti'),
-    '#default_value' => variable_get('fantacalcio_number_role_2', '8'),
-    '#size' => 3,
-    '#maxlength' => 3,
-    '#description' => t('Numero di centrocampisti da inserire in rosa.'),
+
+  $form['fantacalcio_team']['fantacalcio_number_players'] = array(
+  		'#type' => 'textfield',
+  		'#title' => t('Numero giocatori della squadra'),
+  		'#default_value' => variable_get('fantacalcio_number_players', '25'),
+  		'#size' => 3,
+  		'#maxlength' => 3,
+  		'#description' => t('Numero di giocatori da acquistare per completare la rosa.'),
   );
   
-  $form['fantacalcio_rosa']['fantacalcio_number_role_3'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Numero Attaccanti'),
-    '#default_value' => variable_get('fantacalcio_number_role_3', '6'),
-    '#size' => 3,
-    '#maxlength' => 3,
-    '#description' => t('Numero di attaccanti da inserire in rosa.'),
+  $form['fantacalcio_team']['fantacalcio_number_role_0'] = array(
+  		'#type' => 'textfield',
+  		'#title' => t('Numero Portieri'),
+  		'#default_value' => variable_get('fantacalcio_number_role_0', '3'),
+  		'#size' => 3,
+  		'#maxlength' => 3,
+  		'#description' => t('Numero di portieri da inserire in rosa.'),
   );
   
-  $form["fantacalcio_moduli"] = array(
-    "#type" => "fieldset",
-    "#collapsed" => TRUE,
-    "#collapsible" => TRUE,
-    "#title" => "Moduli",
+  $form['fantacalcio_team']['fantacalcio_number_role_1'] = array(
+  		'#type' => 'textfield',
+  		'#title' => t('Numero Difensori'),
+  		'#default_value' => variable_get('fantacalcio_number_role_1', '8'),
+  		'#size' => 3,
+  		'#maxlength' => 3,
+  		'#description' => t('Numero di difensori da inserire in rosa.'),
   );
   
-  $form["fantacalcio_moduli"]['fantacalcio_moduli_titolari'] = array(
+  $form['fantacalcio_team']['fantacalcio_number_role_2'] = array(
+  		'#type' => 'textfield',
+  		'#title' => t('Numero Centrocampisti'),
+  		'#default_value' => variable_get('fantacalcio_number_role_2', '8'),
+  		'#size' => 3,
+  		'#maxlength' => 3,
+  		'#description' => t('Numero di centrocampisti da inserire in rosa.'),
+  );
+  
+  $form['fantacalcio_team']['fantacalcio_number_role_3'] = array(
+  		'#type' => 'textfield',
+  		'#title' => t('Numero Attaccanti'),
+  		'#default_value' => variable_get('fantacalcio_number_role_3', '6'),
+  		'#size' => 3,
+  		'#maxlength' => 3,
+  		'#description' => t('Numero di attaccanti da inserire in rosa.'),
+  );
+
+  $form['fantacalcio_team']['fantacalcio_admin_contact_url'] = array(
+  		'#type' => 'textfield',
+  		'#title' => t('Link per contattare l\'amministratore di lega per poter creare una squadra'),
+  		'#default_value' => variable_get('fantacalcio_admin_contact_url', ''),
+  		'#size' => 64,
+  		'#maxlength' => 64,
+  		'#description' => t('Link per contattare l\'amministratore di lega per poter creare una squadra.'),
+  );
+  
+  $form["fantacalcio_results"] = array(
+  		"#type" => "fieldset",
+  		"#collapsed" => TRUE,
+  		"#collapsible" => TRUE,
+  		"#title" => t("Calcolo Risultati"),
+  );
+  
+  $form["fantacalcio_results"]['fantacalcio_regulars_modules'] = array(
     '#type' => 'textarea',
     '#title' => t('Moduli titolari'),
-    '#default_value' => variable_get('fantacalcio_moduli_titolari', ''),
+    '#default_value' => variable_get('fantacalcio_regulars_modules', ''),
     '#description' => t('Moduli permessi per i titolari (un modulo per riga, es: 1-4-4-2 o 1-3-5-2)'),
   );
   
-  $form["fantacalcio_moduli"]['fantacalcio_moduli_riserve'] = array(
+  $form["fantacalcio_results"]['fantacalcio_reserves_modules'] = array(
     '#type' => 'textarea',
     '#title' => t('Moduli riserve'),
-    '#default_value' => variable_get('fantacalcio_moduli_riserve', ''),
+    '#default_value' => variable_get('fantacalcio_reserves_modules', ''),
     '#description' => t('Moduli permessi per le riserve (un modulo per riga, es: 1-4-4-2 o 1-3-5-2)'),
   );
   
-  $form["fantacalcio_modificatori"] = array(
-    "#type" => "fieldset",
-    "#collapsed" => TRUE,
-    "#collapsible" => TRUE,
-    "#title" => "Modificatori",
-  );
-  
-  $form["fantacalcio_modificatori"]['fantacalcio_modificatore_portiere'] = array(
+  $form["fantacalcio_results"]['fantacalcio_modifier_role_0'] = array(
     '#type' => 'checkbox',
     '#title' => t('Modificatore Portiere'),
-    '#default_value' => variable_get('fantacalcio_modificatore_portiere', '0'),
+    '#default_value' => variable_get('fantacalcio_modifier_role_0', '0'),
     '#description' => t('Selezionare se si applica il modificatore del portiere.'),
   );
   
-  $form["fantacalcio_modificatori"]['fantacalcio_modificatore_difesa'] = array(
+  $form["fantacalcio_results"]['fantacalcio_modifier_role_1'] = array(
     '#type' => 'checkbox',
     '#title' => t('Modificatore Difesa'),
-    '#default_value' => variable_get('fantacalcio_modificatore_difesa', '0'),
+    '#default_value' => variable_get('fantacalcio_modifier_role_1', '0'),
     '#description' => t('Selezionare se si applica il modificatore della difesa.'),
   );
   
-  $form["fantacalcio_modificatori"]['fantacalcio_modificatore_centrocampo'] = array(
+  $form["fantacalcio_results"]['fantacalcio_modifier_role_2'] = array(
     '#type' => 'checkbox',
     '#title' => t('Modificatore Centrocampo'),
-    '#default_value' => variable_get('fantacalcio_modificatore_centrocampo', '0'),
+    '#default_value' => variable_get('fantacalcio_modifier_role_2', '0'),
     '#description' => t('Selezionare se si applica il modificatore del centrocampo.'),
   );
   
-  $form["fantacalcio_modificatori"]['fantacalcio_modificatore_attacco'] = array(
+  $form["fantacalcio_results"]['fantacalcio_modifier_role_3'] = array(
     '#type' => 'checkbox',
     '#title' => t('Modificatore Attacco'),
-    '#default_value' => variable_get('fantacalcio_modificatore_attacco', '0'),
+    '#default_value' => variable_get('fantacalcio_modifier_role_3', '0'),
     '#description' => t('Selezionare se si applica il modificatore dell\'attacco.'),
   );
     
@@ -167,7 +210,7 @@ function fantacalcio_admin_settings() {
     "#type" => "fieldset",
     "#collapsed" => TRUE,
     "#collapsible" => TRUE,
-    "#title" => "Bonus e malus",
+    "#title" => t("Punteggi"),
   );
 
   $form["fantacalcio_points"]['fantacalcio_points_goals_for'] = array(
@@ -269,7 +312,15 @@ function fantacalcio_admin_settings() {
     '#description' => t('Punteggio attribuito per ogni gol vittoria'),
   );
 
-  $form["fantacalcio_points"]['fantacalcio_default_vote_1'] = array(
+  $form["fantacalcio_results"]['fantacalcio_max_substitutions'] = array(
+  		'#type' => 'select',
+  		'#title' => t('Numero massimo di sostituzioni per squadra'),
+  		'#default_value' => variable_get('fantacalcio_max_substitutions', '0'),
+  		'#options' => (array("-1" => "Nessun limite") + range(0, 11)),
+  		'#description' => t('Numero massimo di sostituzioni per squadra'),
+  );
+  
+  $form["fantacalcio_results"]['fantacalcio_default_vote_1'] = array(
     '#type' => 'textfield',
     '#title' => t('Voto di default #1'),
     '#default_value' => variable_get('fantacalcio_default_vote_1', '6'),
@@ -278,7 +329,7 @@ function fantacalcio_admin_settings() {
     '#description' => t('Voto di default #1 per i giocatori non scesi in campo'),
   );
   
-  $form["fantacalcio_points"]['fantacalcio_default_vote_2'] = array(
+  $form["fantacalcio_results"]['fantacalcio_default_vote_2'] = array(
     '#type' => 'textfield',
     '#title' => t('Voto di default #2'),
     '#default_value' => variable_get('fantacalcio_default_vote_2', '6'),
@@ -287,118 +338,88 @@ function fantacalcio_admin_settings() {
     '#description' => t('Voto di default #2 per i giocatori non scesi in campo'),
   );
 
-  $form["fantacalcio_voti_params"] = array(
+
+  $form["fantacalcio_results"]['fantacalcio_gap_victory'] = array(
+  		'#type' => 'checkbox',
+  		'#title' => t('Vittoria con scarto'),
+  		'#default_value' => variable_get('fantacalcio_gap_victory', '0'),
+  		'#description' => t('Selezionare se si assegna la vittoria ad una squadra che supera di tot punti l\'avversaria.'),
+  );
+  
+  $form["fantacalcio_results"]['fantacalcio_gap_victory_points'] = array(
+  		'#type' => 'textfield',
+  		'#title' => t('Differenza tra i punteggi per la vittoria'),
+  		'#default_value' => variable_get('fantacalcio_gap_victory_points', '0'),
+  		'#description' => t('Selezionare il numero di punti minimi di differenza tra le due squadre per assegnare la vittoria.'),
+  );
+  
+  $form["fantacalcio_data_load"] = array(
     "#type" => "fieldset",
     "#collapsed" => TRUE,
     "#collapsible" => TRUE,
-    "#title" => t("Caricamento Voti"),
+    "#title" => t("Caricamento Dati"),
   );
   
-  $form["fantacalcio_voti_params"]['fantacalcio_votes_provider'] = array(
+  $form["fantacalcio_data_load"]['fantacalcio_votes_provider'] = array(
     '#type' => 'select',
-    '#title' => t('Fonte dei voti su Fantagazzetta.com'),
+    '#title' => t('Redazione di Fantagazzetta.com da cui estrarre i voti'),
     '#default_value' => variable_get('fantacalcio_votes_provider', ''),
 	'#options' => get_providers_for_select(),
     '#description' => t('Redazione di Fantagazzetta.com che fornisce i voti per il conteggio'),
   );
 
-  $form["fantacalcio_voti_params"]['fantacalcio_voti_login_username'] = array(
+  $form["fantacalcio_data_load"]['fantacalcio_votes_login_username'] = array(
     '#type' => 'textfield',
     '#title' => t('Username per login su Fantagazzetta.com'),
-    '#default_value' => variable_get('fantacalcio_voti_login_username', ''),
+    '#default_value' => variable_get('fantacalcio_votes_login_username', ''),
     '#size' => 255,
     '#maxlength' => 255,
     '#description' => t('Username per login su Fantagazzetta.com'),
   );
 
-  $form["fantacalcio_voti_params"]['fantacalcio_voti_login_password'] = array(
+  $form["fantacalcio_data_load"]['fantacalcio_votes_login_password'] = array(
     '#type' => 'textfield',
     '#title' => t('Password per login su Fantagazzetta.com'),
-    '#default_value' => variable_get('fantacalcio_voti_login_password', ''),
+    '#default_value' => variable_get('fantacalcio_votes_login_password', ''),
     '#size' => 255,
     '#maxlength' => 255,
     '#description' => t('Password per login su Fantagazzetta.com'),
   );
 
-  $form["fantacalcio_voti_params"]['fantacalcio_voti_login_page'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Url per login su Fantagazzetta.com'),
-    '#default_value' => variable_get('fantacalcio_voti_login_page', ''),
-    '#size' => 255,
-    '#maxlength' => 255,
-    '#description' => t('Url per login su Fantagazzetta.com'),
-  );
-
-  $form["fantacalcio_voti_params"]['fantacalcio_voti_secured_page'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Url pagina voti su Fantagazzetta.com'),
-    '#default_value' => variable_get('fantacalcio_voti_secured_page', ''),
-    '#size' => 255,
-    '#maxlength' => 255,
-    '#description' => t('Url pagina voti su Fantagazzetta.com'),
-  );
-
-  $form["fantacalcio_voti_params"]['fantacalcio_lista_portieri_page'] = array(
+  $form["fantacalcio_data_load"]['fantacalcio_players_list_role_0'] = array(
     '#type' => 'textfield',
     '#title' => t('Url lista portieri su Fantagazzetta.com'),
-    '#default_value' => variable_get('fantacalcio_lista_portieri_page', ''),
+    '#default_value' => variable_get('fantacalcio_players_list_role_0', ''),
     '#size' => 255,
     '#maxlength' => 255,
     '#description' => t('Url lista portieri su Fantagazzetta.com'),
   );
 
-  $form["fantacalcio_voti_params"]['fantacalcio_lista_difensori_page'] = array(
+  $form["fantacalcio_data_load"]['fantacalcio_players_list_role_1'] = array(
     '#type' => 'textfield',
     '#title' => t('Url lista difensori su Fantagazzetta.com'),
-    '#default_value' => variable_get('fantacalcio_lista_difensori_page', ''),
+    '#default_value' => variable_get('fantacalcio_players_list_role_1', ''),
     '#size' => 255,
     '#maxlength' => 255,
     '#description' => t('Url lista difensori su Fantagazzetta.com'),
   );
 
-  $form["fantacalcio_voti_params"]['fantacalcio_lista_centrocampisti_page'] = array(
+  $form["fantacalcio_data_load"]['fantacalcio_players_list_role_2'] = array(
     '#type' => 'textfield',
     '#title' => t('Url lista centrocampisti su Fantagazzetta.com'),
-    '#default_value' => variable_get('fantacalcio_lista_centrocampisti_page', ''),
+    '#default_value' => variable_get('fantacalcio_players_list_role_2', ''),
     '#size' => 255,
     '#maxlength' => 255,
     '#description' => t('Url lista centrocampisti su Fantagazzetta.com'),
   );
 
-  $form["fantacalcio_voti_params"]['fantacalcio_lista_attaccanti_page'] = array(
+  $form["fantacalcio_data_load"]['fantacalcio_players_list_role_3'] = array(
     '#type' => 'textfield',
     '#title' => t('Url lista attaccanti su Fantagazzetta.com'),
-    '#default_value' => variable_get('fantacalcio_lista_attaccanti_page', ''),
+    '#default_value' => variable_get('fantacalcio_players_list_role_3', ''),
     '#size' => 255,
     '#maxlength' => 255,
     '#description' => t('Url lista attaccanti su Fantagazzetta.com'),
-  );
-
-
-
-  $form["fantacalcio_utilities"] = array(
-    "#type" => "fieldset",
-    "#collapsed" => TRUE,
-    "#collapsible" => TRUE,
-    "#title" => t("Altro"),
-  );
-  
-  $form["fantacalcio_utilities"]['fantacalcio_votes_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Url della pagina da cui scaricare i voti'),
-    '#default_value' => variable_get('fantacalcio_votes_url', ''),
-    '#size' => 255,
-    '#maxlength' => 255,
-    '#description' => t('Url della pagina da cui scaricare i voti'),
-  );
-
-  $form["fantacalcio_utilities"]['fantacalcio_feed_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Url feed delle notizie'),
-    '#default_value' => variable_get('fantacalcio_feed_url', ''),
-    '#size' => 255,
-    '#maxlength' => 255,
-    '#description' => t('Url del feed delle notizie'),
   );
 
   return system_settings_form($form);

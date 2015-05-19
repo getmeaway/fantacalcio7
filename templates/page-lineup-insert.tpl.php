@@ -1,20 +1,27 @@
-<div id='div-formazione'>
-	<div id='header-formazione'>
-		<div class='clear' style='height:30px;'></div>
-		
-		<div id='_formazione_form'>
-			<?php print render($lineup_check); ?>
-		</div>
-		
-<!-- 		<div data-role='popup' id='popup_validate'> 
-			<?php //print render($lineup_form); ?>			
- 		</div> -->
+<div id='div-formazione' class="row">
+	
+	<div id='_formazione_form' class="col-xs-12 col-sm-10">
+		<?php print render($lineup_check); ?>
 	</div>
+	
+	<div class="col-xs-12 col-sm-2">
+		<div class="row">
+			<div class="col-xs-6 col-sm-12 col-md-12">
+				<?php print render($lineup_form_clean); ?>
+			</div>
+			<div class="col-xs-6 col-sm-12 col-md-12">
+				<?php print render($lineup_form_confirm); ?>
+			</div>
+		</div>
+	</div>
+	
+</div>
 
 <div class="row">
 	<div class="col-xs-12 col-md-12">
 	</div>
 </div>
+
 <div class="row">
 	<div class="col-sm-6 col-xs-12">
 		<div class="lineup-group-container">

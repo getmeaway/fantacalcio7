@@ -416,6 +416,11 @@ function fantacalcio_lineup_insert($competition, $team, $competition_round, $is_
     	$lineup_form = (drupal_get_form('fantacalcio_lineup_form', $competition, $team, $round));
     	$output["lineup_form"] = $lineup_form;
     	
+    	$lineup_form_clean = (drupal_get_form('fantacalcio_lineup_form_clean', $competition, $team, $round));
+    	$output["lineup_form_clean"] = $lineup_form_clean;
+
+    	$lineup_form_confirm = (drupal_get_form('fantacalcio_lineup_form_confirm', $competition, $team, $round));
+    	$output["lineup_form_confirm"] = $lineup_form_confirm;
     	//$args_confirm = get_args_confirm($args);
 
     	//$out .= confirm_lineup($args_confirm);
@@ -550,6 +555,8 @@ function fantacalcio_lineup_form_submit($form, &$form_state) {
     fantacalcio_lineup_insert_players('new', $t_id, $c_id, $round);
     
     drupal_set_message(t("Formazione inserita correttamente."));
+    
+    watchdog("fantacalcio", t("%team: formazione inserita correttamente"), array("%team" => $team->name), WATCHDOG_INFO);
 
     drupal_goto("formazioni/view/" . Competition::get($c_id)->name . "/" . $round . "/" . $t_id);
   }
@@ -562,9 +569,35 @@ function fantacalcio_lineup_form_submit($form, &$form_state) {
   return;
 }
 
-function _fantacalcio_lineup_form_clear($form, &$form_state) {
+function fantacalcio_lineup_form_clean($form, &$form_state, $competition, $team, $round) {
+	$form['t_id'] = array(
+			'#type' => 'hidden',
+			'#value' => $team->id
+	);
+	
+	$form['c_id'] = array(
+			'#type' => 'hidden',
+			'#value' => $competition->id
+	);
+	
+	$form['round'] = array(
+			'#type' => 'hidden',
+			'#value' => $round->round
+	);
+	
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Cancella'),
+			'#attributes' => array("id" => "line_up_clean", "class" => array("btn", "btn-sm", "btn-warning")),
+	);
+	
+	return $form;
+}
+
+function fantacalcio_lineup_form_clean_submit($form, &$form_state) {
 
   #cancella la lineup inserita
+  $competition = Competition::get($form_state['values']['c_id']);
   
   $query = db_delete("fanta_lineups");
   $query->condition("t_id", $form_state['values']['t_id']);
@@ -582,12 +615,62 @@ function _fantacalcio_lineup_form_clear($form, &$form_state) {
   
   watchdog('fantacalcio', '@team: formazione cancellata', array('@team' => Team::get($form_state['values']['t_id'])->name), WATCHDOG_NOTICE);
 
-  return $form_state['rebuild'] = TRUE;
+  drupal_goto("formazioni/insert/" . $form_state['values']['t_id'] . "/" . $competition->name);
+}
+
+
+function fantacalcio_lineup_form_confirm($form, &$form_state, $competition, $team, $round) {
+	$form['t_id'] = array(
+			'#type' => 'hidden',
+			'#value' => $team->id
+	);
+
+	$form['c_id'] = array(
+			'#type' => 'hidden',
+			'#value' => $competition->id
+	);
+
+	$form['round'] = array(
+			'#type' => 'hidden',
+			'#value' => $round->round
+	);
+
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t("Conferma"),
+			'#attributes' => array("id" => "line_up_confirm", "class" => array("btn", "btn-sm", "btn-info")),
+	);
+	
+	return $form;
+}
+
+function fantacalcio_lineup_form_confirm_submit($form, &$form_state) {
+
+	#cancella la lineup inserita
+	$competition = Competition::get($form_state['values']['c_id']);
+
+	$query = db_delete("fanta_lineups");
+	$query->condition("t_id", $form_state['values']['t_id']);
+	$query->condition("c_id", $form_state['values']['c_id']);
+	$query->condition("round", $form_state['values']['round']);
+	$query->execute();
+
+	$query = db_delete("fanta_lineups_inserts");
+	$query->condition("t_id", $form_state['values']['t_id']);
+	$query->condition("c_id", $form_state['values']['c_id']);
+	$query->condition("round", $form_state['values']['round']);
+	$query->execute();
+
+	drupal_set_message(t("Formazione cancellata"));
+
+	watchdog('fantacalcio', '@team: formazione cancellata', array('@team' => Team::get($form_state['values']['t_id'])->name), WATCHDOG_NOTICE);
+
+	drupal_goto("formazioni/insert/" . $form_state['values']['t_id'] . "/" . $competition->name);
 }
 
 function fantacalcio_lineup_form_validate($form, &$form_state) {
-// 	dpm($form_state);
-  $t_id = $form_state['values']['t_id'];
+
+	$t_id = $form_state['values']['t_id'];
   $c_id = $form_state['values']['c_id'];
   $round = $form_state['values']['round'];
 

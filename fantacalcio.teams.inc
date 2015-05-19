@@ -743,8 +743,8 @@ function fantacalcio_squad_edit($t_id)
 	$content["expected_players"] = array("0" => variable_get("fantacalcio_number_role_0", 1), "1" => variable_get("fantacalcio_number_role_1", 1), "2" => variable_get("fantacalcio_number_role_2", 1), "3" => variable_get("fantacalcio_number_role_3", 1));
 	$content["bought_players"] = $bought_players_role;
 		
-	$content["movements"] = variable_get("fantacalcio_squad_allowed_movements", 0);
-	$content["left_movements"] = variable_get("fantacalcio_squad_allowed_movements", 0) - $team->getMovementsCount();
+	$content["movements"] = variable_get("fantacalcio_max_movements", 0);
+	$content["left_movements"] = variable_get("fantacalcio_max_movements", 0) - $team->getMovementsCount();
 	
 	$squad_confirm_form = drupal_get_form("fantacalcio_complete_squad_form", $t_id);
 	$content["squad_confirm_form"] = drupal_render($squad_confirm_form);
@@ -838,7 +838,7 @@ function fantacalcio_sell_player_form_validate($form, &$form_state) {
 	$movements_count = $team->getMovementsCount();
 	$num_players = $team->getNumberPlayers();  
 	
-	$max_movements = variable_get("fantacalcio_squad_allowed_movements", 0) > 0 ? variable_get("fantacalcio_squad_allowed_movements", 0) : PHP_INT_MAX;
+	$max_movements = variable_get("fantacalcio_max_movements", 0) > 0 ? variable_get("fantacalcio_max_movements", 0) : PHP_INT_MAX;
 	
 	//verifica squadra appartenente all'utente
 	if ($user->uid != $team->user) 	
@@ -915,7 +915,7 @@ function fantacalcio_buy_player_form_validate($form, &$form_state) {
 	$movements_count = $team->getMovementsCount();
 	$num_players = $team->getNumberPlayers();  
 	
-	$max_movements = variable_get("fantacalcio_squad_allowed_movements", 0) > 0 ? variable_get("fantacalcio_squad_allowed_movements", 0) : PHP_INT_MAX;
+	$max_movements = variable_get("fantacalcio_max_movements", 0) > 0 ? variable_get("fantacalcio_max_movements", 0) : PHP_INT_MAX;
 	
 	//verifica squadra appartenente all'utente
 	if ($user->uid != $team->user) 	
