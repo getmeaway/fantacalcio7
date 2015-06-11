@@ -1,14 +1,28 @@
 <div class="row">
+	<div class="cols-xs-12">&nbsp;</div>
+</div>
+
+<div class="row">
 	<div id='teams_list' class="col-xs-12 col-sm-3">
 
 		<?php if (isset($choose_rounds) ) : ?> 
 		<!-- scegli giornata TODO -->
 		<div>
 			<?php //print ($choose_rounds); ?>
-			<div class="dropdown">
-			  <button class="btn btn-sm btn-default dropdown-toggle" type="button" id="dropdown-rounds" data-toggle="dropdown" aria-expanded="true">
+			<div class="dropdown btn-group">
+			  <!-- <button class="btn btn-sm btn-default dropdown-toggle" type="button" id="dropdown-rounds" data-toggle="dropdown" aria-expanded="true">
 			    <?php print t("Giornata"); ?>
 			    <span class="caret"></span>
+			  </button> -->
+			  <button type="button" class="btn btn-sm btn-default" disabled="disabled" style="border-right: none;">
+			  	<?php print t("Giornata"); ?>
+			  </button>
+			  <button type="button" class="btn btn-sm btn-default" disabled="disabled" style="border-left: none;">
+			  	<?php print render($round_number); ?>
+			  </button>
+			  <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+			    <span class="caret"></span>
+			    <span class="sr-only">Toggle Dropdown</span>
 			  </button>
 			  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdown-rounds">
 			  	<?php foreach ($choose_rounds as $round => $link): ?>
@@ -19,6 +33,10 @@
 		</div>
 		<?php endif; ?>
 		
+		<div class="row">
+			<div class="cols-xs-12">&nbsp;</div>
+		</div>
+				
 		<!-- elenco squadre-->
 		
 		<div class="panel-group" id='accordion_1'>

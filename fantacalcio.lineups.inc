@@ -30,16 +30,12 @@ function _fantacalcio_lineup_view($competition_name, $round_number =  null, $t_i
   foreach($competitions as $c_id => $competition) {
   	
   	$round_number = (!isset($round_number) || $round_number == null || !Round::existsInCompetition($round_number, $c_id)) ? Round::getLastLineup($c_id) : $round_number;
-
-//   	$main_round_number = Round::getRoundByCompetitionRound($round_number, $competition->id);
-  	
-//   	$round = Round::getCompetitionRound($main_round_number, $c_id);
   	
   	if ($selected_competition != null && $selected_competition->id == $competition->id)
   		$round = Round::getByCompetitionRound($round_number, $competition->id);
   	else 
   		$round = Round::getLastLineups($competition->id);
-  	
+
   	$teams_list = array();
 
   	foreach($competition->groups as $g_id => $group) {
@@ -78,6 +74,7 @@ function _fantacalcio_lineup_view($competition_name, $round_number =  null, $t_i
   		$choose_rounds[$i] = base_path() . "formazioni/view/" . strtolower($competition->name) . "/" . $i;
   	}
   	
+	$columns_output["round_number"] = isset($round_number) ? $round_number : 1;
   	$columns_output["choose_rounds"] = $choose_rounds;
   	
   	$competition->output = theme("columns", $columns_output);  	 

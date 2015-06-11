@@ -604,7 +604,7 @@ class Team {
 	}
 	
 	function getSeasonPosition($competition_id) {
-		$round = 1;//Round::getLast();
+		$round = Round::getLast();
 		
 		$query = db_select("fanta_teams_rounds", "tr");
 		$query->condition("t_id", $this->id);
@@ -657,5 +657,373 @@ class Team {
 		
 		return $result->rowCount();
 	}
+
+	function statPosition($competition) {
+		if ($competition->type == COMPETITION_TYPE_GP)
+			return $this->getSeasonPosition($competition->id);
+		else {
+			return $this->getPosition($competition);
+		}
+	}
+
+	function statPoints($competition) {
+		if ($competition->type == COMPETITION_TYPE_GP)
+			return $this->seasonPoints($competition->id);
+		else {
+			return $this->getPoints($competition);
+		}
+	}
+
+	function statGap($competition) {
+		if ($competition->type == COMPETITION_TYPE_GP) {
+			
+			$gap_points = 0;
+			
+			$query = db_select("fanta_teams_rounds", "tr");
+			$query->condition("t_id", $this->id, "!=");
+			$query->addExpression("SUM(points)", "sum");
+			$query->groupBy("t_id");
+			
+			$result = $query->execute();
+			
+			foreach($result as $row) {
+				$gap_points = max($gap_points, $row->sum);
+			}
+			
+			return abs($this->seasonPoints($competition->id) - $gap_points);
+		}
+		else {
+			return $this->getGap($competition);
+		}
+	}
+
+	function statMaxPoints($competition) {
+		if ($competition->type == COMPETITION_TYPE_GP)
+			return $this->pointsMax($competition->id);
+		else {
+			$query = db_select("fanta_matches", "m");
+			$query->condition("t1_id", $this->id);
+			$query->condition("played", 1);
+			$query->condition("g_id", array_keys($competition->groups), "IN");
+			$query->addExpression("MAX(tot_1)", "n");
+			 
+			$result = $query->execute();
+			$points_home = $result->fetchObject()->n;
+			 
+			$query = db_select("fanta_matches", "m");
+			$query->condition("t2_id", $this->id);
+			$query->condition("played", 1);
+			$query->condition("g_id", array_keys($competition->groups), "IN");
+			$query->addExpression("MAX(tot_2)", "n");
+		
+			$result = $query->execute();
+			$points_away = $result->fetchObject()->n;
+			
+			return max($points_home, $points_away);
+		}
+	}
+
+	function statMinPoints($competition) {
+		if ($competition->type == COMPETITION_TYPE_GP)
+			return $this->pointsMin($competition->id);
+		else {
+			$query = db_select("fanta_matches", "m");
+			$query->condition("t1_id", $this->id);
+			$query->condition("played", 1);
+			$query->condition("g_id", array_keys($competition->groups), "IN");
+			$query->addExpression("MIN(tot_1)", "n");
+			 
+			$result = $query->execute();
+			$points_home = $result->fetchObject()->n;
+			 
+			$query = db_select("fanta_matches", "m");
+			$query->condition("t2_id", $this->id);
+			$query->condition("played", 1);
+			$query->condition("g_id", array_keys($competition->groups), "IN");
+			$query->addExpression("MIN(tot_2)", "n");
+		
+			$result = $query->execute();
+			$points_away = $result->fetchObject()->n;
+			
+			return min($points_home, $points_away);
+		}
+	}
+
+	function statAvgPoints($competition) {
+		if ($competition->type == COMPETITION_TYPE_GP) {
+			
+			$query = db_select("fanta_teams_rounds", "tr");
+			$query->condition("t_id", $this->id);
+			$query->fields("tr", array("points"));
+							
+			$result = $query->execute();
+
+			$count = 0;
+			$sum = 0;
+			foreach($result as $row) {
+				$count++;
+				$sum += $row->points;
+			}
+			
+			return round($sum / $count, 2);
+		}
+		else {
+			
+			$count = 0;
+			$sum = 0;
+			
+			$query = db_select("fanta_matches", "m");
+			$query->condition("t1_id", $this->id);
+			$query->condition("played", 1);
+			$query->condition("g_id", array_keys($competition->groups), "IN");
+			$query->fields("m", array("tot_1"));
+			 
+			$result = $query->execute();			
+			
+			foreach($result as $row) {
+				$sum += $row->tot_1;
+				$count++;
+			}
+			
+			$query = db_select("fanta_matches", "m");
+			$query->condition("t2_id", $this->id);
+			$query->condition("played", 1);
+			$query->condition("g_id", array_keys($competition->groups), "IN");
+			$query->fields("m", array("tot_2"));
+		
+			$result = $query->execute();
+			
+			foreach($result as $row) {
+				$sum += $row->tot_2;
+				$count++;
+			}
+			
+			if ($count > 0)
+				return round($sum / $count, 2);
+			else 
+				return 0;
+		}
+	}
 	
+	function getRoundsPoints($competition) {
+		
+		$query = db_select("fanta_teams_rounds", "tr");
+		$query->condition("t_id", $this->id);
+		$query->condition("c_id", $competition->id);
+		$query->fields("tr", array("points", "round"));
+		
+		$result = $query->execute();
+		
+		$points = array();
+		foreach($result as $row) {
+			$points[$row->round] = $row->points;
+		}
+
+		return $points;
+	}
+	
+	function getRoundsPositions($competition) {
+	
+		$query = db_select("fanta_teams_rounds", "tr");
+		$query->condition("t_id", $this->id);
+		$query->condition("c_id", $competition->id);
+		$query->fields("tr", array("round_position", "round"));
+	
+		$result = $query->execute();
+	
+		$positions = array();
+		foreach($result as $row) {
+			$positions[$row->round] = $row->round_position;
+		}
+	
+		return $positions;
+	}
+
+	function getRoundsSeasonPositions($competition) {
+	
+		$query = db_select("fanta_teams_rounds", "tr");
+		$query->condition("t_id", $this->id);
+		$query->condition("c_id", $competition->id);
+		$query->fields("tr", array("season_position", "round"));
+	
+		$result = $query->execute();
+	
+		$positions = array();
+		foreach($result as $row) {
+			$positions[$row->round] = $row->season_position;
+		}
+	
+		return $positions;
+	}
+	
+	function getPosition($competition) {
+		
+		$query = db_select("fanta_matches", "m");
+		$query->condition("g_id", array_keys($competition->groups), "IN");
+		$query->condition("played", 1);
+		$query->fields("m");
+		$result = $query->execute();
+		
+		$points = array();
+		
+		foreach($result as $row) {
+			switch ($row->winner_id) {
+				case $row->t1_id:
+					if (!isset($points[$row->t1_id]))
+						$points[$row->t1_id] = 0;
+					$points[$row->t1_id] += 3;
+					break;
+				case $row->t2_id:
+					if (!isset($points[$row->t2_id]))
+						$points[$row->t2_id] = 0;
+					$points[$row->t2_id] += 3;
+					break;
+				case -1:
+					if (!isset($points[$row->t1_id]))
+						$points[$row->t1_id] = 0;
+					$points[$row->t1_id] += 1;
+					
+					if (!isset($points[$row->t2_id]))
+						$points[$row->t2_id] = 0;
+					$points[$row->t2_id] += 1;
+					break;
+			}
+		}
+		
+		if ($points) {
+
+			$max_point = 0; $t_id_max_point = 0;
+			foreach ($points as $team_id => $point) {
+				if ($this->id == $team_id) 
+					$position_point = $point;
+		
+				if ($max_point < $point) {
+					$max_point = $point;
+					$t_id_max_point = $team_id;
+				}
+			}
+		
+			rsort($points);
+			$points_teams = array_flip($points);
+		
+			if (isset($position_point) && isset($points_teams[$position_point]))
+				return $points_teams[$position_point] +1;
+			else 
+				return null;
+		}
+	}
+	
+	function getPoints($competition) {
+		
+		$query = db_select("fanta_matches", "m");
+		$query->condition("g_id", array_keys($competition->groups), "IN");
+		$query->condition("played", 1);
+		$db_or = db_or();
+		
+		$db_or->condition('t1_id', $this->id);
+		$db_or->condition('t2_id', $this->id);
+		$query->condition($db_or);
+		
+		$query->fields("m");
+		$result = $query->execute();
+		
+		$points = 0;
+		
+		foreach($result as $row) {
+			switch ($row->winner_id) {
+				case $this->id:
+					$points += 3;
+					break;
+				case -1:
+					$points += 1;
+					break;				
+			}
+		}
+		
+		return $points;	
+	}
+	
+	function getGap($competition) {
+	
+		$query = db_select("fanta_matches", "m");
+		$query->condition("g_id", array_keys($competition->groups), "IN");
+		$query->condition("played", 1);
+		
+		$db_and = db_and();
+		
+		$db_and->condition('t1_id', $this->id, '!=');
+		$db_and->condition('t2_id', $this->id, '!=');
+		$query->condition($db_and);
+		
+		$query->fields("m");
+		$result = $query->execute();
+	
+		$points = array();
+	
+		foreach($result as $row) {
+			switch ($row->winner_id) {
+				case $row->t1_id:
+					if (!isset($points[$row->t1_id]))
+						$points[$row->t1_id] = 0;
+						$points[$row->t1_id] += 3;
+						break;
+				case $row->t2_id:
+					if (!isset($points[$row->t2_id]))
+						$points[$row->t2_id] = 0;
+						$points[$row->t2_id] += 3;
+						break;
+				case -1:
+					if (!isset($points[$row->t1_id]))
+						$points[$row->t1_id] = 0;
+						$points[$row->t1_id] += 1;
+							
+						if (!isset($points[$row->t2_id]))
+							$points[$row->t2_id] = 0;
+						$points[$row->t2_id] += 1;
+						break;
+			}
+		}
+	
+		if ($points) {
+	
+			return max($points);
+		}
+	}
+	
+	function getMatchesResults($competition) {
+	
+		$query = db_select("fanta_matches", "m");
+		$query->condition("g_id", array_keys($competition->groups), "IN");
+		$query->condition("played", 1);
+		$db_or = db_or();
+	
+		$db_or->condition('t1_id', $this->id);
+		$db_or->condition('t2_id', $this->id);
+		$query->condition($db_or);
+	
+		$query->fields("m");
+		$result = $query->execute();
+	
+		$points = 0;
+	
+		$wins = 0;
+		$draws = 0;
+		$losts = 0;
+		
+		foreach($result as $row) {
+			switch ($row->winner_id) {
+				case $this->id:
+					$wins++;
+					break;
+				case -1:
+					$draws++;
+					break;
+				default:
+					$losts++;
+					break;
+			}
+		}
+	
+		return (object) array("wins" => $wins, "draws" => $draws, "losts" => $losts);
+	}
 }

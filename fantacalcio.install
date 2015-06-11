@@ -1146,7 +1146,7 @@ $schema['fanta_votes'] = array(
 
 #Installa il Plug In
 function fantacalcio_install() {
-	
+	/*
 	//allenatore
 	$role = new stdClass();
 	$role->name = 'coach';
@@ -1176,6 +1176,7 @@ function fantacalcio_install() {
 // 	user_role_change_permissions($administrator_rid, $administrator_permissions);
 	
   //variabili di sistema
+  
   variable_set("fantacalcio_riserve_fisse", 0);
   variable_set("fantacalcio_coppa_competition", "2");
   variable_set("fantacalcio_credits", "350");
@@ -1220,11 +1221,12 @@ function fantacalcio_install() {
   variable_set("fantacalcio_lista_difensori_page", "http://www.fantagazzetta.com/quotazioni-serie-a/difensori/costodesc");
   variable_set("fantacalcio_lista_centrocampisti_page", "http://www.fantagazzetta.com/quotazioni-serie-a/centrocampisti/costodesc");
   variable_set("fantacalcio_lista_attaccanti_page", "http://www.fantagazzetta.com/quotazioni-serie-a/attaccanti/costodesc");
+  */
 }
 
 #Disinstalla il Plug In
 function fantacalcio_uninstall() {
-  $sql = "DELETE FROM {variables} WHERE name LIKE = 'fantacalcio%'";
+  //$sql = "DELETE FROM {variables} WHERE name LIKE = 'fantacalcio%'";
   //$result = db_query($sql);
   
   //drupal_uninstall_schema('fantacalcio');

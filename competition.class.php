@@ -11,11 +11,12 @@ class Competition {
 	var $has_newsletters;
 	var $groups;
 
-	function __construct($id, $name, $active, $type, $has_matches, $has_standings, $has_lineups, $has_newsletters) {
+	function __construct($id, $name, $active, $type, $is_default, $has_matches, $has_standings, $has_lineups, $has_newsletters) {
 		$this->id = $id;
 		$this->name = $name;
 		$this->active = $active;
 		$this->type = $type;
+		$this->is_default = $is_default;
 		$this->has_matches = $has_matches;
 		$this->has_standings = $has_standings;
 		$this->has_lineups = $has_lineups;
@@ -32,11 +33,28 @@ class Competition {
 		$query->fields("c");
 		$result = $query->execute();
 		foreach($result as $row) {
-			$competition = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
+			$competition = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->is_default, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
 			$competition->groups = Group::allByCompetition($row->c_id);
 			$competition->sanitized_name = self::sanitize($competition->name);
 		}
 		
+		return $competition;
+	}
+	
+	static function getDefault() {
+	
+		$competition = null;
+	
+		$query = db_select("fanta_competitions", "c");
+		$query->condition("is_default", 1);
+		$query->fields("c");
+		$result = $query->execute();
+		foreach($result as $row) {
+			$competition = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->is_default, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
+			$competition->groups = Group::allByCompetition($row->c_id);
+			$competition->sanitized_name = self::sanitize($competition->name);
+		}
+	
 		return $competition;
 	}
 
@@ -53,7 +71,7 @@ class Competition {
 		$query->fields("c");
 		$result = $query->execute();
 		foreach($result as $row) {
-			$competition = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
+			$competition = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->is_default, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
 			$competition->groups = Group::allByCompetition($row->c_id);
 			$competition->sanitized_name = self::sanitize($competition->name);
 		}
@@ -95,7 +113,7 @@ class Competition {
 		$query->fields("c");
 		$result = $query->execute();
 		foreach($result as $row) {
-			$competitions[$row->c_id] = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
+			$competitions[$row->c_id] = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->is_default, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
 			$competitions[$row->c_id]->groups = Group::allByCompetition($row->c_id);
 			$competitions[$row->c_id]->sanitized_name = self::sanitize($row->name);
 		}
@@ -119,7 +137,7 @@ class Competition {
 		$result = $query->execute();
 		
 		foreach($result as $row) {
-			$competitions[$row->c_id] = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
+			$competitions[$row->c_id] = new Competition($row->c_id, $row->name, $row->active, $row->type, $row->is_default, $row->has_matches, $row->has_standings, $row->has_lineups, $row->has_newsletters);
 			$competitions[$row->c_id]->competition_round = $row->competition_round;
 			$competitions[$row->c_id]->round_label = empty($row->round_label) ? $row->competition_round . t("&ordf; giornata") : $row->round_label;
 			$competitions[$row->c_id]->sanitized_name = self::sanitize($row->name);
