@@ -27,9 +27,21 @@ class RealTeam {
     $query->fields("r");
     $result = $query->execute();
     foreach ($result as $row) {
-      array_push($teams, new RealTeam($row->rt_id, $row->name));
+      $teams[$row->rt_id] = new RealTeam($row->rt_id, $row->name);
     }
     
+    return $teams;
+  }
+  
+  static function allNames() {
+    $teams = array();
+    $query = db_select("fanta_real_teams", "r");
+    $query->fields("r");
+    $result = $query->execute();
+    foreach ($result as $row) {
+      $teams[$row->rt_id] = strtolower($row->name);
+    }
+  
     return $teams;
   }
 

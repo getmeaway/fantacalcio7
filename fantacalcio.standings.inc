@@ -8,9 +8,11 @@ function fantacalcio_standings($name = '', $round = null) {
 	
 	$competition = Competition::getByName($name);
 	
-  if ($competition == null || $competition->has_standings != 1) 
-    return Competition::choose(array("has_standings" => 1), "classifica");
-
+  if ($competition == null || $competition->has_standings != 1) { 
+    $items = Competition::choose(array("has_standings" => 1), "classifica");
+     
+    return theme_item_list(array("items" => $items, "attributes" => array("class" => array("list-group")), "type" => "ul", "title" => ""));
+  }
   else {
     drupal_set_title(check_plain(t("Classifica") . " - " . ucwords($name)));
     

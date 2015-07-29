@@ -316,6 +316,8 @@ function fantacalcio_show_teams($t_id = "") {
   
   $teams_list = array();
   
+  if ($competition) {
+  
   foreach ($competition->groups as $g_id => $group) {
     
     $teams = Team::allByGroup($g_id);
@@ -364,6 +366,10 @@ function fantacalcio_show_teams($t_id = "") {
   }
   
   return theme("columns", $output);
+  }
+  else {
+    return t("Nessuna competizione");
+  }
 }
 
 function show_team_data($t_id) {
@@ -466,6 +472,7 @@ function show_team_details($t_id = "") {
 }
 
 function show_team_rounds($t_id) {
+  
   if (Competition::getDefault()->type == COMPETITION_TYPE_GP) {
     
     $rounds = array();
@@ -515,7 +522,7 @@ function show_team_rounds($t_id) {
       "attributes" => array(
         "class" => array("squad", "table", "table-responsive")), 
       "caption" => "", 
-      "empty" => "", 
+      "empty" => t("Nessuna giornata giocata"), 
       "sticky" => TRUE, 
       "colgroups" => array()));
   }
@@ -557,13 +564,15 @@ function show_team_rounds($t_id) {
       "attributes" => array(
         "class" => array("squad", "table", "table-responsive")), 
       "caption" => "", 
-      "empty" => "", 
+      "empty" => t("Nessuna giornata giocata"), 
       "sticky" => TRUE, 
       "colgroups" => array()));
   }
 }
 
 function show_team_stats($t_id) {
+  
+  if (count(Round::allPlayed()) > 0) {
   drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/Chart.min.js");
   
   $team = Team::get($t_id);
@@ -744,7 +753,12 @@ function show_team_stats($t_id) {
       drupal_add_js($matches_js, "inline");
     }
   
-  return theme("table", $stats) . $points_chart . $round_positions_chart . $season_position_chart . $matches_chart;
+    return theme("table", $stats) . $points_chart . $round_positions_chart . $season_position_chart . $matches_chart;
+  }
+  else {
+    return t("Nessuna giornata giocata");
+  } 
+    
 }
 
 function theme_team_history($history) {

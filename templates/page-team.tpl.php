@@ -42,7 +42,7 @@
 		<div role="tabpanel" class="tab-pane" id="rounds">
 		<?php print render($rounds); ?>
 		</div>
-		<div role="tabpanel" class="tab-pane active" id="stats">
+		<div role="tabpanel" class="tab-pane" id="stats">
 		<?php print render($stats); ?>
 		</div>
 	</div>

@@ -161,7 +161,7 @@ class Competition {
 			}
 		}
 	
-		return theme_item_list(array("items" => $items, "attributes" => array("class" => array("list-group")), "type" => "ul", "title" => ""));
+		return $items;
 	}
 	
 	static function sanitize($name) {
@@ -170,5 +170,12 @@ class Competition {
 		$sanitized_name = preg_replace('@[^a-z0-9-_\s]+@', '', $sanitized_name);
 		
 		return $sanitized_name;
+	}
+	
+	static function count() {
+	  $competitions = Competition::all();
+	  if (count($competitions) > 0)
+	    return TRUE;
+	  return FALSE;
 	}
 }

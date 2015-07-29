@@ -120,6 +120,21 @@ class Player {
 		return $roles[$role_id];
 	}
 	
+	static function getIdList() {
+	  
+	  $ids = array();
+	  
+	  $query = db_select("fanta_players", "p");
+	  $query->fields("p");
+	  $result = $query->execute();
+	  
+	  foreach($result as $row) {
+	    $ids[strtolower($row->name)] = $row->pl_id;
+	  } 
+	  
+	  return $ids;
+	}
+	
 	function getPlayerRounds() {
 		$sql = "SELECT * FROM {fanta_players_teams} p, {fanta_real_teams} t
       WHERE p.rt_id = t.rt_id

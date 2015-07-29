@@ -765,7 +765,10 @@ class Team {
 				$sum += $row->points;
 			}
 			
-			return round($sum / $count, 2);
+			if ($count > 0)
+			 return round($sum / $count, 2);
+			else 
+			  return 0;
 		}
 		else {
 			

@@ -32,8 +32,8 @@ include "user.class.php";
 include "fantacalcio.block.inc";
 include "fantacalcio.tooltip.inc";
 
-define("COMPETITION_TYPE_GP", 1);
-define("COMPETITION_TYPE_SD", 2);
+define("COMPETITION_TYPE_SD", 1);
+define("COMPETITION_TYPE_GP", 2);
 
 // Css file
 // drupal_add_css('sites/all/modules/fantacalcio/css/style.css', 'themes', 'all', TRUE);
@@ -81,20 +81,26 @@ function fantacalcio_init() {
   }
 }
 
-function fantacalcio_user_login() {
-  global $user;
+function fantacalcio_user_login(&$edit, $account) {
   
-  // controllo variabile
-  if (variable_get("fantacalcio_assign_default_role", 0)) {
-    if (!in_array($user->roles, "coach") && user_role_load_by_name('coach') != null) {
-      $user_roles = $user->roles;
-      $user_roles[] = 'coach';
-      
-      module_invoke('user', 'save', $user, array('roles' => $user_roles));
-    }
-  }
+  fantacalcio_check_role($account);
 }
 
+function fantacalcio_check_role($account) { 
+  watchdog("fantacalcio", "BBB", array(), WATCHDOG_NOTICE);
+  // controllo variabile
+  if (variable_get("fantacalcio_assign_default_role", 0)) { 
+    watchdog("fantacalcio", "AAA", array(), WATCHDOG_NOTICE);
+    //watchdog("fantacalcio", t("%team: Acquisto di %player (-%quotation crediti)"), array("%team" => $team->name, "%player" => $player->name, "%quotation" => $player->getQuotation()), WATCHDOG_INFO);
+    if (!in_array($account->roles, "coach") && user_role_load_by_name('coach') != null) {
+      $user_roles = $account->roles;
+      $user_roles[] = 'coach';
+      
+      module_invoke('user', 'save', $account, array('roles' => $user_roles));
+    }
+  }
+  else watchdog("fantacalcio", "BBB", array(), WATCHDOG_NOTICE);
+}
 // help
 function fantacalcio_help($section = '', $arg) {
   $output = '';

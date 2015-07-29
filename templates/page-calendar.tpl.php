@@ -2,6 +2,7 @@
 	<?php if (isset($next_round) || isset($last_round)): ?>
 	<div class="row">
 		<?php print $next_round; ?>
+		<?php print $last_round; ?>
 	</div>
 	<?php endif; ?>
 	
@@ -25,14 +26,26 @@
 	<?php foreach ($matches as $round => $round_matches): ?>
 		<div class="col-xs-12 col-sm-6">
 			<h4 id="round_<?php print $round; ?>">
-			<?php print $round . t("&ordf; giornata");?></h4>
+			<?php
+			 $matches_values = array_values($round_matches);
+			 $first_match = array_shift($matches_values); 
+			 print (!empty($first_match->round_label) ? $first_match->round_label : $round . t("&ordf; giornata"));?>
+			<?php if (!$is_main_competition): ?>
+			 <small class="pull-right"><em><?php print date("d-m-Y H:i", $rounds[$round]->date); ?></em></small>
+			<?php endif; ?>
+			</h4>
 			<table class="table table-responsive">
 			<?php foreach ($round_matches as $match): ?>
 				<tr>
 					<td><?php print $match->home_team . " - " . $match->away_team; ?></td>
+					<?php if ($is_main_competition): ?>
 					<td><small><em><?php print date("d-m-Y H:i", $match->date); ?></em></small></td>
+					<?php endif; ?>
 					<?php if ($match->played): ?>
 					<td><?php print $match->goals_1 . " - " . $match->goals_2; ?></td>
+					<?php if (!$is_main_competition): ?>
+					<td><small><em><?php print $match->tot_1 . " - " . $match->tot_2; ?></em></small></td>
+					<?php endif; ?>
 					<td><a href=""><i class="fa fa-bar-chart"></i></a></td>
 					<?php else: ?>
 					<td></td>

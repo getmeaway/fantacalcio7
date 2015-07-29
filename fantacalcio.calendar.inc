@@ -7,13 +7,15 @@
 function fantacalcio_calendar($name = '', $round = null) {
   $competition = Competition::getByName($name);
   
-  if ($competition == null || $competition->has_matches != 1)
-    return Competition::choose(array("has_matches" => 1), "calendario");
-  
+  if ($competition == null || $competition->has_matches != 1) {
+  	
+  	$items = Competition::choose(array("has_matches" => 1, "type" => COMPETITION_TYPE_SD), "calendario"); 
+  	return theme_item_list(array("items" => $items, "attributes" => array("class" => array("list-group")), "type" => "ul", "title" => ""));
+  } 
   else {
     drupal_set_title(check_plain(t("Calendario") . " - " . ucwords($name)));
     
-    if (variable_get("fantacalcio_league_type", 1) != COMPETITION_TYPE_GP)
+    if ($competition->is_default && $competition->type != COMPETITION_TYPE_GP)
       return get_matches_table($competition);
     else
       return get_matches_table($competition);
@@ -21,7 +23,7 @@ function fantacalcio_calendar($name = '', $round = null) {
 }
 
 function get_matches_table($competition) {
-  global $user;
+  global $user;//print_r($user);
   
   $output = array();
   $index = 0;
@@ -32,27 +34,38 @@ function get_matches_table($competition) {
       
       $index++;
       
-      // $group = Group::get($g_id);
-      $last_round = theme_table(array(
+      $matches = Match::getByGroup($g_id);
+      ksort($matches);
+      
+      $rounds = array();
+      foreach($matches as $round => $round_matches) {
+        if (count(array_values($round_matches)) > 0 ) {
+      	  $match = array_values($round_matches);
+          $rounds[$round] = (object) array("date" => $match[0]->date);
+        }
+      } 
+      
+      $last_round = theme("table", array(
         "header" => array(), 
         "rows" => array(), 
         "attributes" => array(), 
         "sticky" => false, 
-        "caption" => t("Ultima giornata"), 
-        "empty" => "", 
-        "colgroups" => array()));
-      $next_round = theme_table(array(
+        "empty" => ""          
+      ));
+
+      $next_round = theme("table", array(
         "header" => array(), 
         "rows" => array(), 
         "attributes" => array(), 
         "sticky" => false, 
-        "caption" => t("Prossima giornata"), 
-        "empty" => "", 
-        "colgroups" => array()));
+        "empty" => ""          
+      ));
       
       $group->output = theme("calendar", array(
-        "matches" => Match::getByGroup($g_id), 
+        "matches" => $matches,
+      	"rounds" => $rounds,
         "rounds_list" => null, 
+      	"is_main_competition" => false,
         "last_round" => $last_round, 
         "next_round" => $next_round)); // "ABC";//theme_table(array("header" => $header, "rows" => $rows, "attributes" => array("class" => "table table-responsive tablesorter tablesorter-blue classifica", "id" => "classifica_" . $g_id), "caption" => "", "sticky" => "", "empty" => "", "colgroups" => array()));
       $group->active = (isset($user_group) && $g_id == $user_group) || $index == 1;
