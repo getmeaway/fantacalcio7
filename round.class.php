@@ -26,7 +26,7 @@ class Round
 		$query->fields("r");
 		$result = $query->execute();
 		
-		while ($row = $result->fetchObject()) {
+		foreach ($result as $row) {
 			$competition_round = new Round();
 			$competition_round->competition_round= $row->competition_round;
 			$competition_round->round= $row->round;
@@ -43,20 +43,25 @@ class Round
 	static function allWithStatus() {
 		$rounds = array();
 	
-		$query = db_select("fanta_rounds", "r");
+		$query = db_select("fanta_rounds_competitions", "rc");
+		$query->join("fanta_rounds", "r", "r.round = rc.round");
 		$query->join("fanta_round_statuses", "s", "s.s_id = r.status");
+		$query->fields("rc");
 		$query->fields("r", array("round", "date"));
 		$query->fields("s", array("status"));
 		$query->orderBy("r.round");
+		
 		$result = $query->execute();
 	
-		while ($row = $result->fetchObject()) {
-			$competition_round = new Round();
-			$competition_round->round= $row->round;
-			$competition_round->date = $row->date;
-			$competition_round->status = $row->status;
-	
-			array_push($rounds, $competition_round);
+		foreach ($result as $row) {
+			$round = new Round();
+			$round->competition_round= $row->competition_round;
+			$round->round= $row->round;
+			$round->label = (empty($row->round_label) ? $row->competition_round . t("ª giornata") : $row->round_label);
+			$round->next = $row->next;
+			$round->date = $row->date;
+		
+			array_push($rounds, $round);
 		}
 	
 		return $rounds;

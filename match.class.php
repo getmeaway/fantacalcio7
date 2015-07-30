@@ -92,6 +92,8 @@ class Match {
     while ($row = $result->fetchObject()) {
       $match = new Match();
       $match->id = $row->m_id;
+      $match->t1_id = $row->t1_id;
+      $match->t2_id = $row->t2_id;
       $match->home_team = $row->home_team;
       $match->away_team = $row->away_team;
       $match->date = $row->date;
