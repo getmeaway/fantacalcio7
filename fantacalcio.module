@@ -122,6 +122,7 @@ function fantacalcio_permission() {
     'access content fantacalcio' => array(
       'title' => 'access content fantacalcio'), 
     'administer team' => array('title' => 'administer team'), 
+    'administer draft' => array('title' => 'administer draft'), 
     'administer fantacalcio' => array('title' => 'administer fantacalcio'), 
     );
 }
@@ -590,6 +591,110 @@ function fantacalcio_menu() {
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.stats.players.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+
+  $items['mercato']  = array(
+      'title' => t('Mercato'),
+      'page callback' => 'fantamercato_group',
+      'access arguments' => array('gestione mercato'),
+      'type' => MENU_NORMAL_ITEM,
+    'file' => 'fantacalcio.draft.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['mercato/group']  = array(
+      'title' => t('Mercato'),
+      'page callback' => 'fantamercato_group',
+      'access arguments' => array('gestione mercato'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.draft.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['mercato/group/%']  = array(
+      'title' => t('Mercato'),
+      'page callback' => 'fantamercato_group',
+      'page arguments' => array(2),
+      'access arguments' => array('gestione mercato'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.draft.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['mercato/team']  = array(
+      'title' => t('Mercato'),
+      'page callback' => 'fantamercato_team',
+      'access arguments' => array('visualizza sfide'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.draft.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['mercato/team/%/%']  = array(
+      'title' => t('Mercato'),
+      'page callback' => 'fantamercato_team',
+      'page arguments' => array(2, 3),
+      'access arguments' => array('gestione mercato'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.draft.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['mercato/swaps']  = array(
+      'title' => t('Mercato'),
+      'page callback' => 'fantamercato_swaps',
+      'access arguments' => array('gestione mercato'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.draft.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['mercato/swaps/%']  = array(
+      'title' => t('Mercato'),
+      'page callback' => 'fantamercato_swaps',
+      'page arguments' => array(2),
+      'access arguments' => array('gestione mercato'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.draft.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['mercato/view']  = array(
+      'title' => t('Mercato'),
+      'page callback' => 'fantamercato_view',
+      'access arguments' => array('gestione mercato'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.draft.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['mercato/view/%']  = array(
+      'title' => t('Mercato'),
+      'page callback' => 'fantamercato_view',
+      'page arguments' => array(2),
+      'access arguments' => array('gestione mercato'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.draft.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['mercato/autocomplete/group/%']  = array(
+      'title' => 'Autocomplete giocatori',
+      'page callback' => 'fantamercato_autocomplete_players_group',
+      'page arguments' => array(3),
+      'access arguments' => array('administer draft'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.draft.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['mercato/autocomplete/team/%/%']  = array(
+      'title' => 'Autocomplete giocatori',
+      'page callback' => 'fantamercato_autocomplete_players_team',
+      'page arguments' => array(3, 4),
+      'access arguments' => array('administer draft'),
+      'type' => MENU_CALLBACK
+  );
+  
+  $items['mercato/autocomplete/swaps/%']  = array(
+      'title' => 'Autocomplete giocatori',
+      'page callback' => 'fantamercato_autocomplete_players_swaps',
+      'page arguments' => array(3),
+      'access arguments' => array('administer draft'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.draft.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
+  
   /*
    * // Registration and login pages.
    * $items['user'] = array(
