@@ -12,7 +12,6 @@
  * *********************
  */
 function fantacalcio_results($round = '', $action = '') {
-	
   $round = (is_numeric($round)) ? $round : Round::getLast() + 1;
   
   $out = '';
@@ -75,12 +74,11 @@ function fantacalcio_results($round = '', $action = '') {
   $actions_keys = array_keys($actions);
   $action = !empty($action) ? $action : $actions_keys[0];
   
-    $function = $actions[$action]['function'];
-    
-    $out .= "\n<div id='data'>";
-    $out .= $function($round);
-    $out .= "\n</div>";
+  $function = $actions[$action]['function'];
   
+  $out .= "\n<div id='data'>";
+  $out .= $function($round);
+  $out .= "\n</div>";
   
   return $out;
 }
@@ -624,9 +622,9 @@ function votes_upload_form($form, $form_state, $round) {
   $form['clear'] = array(
     '#type' => 'submit', 
     '#value' => 'Annulla', 
-    '#validate' => array('upload_form_clear'))
+    '#validate' => array('upload_form_clear'));
 
-  ;
+  
   return $form;
 }
 
@@ -638,9 +636,7 @@ function votes_upload_form_submit($form, &$form_state) {
   $text = $form_state["values"]["text"];
   $round = $form_state["values"]["round"];
   
-  $votes_url = DATA_SOURCE_URL . "/votes/"
-  		. $round . "-"
-        . variable_get("fantacalcio_votes_provider", 1) . ".json";
+  $votes_url = DATA_SOURCE_URL . "/votes/" . $round . "-" . variable_get("fantacalcio_votes_provider", 1) . ".json";
   
   $votes = json_decode(file_get_contents($votes_url));
   
@@ -653,7 +649,8 @@ function votes_upload_form_submit($form, &$form_state) {
   update_players($round + 1);
   
   // risultati provvisori
-  db_update("fanta_rounds")->condition("round", $round)->fields(array("status" => -1))->execute();
+  db_update("fanta_rounds")->condition("round", $round)->fields(array(
+    "status" => -1))->execute();
   
   drupal_set_message('Voti caricati');
   drupal_set_message(check_plain($out));
@@ -661,11 +658,9 @@ function votes_upload_form_submit($form, &$form_state) {
 
 function fantacalcio_upload_votes_cron($round) {
   $providers = get_vote_providers();
-//  $votes = get_votes_html_data($round, $providers);
+  // $votes = get_votes_html_data($round, $providers);
   
-  $votes_url = DATA_SOURCE_URL . "/votes/"
-  		. $round . "-"
-        . variable_get("fantacalcio_votes_provider", 1) . ".json";
+  $votes_url = DATA_SOURCE_URL . "/votes/" . $round . "-" . variable_get("fantacalcio_votes_provider", 1) . ".json";
   
   $votes = json_decode(file_get_contents($votes_url));
   
@@ -770,9 +765,8 @@ function parse_votes_text($text, $round, $provider) {
 }
 
 function insert_votes($votes, $round, $provider) {
-	
-	$tot = 0;
-	
+  $tot = 0;
+  
   // VOTI della GIORNATA
   $sql = "DELETE FROM {fanta_votes} WHERE round = '%d'";
   
@@ -780,27 +774,47 @@ function insert_votes($votes, $round, $provider) {
   $query->condition("round", $round);
   
   if ($provider > 0)
-      $query->condition("provider", $provider);
+    $query->condition("provider", $provider);
   
   $result = $query->execute();
   
   $players_ids = Player::getIdList();
   
-  //$sql = "INSERT INTO {fanta_votes} (round, pl_id, provider, vote, goals_for, goals_against, saved_penalties, missed_penalties, penalty_goals, own_goals, yellow_cards, red_cards, assists, win_goals, draw_goals) VALUES ";
+  // $sql = "INSERT INTO {fanta_votes} (round, pl_id, provider, vote, goals_for, goals_against, saved_penalties, missed_penalties, penalty_goals, own_goals, yellow_cards, red_cards, assists, win_goals, draw_goals) VALUES ";
   foreach ($votes->votes as $name => $vote) {
-  	if (in_array($name, array_keys($players_ids))) {
-    
-    $total = $vote->vote + ($vote->goals_for * variable_get("fantacalcio_points_goals_for", "3")) + ($vote->penalty_goals * variable_get("fantacalcio_points_penalty_goals", "3")) + ($vote->assists * variable_get("fantacalcio_points_assists", "1")) + ($vote->saved_penalties  * variable_get("fantacalcio_points_saved_penalties", "3")) + ($vote->goals_against * variable_get("fantacalcio_points_goals_against", "-1")) + ($vote->red_cards * variable_get("fantacalcio_points_red_card", "-1")) + ($vote->yellow_cards * variable_get("fantacalcio_points_yellow_card", "-0.5")) + ($vote->own_goals *  variable_get("fantacalcio_points_own_goal", "-2")) + ($vote->missed_penalties * variable_get("fantacalcio_points_missed_penalties", "-3")) + ($vote->draw_goals * variable_get("fantacalcio_points_draw_goals", "1")) + ($vote->win_goals * variable_get("fantacalcio_points_win_goals", "3"));
-    
-    $query = db_insert("fanta_votes");
-    $query->fields(array("round" => $round, "pl_id" => $players_ids[$name], "provider" => $provider, "total" => $total, "vote" => $vote->vote, "goals_for" => $vote->goals_for, "goals_against" => $vote->goals_against, "saved_penalties" => $vote->saved_penalties, "missed_penalties" => $vote->missed_penalties, "penalty_goals" => $vote->penalty_goals, "own_goals" => $vote->own_goals, "yellow_cards" => $vote->yellow_cards, "red_cards" => $vote->red_cards, "assists" => $vote->assists, "win_goals" => $vote->win_goals, "draw_goals" => $vote->draw_goals ));
-//    print $query->arguments();
-    $query->execute();
-    
-    $tot++;
-  	}
+    if (in_array($name, array_keys($players_ids))) {
+      
+      $total = $vote->vote + ($vote->goals_for * variable_get("fantacalcio_points_goals_for", "3")) + ($vote->penalty_goals * variable_get("fantacalcio_points_penalty_goals", "3")) + ($vote->assists * variable_get("fantacalcio_points_assists", "1")) + ($vote->saved_penalties * variable_get("fantacalcio_points_saved_penalties", "3")) + ($vote->goals_against * variable_get("fantacalcio_points_goals_against", "-1")) + ($vote->red_cards * variable_get("fantacalcio_points_red_card", "-1")) + ($vote->yellow_cards * variable_get("fantacalcio_points_yellow_card", "-0.5")) + ($vote->own_goals * variable_get("fantacalcio_points_own_goal", "-2")) + ($vote->missed_penalties * variable_get("fantacalcio_points_missed_penalties", "-3")) + ($vote->draw_goals * variable_get("fantacalcio_points_draw_goals", "1")) + ($vote->win_goals * variable_get("fantacalcio_points_win_goals", "3"));
+      
+      $query = db_insert("fanta_votes");
+      $query->fields(array(
+        "round" => $round, 
+        "pl_id" => $players_ids[$name], 
+        "provider" => $provider, 
+        "total" => $total, 
+        "vote" => $vote->vote, 
+        "goals_for" => $vote->goals_for, 
+        "goals_against" => $vote->goals_against, 
+        "saved_penalties" => $vote->saved_penalties, 
+        "missed_penalties" => $vote->missed_penalties, 
+        "penalty_goals" => $vote->penalty_goals, 
+        "own_goals" => $vote->own_goals, 
+        "yellow_cards" => $vote->yellow_cards, 
+        "red_cards" => $vote->red_cards, 
+        "assists" => $vote->assists, 
+        "win_goals" => $vote->win_goals, 
+        "draw_goals" => $vote->draw_goals,
+        "regular" => $vote->regular,
+        "substituted" => $vote->substituted
+          
+      ));
+      // print $query->arguments();
+      $query->execute();
+      
+      $tot++;
+    }
   }
-    
+  
   return $tot . " Voti Inseriti";
 }
 
@@ -847,15 +861,15 @@ function update_players($round) {
   
   $query = db_select("fanta_players_rounds", "pt");
   $query->condition("round", $round - 1);
-  $query->fields("pt");//"SELECT DISTINCT pl_id, rt_id as team, active FROM {fanta_players_teams} WHERE round = '%d'";
-  $result = $query->execute();//($sql, ($round - 1));
-  foreach($result as $row) {
+  $query->fields("pt"); // "SELECT DISTINCT pl_id, rt_id as team, active FROM {fanta_players_teams} WHERE round = '%d'";
+  $result = $query->execute(); // ($sql, ($round - 1));
+  foreach ($result as $row) {
     $sqla .= " (" . $row->pl_id . ", " . $round . ", " . $row->rt_id . ", " . $row->quotation . ", " . $row->not_rounded_quotation . ", " . $row->active . "),";
     $i++;
   }
   $sqla = substr($sqla, 0, -1);
   db_query($sqla);
-  $message = "Giocatori aggiornati: " . $i . " (Giornata n° " . $round . ")";
+  $message = "Giocatori aggiornati: " . $i . " (Giornata nï¿½ " . $round . ")";
   drupal_set_message(check_plain($message));
 }
 
@@ -951,26 +965,34 @@ function fantacalcio_get_modifiers($vote_round) {
           mod_1_role_3 = '%f',
           mod_2_role_3  = '%f'
           WHERE m_id = '%d'";
-      //$result = db_query($sql, $mod_1_role_0, $mod_2_role_0, $mod_1_role_1, $mod_2_role_1, $mod_1_role_2, $mod_2_role_2, $mod_1_role_3, $mod_2_role_3, $match->m_id);
+      // $result = db_query($sql, $mod_1_role_0, $mod_2_role_0, $mod_1_role_1, $mod_2_role_1, $mod_1_role_2, $mod_2_role_2, $mod_1_role_3, $mod_2_role_3, $match->m_id);
       
       $query = db_update("fanta_matches");
-      $query->fields(array("mod_1_role_0" => $mod_1_role_0, "mod_1_role_1" => $mod_1_role_1, "mod_1_role_2" => $mod_1_role_2, "mod_1_role_3" => $mod_1_role_3, "mod_2_role_0" => $mod_2_role_0, "mod_2_role_1" => $mod_2_role_1, "mod_2_role_2" => $mod_2_role_2, "mod_2_role_3" => $mod_2_role_3));
+      $query->fields(array(
+        "mod_1_role_0" => $mod_1_role_0, 
+        "mod_1_role_1" => $mod_1_role_1, 
+        "mod_1_role_2" => $mod_1_role_2, 
+        "mod_1_role_3" => $mod_1_role_3, 
+        "mod_2_role_0" => $mod_2_role_0, 
+        "mod_2_role_1" => $mod_2_role_1, 
+        "mod_2_role_2" => $mod_2_role_2, 
+        "mod_2_role_3" => $mod_2_role_3));
       $query->condition("m_id", $m_id);
       
       $query->execute();
     }
     
-    //output    
-  foreach ($round->competitions as $round_competition) {
+    // output
+    foreach ($round->competitions as $round_competition) {
       
-//       $sql = "SELECT * FROM {fanta_matches} " 
-//           . "WHERE g_id IN (SELECT g_id FROM {fanta_groups} WHERE c_id =  '%d') " 
-//               . "AND round = '%d' ";
-//       $result = db_query($sql, $c_id, $competition_round);
-
-    $subquery = db_select('fanta_groups', 'g');
-    $subquery->condition("c_id", $round_competition->c_id);
-    $subquery->fields('g', array("g_id"));
+      // $sql = "SELECT * FROM {fanta_matches} "
+      // . "WHERE g_id IN (SELECT g_id FROM {fanta_groups} WHERE c_id = '%d') "
+      // . "AND round = '%d' ";
+      // $result = db_query($sql, $c_id, $competition_round);
+      
+      $subquery = db_select('fanta_groups', 'g');
+      $subquery->condition("c_id", $round_competition->c_id);
+      $subquery->fields('g', array("g_id"));
       
       $query = db_select("fanta_matches", "m");
       $query->condition("g_id", $subquery, "IN");
@@ -982,7 +1004,12 @@ function fantacalcio_get_modifiers($vote_round) {
       
       $out .= "<h3>" . check_plain($competitions[$round_competition->c_id]->name) . "</h3>";
       
-      $header = array(t("Squadra"), t("Portiere"), t("Difesa"), t("Centrocampo"), t("Attacco"));
+      $header = array(
+        t("Squadra"), 
+        t("Portiere"), 
+        t("Difesa"), 
+        t("Centrocampo"), 
+        t("Attacco"));
       $rows = array();
       
       foreach ($result as $row) {
@@ -1000,8 +1027,11 @@ function fantacalcio_get_modifiers($vote_round) {
         $rows[$row->m_id . "_3"][] = array("data" => "", "colspan" => 5); // separatore
       }
       
-      $out .= theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("class" => array("table", "table-responsive"))));
-  }
+      $out .= theme("table", array(
+        "header" => $header, 
+        "rows" => $rows, 
+        "attributes" => array("class" => array("table", "table-responsive"))));
+    }
   }
   else
     $out = t("No modificatori");
@@ -1011,12 +1041,11 @@ function fantacalcio_get_modifiers($vote_round) {
 
 function fantacalcio_get_modifier_role_0($t_id, $c_id, $vote_round, $competition_round, $votes_provider) {
   
-//   $sql = "SELECT * FROM {fanta_lineups} f, {fanta_players} p " 
-//       . "WHERE f.pl_id = p.pl_id " 
-//           . "AND p.role = 0 " 
-//               . "AND f.c_id = '%d' " . "AND f.round = '%d' " . "AND f.t_id = '%d' " . "AND f.has_played = 1";
-//   $result = db_query($sql, $c_id, $competition_round, $t_id);
-  
+  // $sql = "SELECT * FROM {fanta_lineups} f, {fanta_players} p "
+  // . "WHERE f.pl_id = p.pl_id "
+  // . "AND p.role = 0 "
+  // . "AND f.c_id = '%d' " . "AND f.round = '%d' " . "AND f.t_id = '%d' " . "AND f.has_played = 1";
+  // $result = db_query($sql, $c_id, $competition_round, $t_id);
   $query = db_select("fanta_lineups", "l");
   $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
   $query->condition("p.role", 0);
@@ -1029,7 +1058,7 @@ function fantacalcio_get_modifier_role_0($t_id, $c_id, $vote_round, $competition
   
   $result = $query->execute();
   
-  foreach($result as $row) {
+  foreach ($result as $row) {
     $pl_id = $row->pl_id;
   }
   
@@ -1045,7 +1074,7 @@ function fantacalcio_get_modifier_role_0($t_id, $c_id, $vote_round, $competition
     
     $result = $query->execute();
     
-    foreach($result as $row) {
+    foreach ($result as $row) {
       if ($row->saved_penalties == 0 && $row->vote > 6)
         return $row->vote - 6;
       else
@@ -1062,7 +1091,7 @@ function fantacalcio_get_modifier_role_1($t_id, $c_id, $vote_round, $competition
   $role_0_played_number = 0;
   $sql = "SELECT * FROM {fanta_lineups} f, {fanta_players} p " . "WHERE f.pl_id = p.pl_id " . "AND p.role = 1 " . "AND f.c_id = '%d' " . "AND f.round = '%d'" . "AND f.t_id = '%d'";
   
-  //$result = db_query($sql, $c_id, $competition_round, $t_id);
+  // $result = db_query($sql, $c_id, $competition_round, $t_id);
   
   $query = db_select("fanta_lineups", "l");
   $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
@@ -1076,7 +1105,7 @@ function fantacalcio_get_modifier_role_1($t_id, $c_id, $vote_round, $competition
   
   $result = $query->execute();
   
-  foreach($result as $row) {
+  foreach ($result as $row) {
     
     if ($row->has_played == 1) {
       array_push($pl_ids, $row->pl_id);
@@ -1091,20 +1120,20 @@ function fantacalcio_get_modifier_role_1($t_id, $c_id, $vote_round, $competition
   
   $tot = 0;
   $sql = "SELECT DISTINCT pl_id, vote FROM {fanta_votes} " . "WHERE pl_id IN ($elenco_dif_ids) " . "AND round = '%d' " . "AND provider = '%d'";
-  //$result = db_query($sql, $vote_round, $votes_provider);
+  // $result = db_query($sql, $vote_round, $votes_provider);
   
   $query = db_select("fanta_votes", "v");
   
   $query->fields("v");
   
-  //TODO rimuovere commento
+  // TODO rimuovere commento
   $query->condition("pl_id", $pl_ids, "IN");
   $query->condition("round", $vote_round);
   $query->condition("provider", $votes_provider);
   
   $result = $query->execute();
   
-  foreach($result as $row) {
+  foreach ($result as $row) {
     $tot += $row->vote;
   }
   
@@ -1119,7 +1148,6 @@ function fantacalcio_get_modifier_role_1($t_id, $c_id, $vote_round, $competition
 }
 
 function fantacalcio_get_modifier_role_2($t1_id, $t2_id, $c_id, $vote_round, $competition_round, $votes_provider) {
-  
   $role_2_t1_ids = array();
   $role_2_t1_regulars = 0;
   $role_2_t1_played = 0;
@@ -1128,7 +1156,7 @@ function fantacalcio_get_modifier_role_2($t1_id, $t2_id, $c_id, $vote_round, $co
   $role_2_t2_played = 0;
   
   // team 1
-    
+  
   $query = db_select("fanta_lineups", "l");
   $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
   $query->condition("p.role", 2);
@@ -1140,7 +1168,7 @@ function fantacalcio_get_modifier_role_2($t1_id, $t2_id, $c_id, $vote_round, $co
   $query->fields("p");
   
   $result = $query->execute();
-  foreach($result as $row) {
+  foreach ($result as $row) {
     if ($row->has_played == 1) {
       array_push($role_2_t1_ids, $row->pl_id);
       $role_2_t1_played++;
@@ -1163,7 +1191,7 @@ function fantacalcio_get_modifier_role_2($t1_id, $t2_id, $c_id, $vote_round, $co
   
   $result = $query->execute();
   
-  foreach($result as $row) {
+  foreach ($result as $row) {
     if ($row->has_played == 1) {
       array_push($role_2_t2_ids, $row->pl_id);
       $role_2_t2_played++;
@@ -1175,59 +1203,59 @@ function fantacalcio_get_modifier_role_2($t1_id, $t2_id, $c_id, $vote_round, $co
   
   $role_2_tot_1 = 0;
   $role_2_tot_2 = 0;
-
+  
   if (count($role_2_t1_ids) > 0 && count($role_2_t2_ids)) {
-  
-  // voti team 1
-  $query = db_select("fanta_votes", "v");
-  $query->condition("pl_id", $role_2_t1_ids, "IN");
-  $query->condition("round", $vote_round);
-  $query->condition("provider", $votes_provider);
-  
-  $query->fields("v", array("vote", "pl_id"));
-  
-  $result = $query->execute();//($sql, $vote_round, $votes_provider);
-  foreach ($result as $row) {
-    $role_2_tot_1 += $row->vote;
-  }
-  
-  // voti team 2
-  $query = db_select("fanta_votes", "v");
-  $query->condition("pl_id", $role_2_t2_ids, "IN");
-  $query->condition("round", $vote_round);
-  $query->condition("provider", $votes_provider);
-  
-  $query->fields("v", array("vote", "pl_id"));
-  
-  $result = $query->execute();//($sql, $vote_round, $votes_provider);
-  foreach ($result as $row) {
-    $role_2_tot_2 += $row->vote;
-  }
-  
-  $role_2_tot_1 += 5 * ($role_2_t1_regulars - $role_2_t1_played);
-  $role_2_tot_2 += 5 * ($role_2_t2_regulars - $role_2_t2_played);
-  
-  if ($role_2_t1_regulars > $role_2_t2_regulars)
-    $role_2_tot_2 += 5 * ($role_2_t1_regulars - $role_2_t2_regulars);
-  
-  if ($role_2_t2_regulars > $role_2_t1_regulars)
-    $role_2_tot_1 += 5 * ($role_2_t2_regulars - $role_2_t1_regulars);
-  
-  $scarto = $role_2_tot_1 - $role_2_tot_2;
-  
-  $scarto = floor(abs($scarto)) / 2;
-  
-  if ($role_2_tot_1 > $role_2_tot_2)
-    $mod_role_2 = array(1 => $scarto, 2 => 0 - $scarto);
-  
-  if ($role_2_tot_1 < $role_2_tot_2)
-    $mod_role_2 = array(1 => 0 - $scarto, 2 => $scarto);
-  
-  if ($role_2_tot_1 == $role_2_tot_2)
-    $mod_role_2 = array(1 => 0, 2 => 0);
+    
+    // voti team 1
+    $query = db_select("fanta_votes", "v");
+    $query->condition("pl_id", $role_2_t1_ids, "IN");
+    $query->condition("round", $vote_round);
+    $query->condition("provider", $votes_provider);
+    
+    $query->fields("v", array("vote", "pl_id"));
+    
+    $result = $query->execute(); // ($sql, $vote_round, $votes_provider);
+    foreach ($result as $row) {
+      $role_2_tot_1 += $row->vote;
+    }
+    
+    // voti team 2
+    $query = db_select("fanta_votes", "v");
+    $query->condition("pl_id", $role_2_t2_ids, "IN");
+    $query->condition("round", $vote_round);
+    $query->condition("provider", $votes_provider);
+    
+    $query->fields("v", array("vote", "pl_id"));
+    
+    $result = $query->execute(); // ($sql, $vote_round, $votes_provider);
+    foreach ($result as $row) {
+      $role_2_tot_2 += $row->vote;
+    }
+    
+    $role_2_tot_1 += 5 * ($role_2_t1_regulars - $role_2_t1_played);
+    $role_2_tot_2 += 5 * ($role_2_t2_regulars - $role_2_t2_played);
+    
+    if ($role_2_t1_regulars > $role_2_t2_regulars)
+      $role_2_tot_2 += 5 * ($role_2_t1_regulars - $role_2_t2_regulars);
+    
+    if ($role_2_t2_regulars > $role_2_t1_regulars)
+      $role_2_tot_1 += 5 * ($role_2_t2_regulars - $role_2_t1_regulars);
+    
+    $scarto = $role_2_tot_1 - $role_2_tot_2;
+    
+    $scarto = floor(abs($scarto)) / 2;
+    
+    if ($role_2_tot_1 > $role_2_tot_2)
+      $mod_role_2 = array(1 => $scarto, 2 => 0 - $scarto);
+    
+    if ($role_2_tot_1 < $role_2_tot_2)
+      $mod_role_2 = array(1 => 0 - $scarto, 2 => $scarto);
+    
+    if ($role_2_tot_1 == $role_2_tot_2)
+      $mod_role_2 = array(1 => 0, 2 => 0);
   }
   else
-    $mod_role_2 = array(1 => 0, 2 => 0); 
+    $mod_role_2 = array(1 => 0, 2 => 0);
   
   return $mod_role_2;
 }
@@ -1244,7 +1272,7 @@ function fantacalcio_get_modifier_role_3($t_id, $c_id, $vote_round, $competition
   $query->condition("l.has_played", 1);
   
   $query->fields("p");
-    
+  
   $result = $query->execute();
   
   foreach ($result as $row) {
@@ -1726,7 +1754,6 @@ function fantacalcio_get_totals($vote_round) {
           "classes" => array("table", "table-responsive", "table-striped"))));
     }
   }
-  
   
   return $out;
 }

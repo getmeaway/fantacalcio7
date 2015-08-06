@@ -779,24 +779,42 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
 	  }
   }
   
+  //mobile
+  $squad_mobile = "";
+  foreach ($squad as $player) {
+    
+    $player->status = 1;
+    
+    $offset = "col-xs-offset-1";
+    if (isset($lineup->positions) && array_key_exists($player->pl_id, $lineup->positions[1]))
+      $offset = "col-xs-offset-2";
+    else if (isset($lineup->positions) && array_key_exists($player->pl_id, $lineup_player_ids))
+      $offset = "col-xs-offset-0";
+        
+    $squad_mobile .= "<div class='row'>" 
+        . "<div class='col-xs-10 " . $offset . "'>"
+            . "<table class='table player-table'><tr>"
+                . "<td class='player-role'>"
+                    . fantacalcio_show_role($player->role)
+                . "</td>"
+                . "<td class='player-name'>" . $player->name . "</td>"
+. "<td class='player-team'>" . $player->team . "</td>"
+            
+                . "<td class='player-status'>"
+					. fantacalcio_show_status($player->status)
+                . "</td>"
+                . "</tr>"
+            . "</table>"
+            . "<div class='position-message'></div>"
+        . "</div>"
+    . "</div>";
+  }
+  
+  //web
   foreach ($squad as $player) {
     if (!array_key_exists($player->pl_id, $lineup_player_ids)) {
 
       $classes = array("role_" . $player->role);
-
-//       $out_squad .= "\n<div  class='groupItem' id='$pl_id' name='" . $player->role . "_" . $competition->id . "_" . $team->id . "'>" .
-//       "\n<div  class='itemHeader'>\n" ;
-
-//       $out_squad .= "\n<table width='100%'>" .
-//       "\n<tr class=''>" .
-//       "\n<td class='role' width='10%'>" . Player::convertRole($player->role) . "</td>" .
-//       "\n<td width='50%'>" . $player->name . "</td>" .
-//       "\n<td width='35%'>" . ucwords(strtolower($player->team)) . "</td>" .
-//       "\n<td><a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $pl_id . "' title='Dettagli giocatore'>" .
-//       "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .
-//       "</a></td>".
-//       "\n</tr>" .
-//       "\n</table>";
       
       $row_data = array();
       
@@ -848,27 +866,7 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
 	  
 	  foreach ($lineup->positions[1] as $regular) {
 	    $class = "role_" . $regular->role;
-	
-	//     $out_regulars .= "\n<div  class='groupItem' id='$pl_id' name='" . $regular->role . "_" . $competition->id . "_" . $team->id . "'>" .
-	//       "\n<div  class='itemHeader'>\n";
-	    
-	//     $out_regulars .= "\n<table width='100%'>" .
-	//     "\n<tr class='$class'>" .
-	//     "\n<td class='role' width='10%'>" . Player::convertRole($regular->role) . "</td>" .
-	//     "\n<td width='50%'>" . $regular->name . "</td>" .
-	//     "\n<td width='35%'>" . ucwords(strtolower($regular->team)) . "</td>" .
-	//     "\n<td width='5%' style='padding-left:5px;'>".
-	//     "\n<td><a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $regular->id . "' title='Dettagli giocatore'>" .
-	//     "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>" .
-	//     "</a></td>".
-	//     "\n</td>" .
-	//     "\n</tr>" .
-	//     "\n</table>";
-	    
-	//     $out_regulars .= "\n</div>"
-	//       # . "\n<div class='itemContent'>\n"
-	//       #   . "\n</div>"
-	//        . "\n</div>";
+
 	    $row_data = array();
 	    
 	    $row_data[] = array("data" => "<span class='fa-stack'>
@@ -958,7 +956,7 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
 
   }
   
-  return array("squad" => $out_squad, "regulars" => $out_regulars, "reserves" => $out_reserves);
+  return array("squad" => $out_squad, "regulars" => $out_regulars, "reserves" => $out_reserves, "squad_mobile" => $squad_mobile);
 }
 
 function make_lineup_mobile($t_id, $c_id, $round, $admin = FALSE) {

@@ -229,10 +229,21 @@ class Round
 		$query->addExpression("MAX(round)");
 		$result = $query->execute();
 		
-		if ($result->rowCount() == 0)
+		if ($result->fetchField() == NULL)
 			return 0;
 		
 		return $result->fetchField();
+	}
+	
+	static function getNext() {
+	  $query = db_select("fanta_players_rounds", "t");
+	  $query->addExpression("MAX(round)");
+	  $result = $query->execute();
+	
+	  if ($result->rowCount() == 0)
+	    return 0;
+	
+	  return $result->fetchField();
 	}
 	
 	static function getLastQuotation() {

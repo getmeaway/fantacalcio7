@@ -24,7 +24,7 @@
 		</li>
 		<?php if ($is_own_team) : ?>
 		<li class="pull-right">
-			<a class="btn-info" href="<?php print base_path() . "mie/" . $team->id ?>">
+			<a data-role="button" class="text-info" href="<?php print base_path() . "mie/" . $team->id ?>">
 			<?php print t("Gestione squadra"); ?>
 			</a>
 		</li>

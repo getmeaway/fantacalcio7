@@ -5,10 +5,16 @@
 * 
 */
 function fantacalcio_team_form($form, $form_state, $id) {
+  
+  global $user;
+  
   if ($id == null)
     $team = null;
   else
     $team = Team::get($id);
+  
+  if ($team == null || $team->user !== $user->uid)
+    drupal_goto(drupal_access_denied());
   
   $action = ($team) ? "update" : "insert";
   $title = ($team) ? t("Gestione squadra") . " - " . $team->name : t("Crea squadra");
@@ -419,10 +425,7 @@ function show_team_squad($t_id) {
   $squad_rows = array();
   foreach ($squad as $pl_id => $player) {
     $squad_rows[$pl_id] = array(
-      "<span class=\"fa-stack\">
-					<i class=\"fa fa-square fa-stack-2x squad-player-role-" . $player->role . "\"></i>
-					<i class=\"fa fa-stack-1x\" style=\"color: white;\"><span class=\"font-normal\">" . Player::convertRole($player->role) . "</span></i>
-				</span>", 
+      fantacalcio_show_role($player->role), 
       $player->name, 
       ucfirst($player->team), 
       $player->cost);
@@ -1249,9 +1252,9 @@ function fantacalcio_squad_movements($t_id) {
   
   $team = Team::get($t_id);
   
-  if (!$team)
+  if ($team == null || $team->user !== $user->uid)
     drupal_goto(drupal_access_denied());
-  
+    
   drupal_set_title($team->name . " - Lista movimenti", $output = CHECK_PLAIN);
   
   $rows = $team->getMovements();

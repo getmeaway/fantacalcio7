@@ -683,7 +683,9 @@ function fantacalcio_menu() {
       'page callback' => 'fantamercato_autocomplete_players_team',
       'page arguments' => array(3, 4),
       'access arguments' => array('administer draft'),
-      'type' => MENU_CALLBACK
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.draft.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio')
   );
   
   $items['mercato/autocomplete/swaps/%']  = array(
@@ -1065,6 +1067,8 @@ function fantacalcio_theme($existing, $type, $theme, $path) {
     'fantacalcio_add_matches' => array(
       'arguments' => array("form" => NULL)), 
     'fantacalcio_admin_players_list_player' => array('render element' => 'form'), 
+    'team_buy_player' => array('render element' => 'form'),
+    'group_buy_player' => array('render element' => 'form'),
     'fantacalcio_admin_round' => array(
       'arguments' => array("form" => NULL)), 
     'insert_penalties_form' => array(
@@ -1116,4 +1120,28 @@ function fantacalcio_check_value($value) {
     return "<i class='fa fa-check-circle text-success'></i>";
   else
     return "<i class='fa fa-minus-circle text-danger'></i>";
+}
+
+function fantacalcio_show_role($role) {
+  return "<span class=\"fa-stack\">
+					<i class=\"fa fa-square fa-stack-2x squad-player-role-" . $role . "\"></i>
+					<i class=\"fa fa-stack-1x\" style=\"color: white;\"><span class=\"font-normal\">" . Player::convertRole($role) . "</span></i>
+				</span>";
+}
+
+function fantacalcio_show_status($status) {
+  
+  switch($status) {
+    case 1:
+      $status_class = "text-success";
+      break;
+    case 0:
+      $status_class = "text-warning";
+      break;
+    case -1:
+      $status_class = "text-danger";
+      break;
+  }
+  
+  return "<i class='fa fa-circle " . $status_class . "'></i>";
 }
