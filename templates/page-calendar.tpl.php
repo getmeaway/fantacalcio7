@@ -46,7 +46,9 @@
 					<?php if (!$is_main_competition): ?>
 					<td><small><em><?php print $match->tot_1 . " - " . $match->tot_2; ?></em></small></td>
 					<?php endif; ?>
-					<td><a href=""><i class="fa fa-bar-chart"></i></a></td>
+					<td>
+					 <?php print l('<i class="fa fa-bar-chart"></i>', "scheda/partita/" . $match->id, array("html" => true)); ?>					 
+					</td>
 					<?php else: ?>
 					<td></td>
 					<td></td>

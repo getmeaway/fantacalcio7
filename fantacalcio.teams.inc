@@ -431,7 +431,7 @@ function show_team_squad($t_id) {
       $player->cost);
     if (variable_get("fantacalcio_free_movements", 1) == 1)
       array_push($squad_rows[$pl_id], $player->quotation);
-    array_push($squad_rows[$pl_id], "<a href=\"#\" data-toggle=\"modal\" data-target=\"#player-stats-modal\" class=\"player-stats\" id=\"player-stat-" . $pl_id . "\"><i class=\"fa fa-bar-chart\"></i></a>");
+    array_push($squad_rows[$pl_id], l("<i class=\"fa fa-bar-chart\"></i>", "scheda/giocatore/" . $pl_id, array("html" => true, "attributes" => array("data-toggle" => "modal", "data-target" => "#player-stats-modal"))));
   }
   
   $squad = array(

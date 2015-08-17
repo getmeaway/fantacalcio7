@@ -49,6 +49,13 @@ function fantacalcio_init() {
   
   variable_set("fantacalcio_user_can_create_team", true);
   
+//   drupal_add_js(base_path() . drupal_get_path("module", "fantacalcio") . "/components/lightbox/bootstrap-lightbox.min.js");
+//   drupal_add_js("jQuery(document).delegate('*[data-toggle=\"lightbox\"]', 'click', function(event) {
+//     event.preventDefault();
+//     jQuery(this).ekkoLightbox();
+// });",  array('type' => 'inline', 'scope' => 'footer', 'weight' => 5));
+//   drupal_add_js("jQuery('[data-toggle=\"lightbox\"]').lightbox()",  array('type' => 'inline', 'scope' => 'footer', 'weight' => 5));
+  
   drupal_add_css('http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css', array(
     'group' => CSS_DEFAULT, 
     'every_page' => TRUE, 
@@ -57,6 +64,10 @@ function fantacalcio_init() {
     'group' => CSS_DEFAULT, 
     'every_page' => TRUE, 
     'type' => 'external'));
+//   drupal_add_css(base_path() . drupal_get_path("module", "fantacalcio") . "/components/lightbox/bootstrap-lightbox.min.css", array(
+//     'group' => CSS_DEFAULT, 
+//     'every_page' => TRUE, 
+//     'type' => 'external'));
   
   if ($user->uid > 0 && !isset($user->groups)) {
     
@@ -268,7 +279,7 @@ function fantacalcio_menu() {
   $items['formazioni'] = array(
     'title' => 'Formazioni', 
     'page callback' => '_fantacalcio_lineup', 
-    'access arguments' => array('access fantacalcio'), 
+    'access arguments' => array('access content fantacalcio'), 
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.lineups.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -285,7 +296,7 @@ function fantacalcio_menu() {
     'title' => 'Formazioni', 
     'page callback' => '_fantacalcio_lineup_view', 
     'page arguments' => array(2, 3, 4), 
-    'access arguments' => array('access fantacalcio'), 
+    'access arguments' => array('access content fantacalcio'), 
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.lineups.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -294,7 +305,7 @@ function fantacalcio_menu() {
     'title' => 'Formazioni', 
     'page callback' => '_fantacalcio_lineup_box', 
     'page arguments' => array(2, 3, 4), 
-    'access arguments' => array('access fantacalcio'), 
+    'access arguments' => array('access content fantacalcio'), 
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.lineups.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -382,7 +393,7 @@ function fantacalcio_menu() {
   $items['squadre'] = array(
     'title' => 'Squadre', 
     'page callback' => 'fantacalcio_show_teams', 
-    'access arguments' => array('access fantacalcio'), 
+    'access arguments' => array('access content fantacalcio'), 
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.teams.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -454,7 +465,7 @@ function fantacalcio_menu() {
     'title' => 'Giocatori Liberi', 
     'page callback' => 'fantacalcio_free_players', 
     'page arguments' => array(2), 
-    'access arguments' => array('access fantacalcio'), 
+    'access arguments' => array('access content fantacalcio'), 
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.stats.players.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -496,7 +507,7 @@ function fantacalcio_menu() {
   
   $items['scheda/giocatore/%'] = array(
     'title' => 'Statistiche Giocatore', 
-    'page callback' => 'scheda_giocatore', 
+    'page callback' => 'player_stats', 
     'page arguments' => array(2), 
     'access arguments' => array('access content fantacalcio'), 
     'type' => MENU_NORMAL_ITEM, 
@@ -943,7 +954,7 @@ function fantacalcio_menu() {
   $items['admin/fantacalcio/rounds/%'] = array(
     'title' => 'Giornate', 
     'page callback' => 'drupal_get_form', 
-    'page arguments' => array('fantacalcio_admin_round', 4), 
+    'page arguments' => array('fantacalcio_admin_round', 3), 
     'access arguments' => array('administer fantacalcio'), 
     
     // 'type' => MENU_NORMAL_ITEM,
@@ -1071,10 +1082,9 @@ function fantacalcio_theme($existing, $type, $theme, $path) {
     'fantacalcio_add_matches' => array(
       'arguments' => array("form" => NULL)), 
     'fantacalcio_admin_players_list_player' => array('render element' => 'form'), 
+    'fantacalcio_admin_round' => array('render element' => 'form'), 
     'team_buy_player' => array('render element' => 'form'),
     'group_buy_player' => array('render element' => 'form'),
-    'fantacalcio_admin_round' => array(
-      'arguments' => array("form" => NULL)), 
     'insert_penalties_form' => array(
       'arguments' => array("form" => NULL)), 
     'fantacalcio_admin_matches_calendar' => array('render element' => 'form'), 
@@ -1146,5 +1156,5 @@ function fantacalcio_show_status($status) {
       break;
   }
   
-  return "<i class='fa fa-circle " . $status_class . "'></i>";
+  return "<i class='fa fa-lg fa-circle " . $status_class . "'></i>";
 }

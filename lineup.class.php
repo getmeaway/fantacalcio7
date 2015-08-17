@@ -115,7 +115,6 @@ class Lineup {
 	}
 	
 	function getCheckValues() {
-
 		//massima posizione
 		$max_position = max(array_keys($this->positions));
 				

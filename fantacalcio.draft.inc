@@ -139,26 +139,26 @@ function group_summary($g_id) {
     $row_data = array();
     $row_data[] = array(
       "data" => l($team->name, "mercato/team/" . $g_id . "/" . $t_id));
-    $row_data[] = array("data" => $n_giocatori, "class" => "num");
-    $row_data[] = array("data" => $spesa, "class" => "num");
-    $row_data[] = array("data" => $rimasti, "class" => "num");
+    $row_data[] = array("data" => $n_giocatori, "class" => array("num"));
+    $row_data[] = array("data" => $spesa, "class" => array("num"));
+    $row_data[] = array("data" => $rimasti, "class" => array("num"));
     $row_data[] = array(
       "data" => (($n_giocatori == variable_get('fantacalcio_number_players', 25)) ? "-" : $spesa_max), 
       "class" => "num max");
     $row_data[] = array(
       "data" => $n_roles[0] . " / " . variable_get('fantacalcio_number_role_0', 25), 
-      "class" => role_number_get_class($n_roles[0], variable_get('fantacalcio_number_role_0', 25)));
+      "class" => array(role_number_get_class($n_roles[0], variable_get('fantacalcio_number_role_0', 25))));
     $row_data[] = array(
       "data" => $n_roles[1] . " / " . variable_get('fantacalcio_number_role_1', 25), 
-      "class" => role_number_get_class($n_roles[1], variable_get('fantacalcio_number_role_1', 25)));
+      "class" => array(role_number_get_class($n_roles[1], variable_get('fantacalcio_number_role_1', 25))));
     $row_data[] = array(
       "data" => $n_roles[2] . " / " . variable_get('fantacalcio_number_role_2', 25), 
-      "class" => role_number_get_class($n_roles[2], variable_get('fantacalcio_number_role_2', 25)));
+      "class" => array(role_number_get_class($n_roles[2], variable_get('fantacalcio_number_role_2', 25))));
     $row_data[] = array(
       "data" => $n_roles[3] . " / " . variable_get('fantacalcio_number_role_3', 25), 
-      "class" => role_number_get_class($n_roles[3], variable_get('fantacalcio_number_role_3', 25)));
+      "class" => array(role_number_get_class($n_roles[3], variable_get('fantacalcio_number_role_3', 25))));
     
-    $rows[$t_id] = array("class" => $row_class, 'data' => $row_data);
+    $rows[$t_id] = array("class" => array($row_class), 'data' => $row_data);
   }
   
   return theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("class" => array("table", "table-responsive"))));
@@ -328,7 +328,7 @@ function team_ex_players($g_id, $t_id) {
       $data[] = drupal_get_form('team_action_player_form', $t_id, $pl_id, 'restore');
       $data[] = l("<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>", "scheda/giocatore/" . $pl_id, array(
         "html" => "true", 
-        "attributes" => array("class" => "thickbox", "rel" => "lightframe")));
+        "attributes" => array("class" => array("thickbox"), "rel" => "lightframe")));
       
       $rows[] = array("data" => $data, "class" => "role_" . $player->role);
     }
@@ -361,7 +361,7 @@ function swaps_summary($g_id) {
 function get_last_boughts($g_id, $n) {
   
   $bought_players = array();
-  $teams = Team::all();
+  $teams = Team::allByGroup($g_id);
   
   $query = db_select("fanta_squads", "s");
   $query->join("fanta_players", "p", "p.pl_id = s.pl_id");

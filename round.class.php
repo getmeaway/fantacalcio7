@@ -19,22 +19,40 @@ class Round
 
 	static function all() {
 		$rounds = array();
+		$competition_rounds = array();
 		
 		$query = db_select("fanta_rounds_competitions", "rc");
 		$query->join("fanta_rounds", "r", "r.round = rc.round");
+		$query->join("fanta_round_statuses", "s", "r.status = s.s_id");
 		$query->fields("rc");
 		$query->fields("r");
+		$query->addField("s", "status", "status");
+		$query->orderBy("r.round");
+		
 		$result = $query->execute();
 		
 		foreach ($result as $row) {
-			$competition_round = new Round();
-			$competition_round->competition_round= $row->competition_round;
+			$round = new Round();
+			$round->date = $row->date;
+			$round->end_date = $row->end_date;
+			$round->status = $row->status;
+			
+			$competition_round = (object) array();
 			$competition_round->round= $row->round;
+			$competition_round->competition_id = $row->c_id;
+			$competition_round->competition_round = $row->competition_round;
 			$competition_round->label = (empty($row->round_label) ? $row->competition_round . t("ª giornata") : $row->round_label);
 			$competition_round->next = $row->next;
-			$competition_round->date = $row->date;
 		
-			array_push($rounds, $competition_round);
+			if (!isset($competition_rounds[$row->round]))
+			  $competition_rounds[$row->round] = array();
+			
+			$competition_rounds[$row->round][$row->c_id] = $competition_round;
+			$rounds[$row->round] = $round;
+		}
+		
+		foreach ($rounds as $round_number => $round) { 
+		  $round->competitions = $competition_rounds[$round_number];
 		}
 		
 		return $rounds;
@@ -60,6 +78,7 @@ class Round
 			$round->label = (empty($row->round_label) ? $row->competition_round . t("ª giornata") : $row->round_label);
 			$round->next = $row->next;
 			$round->date = $row->date;
+			$round->status = $row->status;
 		
 			array_push($rounds, $round);
 		}
@@ -91,59 +110,81 @@ class Round
 		return $rounds;
 	}
 	
-	static function get($round, $competition_id) {
+	static function get($_round, $competition_id) {
+	
+		$round = new Round();
+		$competition_rounds = array();
+		
 		$query = db_select("fanta_rounds_competitions", "rc");
 		$query->join("fanta_rounds", "r", "r.round = rc.round");
-		$query->condition("rc.round", $round);
+		$query->join("fanta_round_statuses", "s", "r.status = s.s_id");
+		$query->condition("rc.round", $_round);
 		$query->condition("c_id", $competition_id);
 		$query->fields("rc");
 		$query->fields("r");
+		$query->addField("s", "status", "status");
+		$query->orderBy("r.round");
+		
 		$result = $query->execute();
-	
-		while ($row = $result->fetchObject()) {
-			$competition_round = new Round();
-			$competition_round->competition_round= $row->competition_round;
-			$competition_round->round= $row->round;
-			$competition_round->label = (empty($row->round_label) ? $row->competition_round . t("ª giornata") : $row->round_label);
-			$competition_round->next = $row->next;
-			$competition_round->date = $row->date;
-	
-			return $competition_round;
+		
+		foreach ($result as $row) {
+		  
+		  $round->date = $row->date;
+		  $round->end_date = $row->end_date;
+		  $round->status = $row->status;
+		  	
+		  $competition_round = (object) array();
+		  $competition_round->round= $row->round;
+		  $competition_round->competition_id = $row->c_id;
+		  $competition_round->competition_round = $row->competition_round;
+		  $competition_round->label = (empty($row->round_label) ? $row->competition_round . t("ª giornata") : $row->round_label);
+		  $competition_round->next = $row->next;
+		
+		  if (!isset($competition_rounds[$row->round]))
+		    $competition_rounds[$row->round] = array();
+		  	
+		  $competition_rounds[$row->c_id] = $competition_round;		  
 		}
-	
-		return null;
+		
+		$round->competitions = $competition_rounds;
+				
+		return $round;
 	}
 	
 	static function getByRound($vote_round) {
 		
-		$round = null;
+		$round = new Round();
+		$competition_rounds = array();
 		
-		$query = db_select("fanta_rounds", "r");
-		$query->condition("r.round", $vote_round);
+		$query = db_select("fanta_rounds_competitions", "rc");
+		$query->join("fanta_rounds", "r", "r.round = rc.round");
+		$query->join("fanta_round_statuses", "s", "r.status = s.s_id");
+		$query->condition("rc.round", $vote_round);
+		$query->fields("rc");
 		$query->fields("r");
+		$query->addField("s", "status", "status");
+		$query->orderBy("r.round");
+		
 		$result = $query->execute();
-	
-		while ($row = $result->fetchObject()) {
-			
-			$round = new Round();
-			$round->round= $row->round;
-			$round->date = $row->date;
-			
-			$query2 = db_select("fanta_rounds_competitions", "rc");
-			$query2->condition("rc.round", $vote_round);
-			$query2->fields("rc");
-			
-			$result2 = $query2->execute();
-			
-			$rounds_competitions = array();
-			while ($row2 = $result2->fetchObject()) {
-				array_push($rounds_competitions, (object) array("c_id" => $row2->c_id, "competition_round" => $row2->competition_round, "round_label" => $row2->round_label));
-			}
-	
-			$round->competitions = $rounds_competitions;
-			
+		
+		foreach ($result as $row) {
+		  
+		  $round->date = $row->date;
+		  $round->end_date = $row->end_date;
+		  $round->status = $row->status;
+		  	
+		  $competition_round = (object) array();
+		  $competition_round->round= $row->round;
+		  $competition_round->competition_id = $row->c_id;
+		  $competition_round->competition_round = $row->competition_round;
+		  $competition_round->label = (empty($row->round_label) ? $row->competition_round . t("ª giornata") : $row->round_label);
+		  $competition_round->next = $row->next;
+				  	
+		  $competition_rounds[$row->c_id] = $competition_round;		  
 		}
-	
+		
+		$round->competitions = $competition_rounds;
+				
 		return $round;
 	}
 	
@@ -282,7 +323,7 @@ class Round
 	}
 	
 	static function getLastLineups($competition_id) {
-		$round = self::getLast();
+// 		$round = self::getLast();
 	
 		$query = db_select("fanta_lineups", "l");
 		$query->condition("c_id", $competition_id);		
@@ -290,6 +331,7 @@ class Round
 		$result = $query->execute();
 	
 		$max_round = $result->fetchField();
+		$max_round = max(1, $max_round);
 		
 		return self::getByCompetitionRound($max_round, $competition_id);
 	}
@@ -329,6 +371,21 @@ class Round
 	
 		return $rounds;
 	
+	}
+	
+	static function getStatuses() {
+	  $statuses = array();
+	  
+	  $query = db_select("fanta_round_statuses", "s");
+	  $query->fields("s");
+	  
+	  $result = $query->execute();
+	  
+	  foreach ($result as $row) {
+	    $statuses[$row->s_id] = $row->status;
+	  }
+	  	
+	  return $statuses;
 	}
 	
 	function getVotes($provider) {

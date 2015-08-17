@@ -26,6 +26,56 @@ class Match {
   var $played;
 
   static function get($id) {
+    
+    $query = db_select("fanta_matches", "m");
+    $query->condition("m.m_id", $id);
+    $query->join("fanta_teams", "t1", "t1.t_id = m.t1_id");
+    $query->join("fanta_teams", "t2", "t2.t_id = m.t2_id");
+    $query->join("fanta_groups", "g", "g.g_id = m.g_id");
+    $query->join("fanta_rounds_competitions", "rc", "rc.competition_round = m.round AND rc.c_id = g.c_id");
+    $query->join("fanta_rounds", "r", "r.round = rc.round");
+    $query->fields("m");
+    $query->fields("g");
+    $query->addField("t1", "name", "home_team");
+    $query->addField("t2", "name", "away_team");
+    $query->addField("r", "date", "date");
+    $query->addField("rc", "round_label", "round_label");
+    
+    $result = $query->execute();
+    
+    while ($row = $result->fetchObject()) {
+      $match = new Match();
+      $match->id = $row->m_id;
+      $match->t1_id = $row->t1_id;
+      $match->t2_id = $row->t2_id;
+      $match->g_id = $row->g_id;
+      $match->c_id = $row->c_id;
+      $match->home_team = $row->home_team;
+      $match->away_team = $row->away_team;
+      $match->date = $row->date;
+      $match->round = $row->round;
+      $match->round_label = $row->round_label;
+      $match->played = $row->played;
+      $match->goals_1 = $row->goals_1;
+      $match->goals_2 = $row->goals_2;
+      $match->tot_1 = $row->tot_1;
+      $match->tot_2 = $row->tot_2;
+      $match->bonus_t1 = $row->bonus_t1;
+      $match->bonus_t2 = $row->bonus_t2;
+      $match->mod_1_role_0 = $row->mod_1_role_0;
+      $match->mod_1_role_1 = $row->mod_1_role_1;
+      $match->mod_1_role_2 = $row->mod_1_role_2;
+      $match->mod_1_role_3 = $row->mod_1_role_3;
+      $match->mod_2_role_0 = $row->mod_2_role_0;
+      $match->mod_2_role_1 = $row->mod_2_role_1;
+      $match->mod_2_role_2 = $row->mod_2_role_2;
+      $match->mod_2_role_3 = $row->mod_2_role_3;
+            
+    }
+    
+    if (isset($match))
+      return $match;
+    return null;
   }
 
   static function getByGroup($g_id) {

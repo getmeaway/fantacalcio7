@@ -1,4 +1,13 @@
- <div role="tabpanel" class="navbar-collapse">
+<!-- Modal -->
+<div id='player-stats-modal' class='modal fade'>
+    <div class='modal-dialog'>
+        <div class='modal-content'>
+            <!-- Content will be loaded here from 'remote.php' file -->
+        </div>
+    </div>
+</div>
+
+<div role="tabpanel" class="navbar-collapse">
 
 			<!-- Nav tabs -->
 	<ul class="nav nav-pills responsive" role="tablist" id="team-tabs">

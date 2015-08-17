@@ -1,4 +1,9 @@
-<div id='div-formazione' class="row">
+<!-- <script -->
+<!-- 	src="/fantacazzismo2015/sites/all/modules/fantacalcio/js/jquery.mobile.custom.min.js"></script> -->
+<!-- <script -->
+<!-- 	src="/fantacazzismo2015/sites/all/modules/fantacalcio/js/jquery.ui.touch-punch.min.js"></script> -->
+
+<div id='div-formazione' class="">
 
 	<div id='_formazione_form' class="col-xs-12 col-sm-10 hidden-xs">
 		<?php print render($lineup_check); ?>
@@ -44,11 +49,12 @@
 </div>
 
 <div class="row">
-	<div class="visible-xs">
+	<div class="col-xs-12 visible-xs">
 		<div class="row" id="step-1">
-      		<div id='_formazione_form' class="col-xs-12 col-sm-10">
-      		<?php print render($lineup_check); ?>
-      	</div>
+			<div id='_formazione_form' class="col-xs-12 col-sm-10">
+      		    <?php print render($lineup_check); ?>
+      		    <?php print render($lineup_form_confirm); ?>
+      	    </div>
 			<div class="col-xs-12">
 				<div class="lineup-group-container">
     			<?php print render($squad_mobile);?>
@@ -58,15 +64,15 @@
 					<div class="col-xs-6">
 						<div class="center-block">
 							<button id="step-1-back " type="button" class="btn btn-default">
-				<?php print t("Annulla");?>
-				</button>
+				            <?php print t("Annulla");?>
+				            </button>
 						</div>
 					</div>
 					<div class="col-xs-6">
 						<div class="center-block">
 							<button id="step-1-go" type="button" class="btn btn-success">
-				<?php print t("Avanti");?>
-				</button>
+            				<?php print t("Avanti");?>
+            				</button>
 						</div>
 					</div>
 				</div>
@@ -80,15 +86,15 @@
 					<div class="col-xs-6">
 						<div class="center-block">
 							<button id="step-2-back" type="button" class="btn btn-default">
-				<?php print t("Indietro");?>
-				</button>
+            				<?php print t("Indietro");?>
+            				</button>
 						</div>
 					</div>
 					<div class="col-xs-6">
 						<div class="center-block">
 							<button id="step-2-go" type="button" class="btn btn-success">
-				<?php print t("Avanti");?>
-				</button>
+            				<?php print t("Avanti");?>
+            				</button>
 						</div>
 					</div>
 				</div>
@@ -102,15 +108,15 @@
 					<div class="col-xs-6">
 						<div class="center-block">
 							<button id="step-3-back" type="button" class="btn btn-default">
-				<?php print t("Indietro");?>
-				</button>
+            				<?php print t("Indietro");?>
+            				</button>
 						</div>
 					</div>
 					<div class="col-xs-6">
 						<div class="center-block">
 							<button id="step-3-go" type="button" class="btn btn-success">
-				<?php print t("Avanti");?>
-				</button>
+            				<?php print t("Avanti");?>
+            				</button>
 						</div>
 					</div>
 				</div>
@@ -124,15 +130,15 @@
 					<div class="col-xs-6">
 						<div class="center-block">
 							<button id="step-4-back" type="button" class="btn btn-default">
-				<?php print t("Indietro");?>
-				</button>
+            				<?php print t("Indietro");?>
+            				</button>
 						</div>
 					</div>
 					<div class="col-xs-6">
 						<div class="center-block">
 							<button id="step-4-go" type="button" class="btn btn-success">
-				<?php print t("Conferma");?>
-				</button>
+            				<?php print t("Conferma");?>
+            				</button>
 						</div>
 					</div>
 				</div>
@@ -201,5 +207,77 @@ jQuery(function() {
 		jQuery("#step-4").addClass("hidden");
 		jQuery("#step-3").removeClass("hidden");
 	});
+});
+
+jQuery(document).ready(function() {
+	jQuery(".lineup-group-container .row div").on("swiperight", function() {
+		//da titolare a tribuna
+		if (jQuery(this).hasClass("regular")) {
+	       
+			jQuery(this).removeClass("col-xs-offset-1").addClass("col-xs-offset-2").removeClass("regular");
+	        
+	        jQuery(this).find(".position-message").addClass("position-message-squad").html("Tribuna").fadeIn().delay(500).fadeOut(500, function() {
+	            jQuery(this).removeClass("position-message-squad")
+	            jQuery(this).parent().find(".player-position span").addClass("hidden")
+	            //jQuery(this).parent().find("player-position i.position").html("T")
+	            //jQuery(this).parent().find("player-position i.position-class").removeClass("text-warning").addClass("text-success");
+	            jQuery(this).parent().removeClass("col-xs-offset-2").addClass("col-xs-offset-1")
+	        });
+
+	        changePosition(jQuery(this).attr("data-id"), jQuery(this).attr("data-team"), jQuery(this).attr("data-competition"), jQuery(this).attr("data-role"), 0);
+	    }
+	    //da tribuna a titolare
+		else {
+			jQuery(this).removeClass("col-xs-offset-1").addClass("col-xs-offset-2").addClass("regular");
+	        
+	        jQuery(this).find(".position-message").addClass("position-message-regular").html("Titolare").fadeIn().delay(500).fadeOut(500, function() {
+	            jQuery(this).removeClass("position-message-regular")
+	            jQuery(this).parent().find(".player-position span").removeClass("hidden")
+	            jQuery(this).parent().find(".player-position i.position").removeClass("text-warning").addClass("text-success").html("T")
+	            jQuery(this).parent().find(".player-position i.position-class").removeClass("text-warning").addClass("text-success");
+	            jQuery(this).parent().removeClass("col-xs-offset-2").addClass("col-xs-offset-1")
+	        });
+
+	        changePosition(jQuery(this).attr("data-id"), jQuery(this).attr("data-team"), jQuery(this).attr("data-competition"), jQuery(this).attr("data-role"), 1);
+		}
+
+	   		    
+	});
+
+	jQuery(".lineup-group-container .row div").on("swipeleft", function() {
+
+	    //da riserva a tribuna
+		if (jQuery(this).hasClass("reserve")) {
+		       
+	        jQuery(this).removeClass("col-xs-offset-1").addClass("col-xs-offset-0").removeClass("reserve");
+	        
+	        jQuery(this).find(".position-message").addClass("position-message-squad").html("Tribuna").fadeIn().delay(500).fadeOut(500, function() {
+	            jQuery(this).removeClass("position-message-squad")
+	            jQuery(this).parent().find(".player-position span").addClass("hidden")
+	            //jQuery(this).parent().find("player-position i.position").html("T")
+	            //jQuery(this).parent().find("player-position i.position-class").removeClass("text-warning").addClass("text-success");
+	            jQuery(this).parent().removeClass("col-xs-offset-0").addClass("col-xs-offset-1")
+	        });
+
+	        changePosition(jQuery(this).attr("data-id"), jQuery(this).attr("data-team"), jQuery(this).attr("data-competition"), jQuery(this).attr("data-role"), 0);
+	        checkLineUp(_line_up);
+	    }
+	    //da tribuna a riserva
+		else {
+			jQuery(this).removeClass("col-xs-offset-1").addClass("col-xs-offset-0").addClass("reserve");
+	        
+	        jQuery(this).find(".position-message").addClass("position-message-reserve").html("Riserva").fadeIn().delay(500).fadeOut(500, function() {
+	            jQuery(this).removeClass("position-message-reserve")
+	            jQuery(this).parent().find(".player-position span").removeClass("hidden")
+	            jQuery(this).parent().find(".player-position i.position").removeClass("text-success").addClass("text-warning").html("R")
+	            jQuery(this).parent().find(".player-position i.position-class").removeClass("text-success").addClass("text-warning");
+	            jQuery(this).parent().removeClass("col-xs-offset-0").addClass("col-xs-offset-1")
+	        });
+
+	        changePosition(jQuery(this).attr("data-id"), jQuery(this).attr("data-team"), jQuery(this).attr("data-competition"), jQuery(this).attr("data-role"), 2);
+	        checkLineUp(_line_up);
+		}
+	});
+
 });
 </script>

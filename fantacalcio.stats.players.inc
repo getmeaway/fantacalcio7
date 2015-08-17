@@ -59,9 +59,9 @@ function player_stats($pl_id) {
   // $groups = Group::all();
   $player = Player::get($pl_id);
   
-  $out = "<br><h2>" . $player->name . "</h2><br>";
-  $out .= "<h3>" . $roles[$player->role] . "</h3><br>";
-  $out .= "<h4>" . ucwords($player->team) . "</h4><br>";
+  $out = "<br><h2>" . $player->name . " (" . $roles[$player->role] .")</h2><br>";
+//   $out .= "<h3>" . $roles[$player->role] . "</h3><br>";
+//   $out .= "<h4>" . ucwords($player->team) . "</h4><br>";
   
   // $out .= "<div class=clear>" . get_player_fantateams($player->pl_id, $groups, $teams_groups) . "</div><br/>";
   

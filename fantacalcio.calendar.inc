@@ -8,10 +8,16 @@ function fantacalcio_calendar($name = '', $round = null) {
   $competition = Competition::getByName($name);
   
   if ($competition == null || $competition->has_matches != 1) {
-  	
-  	$items = Competition::choose(array("has_matches" => 1, "type" => COMPETITION_TYPE_SD), "calendario"); 
-  	return theme_item_list(array("items" => $items, "attributes" => array("class" => array("list-group")), "type" => "ul", "title" => ""));
-  } 
+    
+    $items = Competition::choose(array(
+      "has_matches" => 1, 
+      "type" => COMPETITION_TYPE_SD), "calendario");
+    return theme_item_list(array(
+      "items" => $items, 
+      "attributes" => array("class" => array("list-group")), 
+      "type" => "ul", 
+      "title" => ""));
+  }
   else {
     drupal_set_title(check_plain(t("Calendario") . " - " . ucwords($name)));
     
@@ -23,7 +29,7 @@ function fantacalcio_calendar($name = '', $round = null) {
 }
 
 function get_matches_table($competition) {
-  global $user;//print_r($user);
+  global $user;
   
   $output = array();
   $index = 0;
@@ -38,34 +44,32 @@ function get_matches_table($competition) {
       ksort($matches);
       
       $rounds = array();
-      foreach($matches as $round => $round_matches) {
-        if (count(array_values($round_matches)) > 0 ) {
-      	  $match = array_values($round_matches);
+      foreach ($matches as $round => $round_matches) {
+        if (count(array_values($round_matches)) > 0) {
+          $match = array_values($round_matches);
           $rounds[$round] = (object) array("date" => $match[0]->date);
         }
-      } 
+      }
       
       $last_round = theme("table", array(
         "header" => array(), 
         "rows" => array(), 
         "attributes" => array(), 
         "sticky" => false, 
-        "empty" => ""          
-      ));
-
+        "empty" => ""));
+      
       $next_round = theme("table", array(
         "header" => array(), 
         "rows" => array(), 
         "attributes" => array(), 
         "sticky" => false, 
-        "empty" => ""          
-      ));
+        "empty" => ""));
       
       $group->output = theme("calendar", array(
-        "matches" => $matches,
-      	"rounds" => $rounds,
+        "matches" => $matches, 
+        "rounds" => $rounds, 
         "rounds_list" => null, 
-      	"is_main_competition" => false,
+        "is_main_competition" => false, 
         "last_round" => $last_round, 
         "next_round" => $next_round)); // "ABC";//theme_table(array("header" => $header, "rows" => $rows, "attributes" => array("class" => "table table-responsive tablesorter tablesorter-blue classifica", "id" => "classifica_" . $g_id), "caption" => "", "sticky" => "", "empty" => "", "colgroups" => array()));
       $group->active = (isset($user_group) && $g_id == $user_group) || $index == 1;
@@ -242,7 +246,7 @@ function show_matches_for_round($matches, $teams, $rounds, $round, $g_id) {
     if ($match->played == 1) {
       $overtime = "";
       $penalties = "";
-      if (is_match_draw($match) && is_passaggio_turno(get_cid_by_gid($match->g_id), $match->round)) {
+      if (is_match_draw($match) && $round->next) {
         $overtime = " (" . $match->goals_ot_1 . "-" . $match->goals_ot_2 . ")ot";
         if ($match->goals_ot_1 == $match->goals_ot_2)
           $penalties = " (" . $match->penalties_1 . "-" . $match->penalties_2 . ")rig";
@@ -329,25 +333,22 @@ function fantacalcio_calendario_round($c_name = '', $round) {
 }
 
 function show_match_details($m_id) {
-  $teams = get_teams();
-  $matches = get_matches();
-  $match = $matches[$m_id];
-  $match->c_id = get_cid_by_gid($match->g_id);
-  $round = get_competition_round($match->round, $match->c_id);
+  $match = Match::get($m_id);
+  $round = Round::getByCompetitionRound($match->round, $match->c_id);
   
   $empty_rows = get_details_empty_rows($match);
   
   $out = "<div style='margin:auto; margin-bottom: 10px; text-align: center;'>";
   
   $out .= "<h3>" . (!empty($round->round_label) ? $round->round_label : ($match->round . "&ordf; Giornata")) . "</h3><br>";
-  $out .= "<h4>" . $teams[$match->t1_id]->name . " - " . $teams[$match->t2_id]->name . "</h4><hr>";
+  $out .= "<h4>" . Team::get($match->t1_id)->name . " - " . Team::get($match->t2_id)->name . "</h4><hr>";
   $out .= "</div>";
   
-  $out .= "<div class='team-details first-team'>" . show_team_details($match->t1_id, $match->round, $match->c_id, $match->m_id, $match->played, $empty_rows) . "</div>";
+  $out .= "<div class='team-details first-team'>" . show_team_details($match->t1_id, $match->round, $match->c_id, $match->id, $match->played, $empty_rows) . "</div>";
   
-  $out .= "<div class='team-details'>" . show_team_details($match->t2_id, $match->round, $match->c_id, $match->m_id, $match->played, $empty_rows) . "</div>";
+  $out .= "<div class='team-details'>" . show_team_details($match->t2_id, $match->round, $match->c_id, $match->id, $match->played, $empty_rows) . "</div>";
   
-  if (is_passaggio_turno(get_cid_by_gid($match->g_id), $match->round) && is_match_draw($match)) {
+  if ($round->next && is_match_draw($match)) {
     $out .= "<div class='clear'></div>";
     $out .= "<center>";
     $out .= "<h4>Tempi Supplementari</h4>";
@@ -392,7 +393,7 @@ function show_match_overtime($match, $t_id) {
       ORDER BY p.role";
   $result = db_query($sql, $t_id, $match->round, get_cid_by_gid($match->g_id));
   while ($row = db_fetch_array($result)) {
-    $riserve[$row['pl_id']] = $row;
+    $reserves[$row['pl_id']] = $row;
   }
   
   $teams = get_teams();
@@ -433,17 +434,17 @@ function show_match_overtime($match, $t_id) {
   
   $rows = array();
   
-  foreach ($riserve as $riserva) {
-    $pl_id = $riserva['pl_id'];
+  foreach ($reserves as $reserve) {
+    $pl_id = $reserve['pl_id'];
     
     $data = array();
     
     $data[] = array(
-      "data" => "<span class='team-details-'>" . convert_role($players[$riserva['pl_id']]->role) . "</span>", 
+      "data" => "<span class='team-details-'>" . convert_role($players[$reserve['pl_id']]->role) . "</span>", 
       "class" => "role");
-    // $data[] = "<span class='team-details-role role'>" . convert_role($players[$riserva['pl_id']]->role) . "</span>";
-    $data[] = "<span class='team-details-name'>" . compress_string($players[$riserva['pl_id']]->name) . "</span>";
-    $data[] = "<span class='team-details-role'>" . substr(ucwords(convert_teams($players[$riserva['pl_id']]->team)), 0, 3) . "</span>";
+    // $data[] = "<span class='team-details-role role'>" . convert_role($players[$reserve['pl_id']]->role) . "</span>";
+    $data[] = "<span class='team-details-name'>" . compress_string($players[$reserve['pl_id']]->name) . "</span>";
+    $data[] = "<span class='team-details-role'>" . substr(ucwords(convert_teams($players[$reserve['pl_id']]->team)), 0, 3) . "</span>";
     $data[] = get_amm_esp($votes[$pl_id]->amm, $votes[$pl_id]->esp);
     $data[] = array(
       "data" => $votes[$pl_id]->tot, 
@@ -477,7 +478,7 @@ function show_match_overtime($match, $t_id) {
       "class" => "role_" . $players[$pl_id]->role);
   }
   
-  for ($i = count($riserve); $i < 3; $i++) {
+  for ($i = count($reserves); $i < 3; $i++) {
     $rows[][] = array(
       "data" => "&nbsp;", 
       "colspan" => 13, 
@@ -597,29 +598,27 @@ function show_team_details($t_id, $competition_round, $c_id, $m_id, $played, $em
 }
 
 function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $empty_rows) {
-  $teams = get_teams();
+  $team = Team::get($t_id);
   
   $out = "<div style='margin:auto; margin-top: 10px; text-align: center;'>";
-  $out .= "<h3>" . $teams[$t_id]->name . "</h3>";
-  $out .= "<p><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $teams[$t_id]->shirt . "'></p>";
+  $out .= "<h3>" . $team->name . "</h3>";
+  $out .= "<p><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></p>";
   
-  $sql = "SELECT round FROM {fanta_rounds_competitions} " . "WHERE competition_round = '%d' " . "AND c_id = '%d'";
-  $result = db_query($sql, $competition_round, $c_id);
-  $round = db_result($result);
+  $round = Round::getByCompetitionRound($competition_round, $c_id);
   
-  $votes = get_votes($round);
-  $players = get_players($round);
+  $votes = $round->getVotes(variable_get("fantacalcio_votes_provider", 1));
+  // $players = get_players($round->round);
   
-  $titolari = get_details_titolari($t_id, $c_id, $competition_round, $players);
-  $riserve = get_details_riserve($t_id, $c_id, $competition_round, $players);
+  $regulars = get_details_regulars($t_id, $c_id, $competition_round);
+  $reserves = get_details_reserves($t_id, $c_id, $competition_round);
   
-  $modulo = array();
-  foreach ($titolari as $titolare) {
-    $modulo[$players[$titolare['pl_id']]->role]++;
+  $module = array(0, 0, 0, 0);
+  foreach ($regulars as $regular) {
+    $module[$regular->role]++;
   }
-  unset($modulo[0]);
+  unset($module[0]);
   
-  $out .= "<p>" . implode("-", $modulo) . "</p>";
+  $out .= "<p>" . implode("-", $module) . "</p>";
   $out .= "</div>";
   
   $points = 0;
@@ -627,17 +626,17 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $empt
   $header_data = array(
     "", 
     "", 
-    "Nome", 
-    "Squadra", 
+    t("Nome"), 
+    t("Squadra"), 
     "", 
-    "Tot", 
-    "Voto", 
-    "Gol Fatti", 
-    "Gol Subiti", 
-    "Assist", 
-    "Rigori Sbagliati", 
-    "Rigori Parati", 
-    "Autogol");
+    t("Tot"), 
+    t("Voto"), 
+    t("Gol Fatti"), 
+    t("Gol Subiti"), 
+    t("Assist"), 
+    t("Rigori Sbagliati"), 
+    t("Rigori Parati"), 
+    t("Autogol"));
   $header[] = array("data" => "", "class" => "team-details-header");
   $header[] = array("data" => "", "class" => "team-details-header");
   $header[] = array("data" => "Nome", "class" => "team-details-header");
@@ -656,43 +655,43 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $empt
   
   $rows = array();
   
-  foreach ($titolari as $titolare) {
-    $pl_id = $titolare['pl_id'];
+  foreach ($regulars as $regular) {
+    $pl_id = $regular->pl_id;
     
     $data = array();
     
-    $data[] = ($titolare['has_played'] == 1) ? "" : "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/out.png'>";
+    $data[] = ($regular->has_played == 1) ? "" : "<i class='fa fa-lg fa-long-arrow-left text-danger'></i>";
     
     $data[] = array(
-      "data" => "<span class='team-details-'>" . convert_role($players[$titolare['pl_id']]->role) . "</span>", 
-      "class" => "role");
-    $data[] = "<span class='team-details-name'>" . compress_string($players[$titolare['pl_id']]->name) . "</span>";
-    $data[] = "<span class='team-details-role'>" . substr(ucwords(convert_teams($players[$titolare['pl_id']]->team)), 0, 3) . "</span>";
-    if ($titolare['has_played'] == 1) {
+      "data" => "<span class='team-details-'>" . fantacalcio_show_role($regular->role) . "</span>", 
+      "class" => array("role"));
+    $data[] = "<span class='team-details-name'>" . $regular->name . "</span>";
+    $data[] = "<span class='team-details-role'>" . substr(ucwords($regular->team), 0, 3) . "</span>";
+    if ($regular->has_played == 1) {
       $data[] = get_amm_esp($votes[$pl_id]->yellow_cards, $votes[$pl_id]->red_cards);
       $data[] = array(
         "data" => $votes[$pl_id]->total, 
-        "class" => get_details_class($votes[$pl_id]->tot) . " team-details-tot");
+        "class" => array(get_details_class($votes[$pl_id]->total) . " team-details-tot"));
       $data[] = array("data" => $votes[$pl_id]->vote);
       $data[] = array(
         "data" => ($votes[$pl_id]->goals_for + $votes[$pl_id]->penalty_goals > 0 ? ($votes[$pl_id]->goals_for + $votes[$pl_id]->penalty_goals) . (($votes[$pl_id]->penalty_goals > 0) ? "(" . $votes[$pl_id]->penalty_goals . ")" : "") : "-"), 
-        "class" => get_details_class(($votes[$pl_id]->goals_for + $votes[$pl_id]->penalty_goals), "bonus"));
+        "class" => array(get_details_class(($votes[$pl_id]->goals_for + $votes[$pl_id]->penalty_goals), "bonus")));
       
       $data[] = array(
         "data" => ($votes[$pl_id]->goals_against > 0 ? $votes[$pl_id]->goals_against : "-"), 
-        "class" => get_details_class($votes[$pl_id]->goals_against, "malus"));
+        "class" => array(get_details_class($votes[$pl_id]->goals_against, "malus")));
       $data[] = array(
         "data" => ($votes[$pl_id]->assists > 0 ? $votes[$pl_id]->assists : "-"), 
-        "class" => get_details_class($votes[$pl_id]->assists, "bonus"));
+        "class" => array(get_details_class($votes[$pl_id]->assists, "bonus")));
       $data[] = array(
         "data" => ($votes[$pl_id]->missed_penalties > 0 ? $votes[$pl_id]->missed_penalties : "-"), 
-        "class" => get_details_class($votes[$pl_id]->missed_penalties, "malus"));
+        "class" => array(get_details_class($votes[$pl_id]->missed_penalties, "malus")));
       $data[] = array(
         "data" => ($votes[$pl_id]->saved_penalties > 0 ? $votes[$pl_id]->saved_penalties : "-"), 
-        "class" => get_details_class($votes[$pl_id]->saved_penalties, "bonus"));
+        "class" => array(get_details_class($votes[$pl_id]->saved_penalties, "bonus")));
       $data[] = array(
         "data" => ($votes[$pl_id]->own_goals > 0 ? $votes[$pl_id]->own_goals : "-"), 
-        "class" => get_details_class($votes[$pl_id]->own_goals, "malus"));
+        "class" => array(get_details_class($votes[$pl_id]->own_goals, "malus")));
       
       $points += $votes[$pl_id]->total;
     }
@@ -701,52 +700,52 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $empt
     
     $rows[$pl_id] = array(
       "data" => $data, 
-      "class" => "role_" . $players[$pl_id]->role);
+      "class" => array("role_" . $regular->role));
   }
   
   $rows['space'][] = array("data" => "", "colspan" => 13);
   
   $played_reserves = 0;
   
-  foreach ($riserve as $riserva) {
-    if ($riserva['has_played'] == 1) {
-      $pl_id = $riserva['pl_id'];
+  foreach ($reserves as $reserve) {
+    if ($reserve->has_played == 1) {
+      $pl_id = $reserve->pl_id;
       
       $data = array();
       
-      $data[] = "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/in.png'>";
-      // $data[] = "<span class='team-details-role role'>" . convert_role($players[$riserva['pl_id']]->role) . "</span>";
+      $data[] = "<i class='fa fa-lg fa-long-arrow-right text-success'></i>";
+      // $data[] = "<span class='team-details-role role'>" . convert_role($players[$reserve['pl_id']]->role) . "</span>";
       $data[] = array(
-        "data" => "<span class='team-details-'>" . convert_role($players[$riserva['pl_id']]->role) . "</span>", 
-        "class" => "role");
-      $data[] = "<span class='team-details-name'>" . compress_string($players[$riserva['pl_id']]->name) . "</span>";
-      $data[] = "<span class='team-details-role'>" . substr(ucwords(convert_teams($players[$riserva['pl_id']]->team)), 0, 3) . "</span>";
+        "data" => "<span class='team-details-'>" . fantacalcio_show_role($reserve->role) . "</span>", 
+        "class" => array("role"));
+      $data[] = "<span class='team-details-name'>" . $reserve->name . "</span>";
+      $data[] = "<span class='team-details-role'>" . substr(ucwords($reserve->team), 0, 3) . "</span>";
       
-      if ($riserva['has_played'] == 1) {
+      if ($reserve->has_played == 1) {
         $data[] = get_amm_esp($votes[$pl_id]->yellow_cards, $votes[$pl_id]->red_cards);
         $data[] = array(
           "data" => $votes[$pl_id]->total, 
-          "class" => get_details_class($votes[$pl_id]->tot) . " team-details-tot");
+          "class" => array(get_details_class($votes[$pl_id]->tot) . " team-details-tot"));
         $data[] = array("data" => $votes[$pl_id]->vote);
         $data[] = array(
           "data" => ($votes[$pl_id]->goals_for + $votes[$pl_id]->penalty_goals > 0 ? ($votes[$pl_id]->goals_for + $votes[$pl_id]->penalty_goals) . (($votes[$pl_id]->penalty_goals > 0) ? "(" . $votes[$pl_id]->penalty_goals . ")" : "") : "-"), 
-          "class" => get_details_class(($votes[$pl_id]->goals_for + $votes[$pl_id]->penalty_goals), "bonus"));
+          "class" => array(get_details_class(($votes[$pl_id]->goals_for + $votes[$pl_id]->penalty_goals), "bonus")));
         
         $data[] = array(
           "data" => ($votes[$pl_id]->goals_against > 0 ? $votes[$pl_id]->goals_against : "-"), 
-          "class" => get_details_class($votes[$pl_id]->goals_against, "malus"));
+          "class" => array(get_details_class($votes[$pl_id]->goals_against, "malus")));
         $data[] = array(
           "data" => ($votes[$pl_id]->assists > 0 ? $votes[$pl_id]->assists : "-"), 
-          "class" => get_details_class($votes[$pl_id]->assists, "bonus"));
+          "class" => array(get_details_class($votes[$pl_id]->assists, "bonus")));
         $data[] = array(
           "data" => ($votes[$pl_id]->missed_penalties > 0 ? $votes[$pl_id]->missed_penalties : "-"), 
-          "class" => get_details_class($votes[$pl_id]->missed_penalties, "malus"));
+          "class" => array(get_details_class($votes[$pl_id]->missed_penalties, "malus")));
         $data[] = array(
           "data" => ($votes[$pl_id]->saved_penalties > 0 ? $votes[$pl_id]->saved_penalties : "-"), 
-          "class" => get_details_class($votes[$pl_id]->saved_penalties, "bonus"));
+          "class" => array(get_details_class($votes[$pl_id]->saved_penalties, "bonus")));
         $data[] = array(
           "data" => ($votes[$pl_id]->own_goals > 0 ? $votes[$pl_id]->own_goals : "-"), 
-          "class" => get_details_class($votes[$pl_id]->own_goals, "malus"));
+          "class" => array(get_details_class($votes[$pl_id]->own_goals, "malus")));
         $points += $votes[$pl_id]->total;
         
         $played_reserves++;
@@ -757,35 +756,37 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $empt
     
     $rows[$pl_id] = array(
       "data" => $data, 
-      "class" => "role_" . $players[$pl_id]->role);
+      "class" => array("role_" . $regular->role));
   }
   
   for ($i = $played_reserves; $i < $empty_rows; $i++)
     $rows[] = array(
       "data" => array("", "&nbsp;"), 
-      "class" => "team-details-empty-row");
+      "class" => array("team-details-empty-row"));
   
-  $out .= "<div class='team-details-lineup'>" . theme_table($header, $rows, array(
-    "style" => "")) . "</div>";
+  $out .= "<div class='team-details-lineup'>" . theme("table", array(
+    "header" => $header, 
+    "rows" => $rows, 
+    "attributes" => array("style" => ""))) . "</div>";
   
-  $mod = get_details_modificatori($t_id, $m_id);
+  $modifiers = get_details_modifiers($t_id, $m_id);
   
-  $bonus = get_bonus($t_id, $c_id, $competition_round);
-  
-  $total = $points + $mod['por'] + $mod['dif'] + $mod['centr'] + $mod['att'] + $bonus;
+  $bonus = get_bonus($t_id, $m_id);
+    
+  $total = $points + array_sum($modifiers) + $bonus;
   $goals = floor(($total - 60) / 6);
   $goals = ($goals >= 0) ? $goals : 0;
   
   $rows = array();
   $rows[] = array("Punti", $points);
   if (variable_get("fantacalcio_modifier_role_0", 0))
-    $rows[] = array("Mod Portiere", $mod['por']);
+    $rows[] = array("Mod Portiere", $modifiers[0]);
   if (variable_get("fantacalcio_modifier_role_1", 0))
-    $rows[] = array("Mod Difesa", $mod['dif']);
+    $rows[] = array("Mod Difesa", $modifiers[1]);
   if (variable_get("fantacalcio_modifier_role_2", 0))
-    $rows[] = array("Mod Centrocampo", $mod['centr']);
+    $rows[] = array("Mod Centrocampo", $modifiers[2]);
   if (variable_get("fantacalcio_modifier_role_3", 0))
-    $rows[] = array("Mod Attacco", $mod['att']);
+    $rows[] = array("Mod Attacco", $modifiers[3]);
   
   if ($bonus)
     $rows[] = array("Bonus", $bonus);
@@ -795,11 +796,14 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $empt
     "style" => "font-weight:bold");
   $rows[] = array("data" => array("Gol", $goals), "style" => "font-weight:bold");
   
-  $out .= "<div style='width: 40%; margin:auto; margin-top: 10px;'>" . theme_table(array(), $rows, array(
-    "width" => "100%", 
-    "style" => "", 
-    "align" => "char", 
-    "char" => ".")) . "</div>";
+  $out .= "<div style='width: 40%; margin:auto; margin-top: 10px;'>" . theme("table", array(
+    "header" => array(), 
+    "rows" => $rows, 
+    "attributes" => array(
+      "width" => "100%", 
+      "style" => "", 
+      "align" => "char", 
+      "char" => "."))) . "</div>";
   
   return $out;
 }
@@ -811,55 +815,109 @@ function show_team_details_not_played($t_id, $competition_round, $c_id, $m_id, $
     "c_id" => $c_id));
 }
 
-function get_details_titolari($t_id, $c_id, $round, $players) {
-  $formazione = array();
+function get_details_regulars($t_id, $c_id, $round) {
+  $lineup = array();
   $names = array();
   $positions = array();
   $roles = array();
-  $sql = "SELECT * FROM {fanta_lineups} " . "WHERE t_id = '%d' " . "AND c_id = '%d' " . "AND round = '%d' " . "AND position = 1";
-  $result = db_query($sql, $t_id, $c_id, $round);
-  while ($row = db_fetch_array($result)) {
-    $formazione[] = $row;
-    $names[] = $players[$row['pl_id']]->name;
-    $roles[] = $players[$row['pl_id']]->role;
-    $positions[] = $row['position'];
-  }
-  array_multisort($positions, SORT_ASC, $roles, SORT_ASC, $names, SORT_ASC, $formazione);
   
-  return $formazione;
+  $sql = "SELECT * FROM {fanta_lineups} " . "WHERE t_id = '%d' " . "AND c_id = '%d' " . "AND round = '%d' " . "AND position = 1";
+  // $result = db_query($sql, $t_id, $c_id, $round);
+  
+  $query = db_select("fanta_lineups", "l");
+  $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
+  $query->join("fanta_players_rounds", "pr", "p.pl_id = pr.pl_id");
+  $query->join("fanta_real_teams", "rt", "rt.rt_id = pr.rt_id");
+  $query->fields("l");
+  $query->fields("p");
+  $query->addField("rt", "name", "team");
+  $query->condition("t_id", $t_id);
+  $query->condition("c_id", $c_id);
+  $query->condition("pr.round", $round);
+  $query->condition("position", 1);
+  
+  $result = $query->execute();
+  
+  foreach ($result as $row) {
+    $lineup[] = $row;
+    $names[] = $row->name;
+    $roles[] = $row->role;
+    $positions[] = $row->position;
+  }
+  array_multisort($positions, SORT_ASC, $roles, SORT_ASC, $names, SORT_ASC, $lineup);
+  
+  return $lineup;
 }
 
-function get_details_riserve($t_id, $c_id, $round, $players) {
-  $formazione = array();
+function get_details_reserves($t_id, $c_id, $round) {
+  $lineup = array();
   $names = array();
   $positions = array();
   $roles = array();
-  $sql = "SELECT * FROM {fanta_lineups} " . "WHERE t_id = '%d' " . "AND c_id = '%d' " . "AND round = '%d' " . "AND position > 1";
-  $result = db_query($sql, $t_id, $c_id, $round);
-  while ($row = db_fetch_array($result)) {
-    $formazione[] = $row;
-    $names[] = $players[$row['pl_id']]->name;
-    $roles[] = $players[$row['pl_id']]->role;
-    $positions[] = $row['position'];
+  // $sql = "SELECT * FROM {fanta_lineups} " . "WHERE t_id = '%d' " . "AND c_id = '%d' " . "AND round = '%d' " . "AND position > 1";
+  // $result = db_query($sql, $t_id, $c_id, $round);
+  // while ($row = db_fetch_array($result)) {
+  // $lineup[] = $row;
+  // $names[] = $players[$row->pl_id]->name;
+  // $roles[] = $players[$row->pl_id]->role;
+  // $positions[] = $row->position;
+  // }
+  
+  // array_multisort($roles, SORT_ASC, $positions, SORT_ASC, $names, SORT_ASC, $lineup);
+  
+  // return $lineup;
+  
+  $query = db_select("fanta_lineups", "l");
+  $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
+  $query->join("fanta_players_rounds", "pr", "p.pl_id = pr.pl_id");
+  $query->join("fanta_real_teams", "rt", "rt.rt_id = pr.rt_id");
+  $query->fields("l");
+  $query->fields("p");
+  $query->addField("rt", "name", "team");
+  $query->condition("t_id", $t_id);
+  $query->condition("c_id", $c_id);
+  $query->condition("l.round", $round);
+  $query->condition("position", 1, ">");
+  
+  $result = $query->execute();
+  
+  foreach ($result as $row) {
+    $lineup[] = $row;
+    $names[] = $row->name;
+    $roles[] = $row->role;
+    $positions[] = $row->position;
   }
+  array_multisort($positions, SORT_ASC, $roles, SORT_ASC, $names, SORT_ASC, $lineup);
   
-  array_multisort($roles, SORT_ASC, $positions, SORT_ASC, $names, SORT_ASC, $formazione);
-  
-  return $formazione;
+  return $lineup;
 }
 
 function get_details_empty_rows($match) {
-  $sql = "SELECT count(*) FROM {fanta_lineups} WHERE c_id = '%d' AND t_id = '%d' AND round = '%d' AND position > 1 AND has_played = 1";
-  $t1_reserves = db_result(db_query($sql, $match->c_id, $match->t1_id, $match->round));
-  $t2_reserves = db_result(db_query($sql, $match->c_id, $match->t2_id, $match->round));
+  $query = db_select("fanta_lineups", "l");
+  $query->condition("c_id", $match->c_id);
+  $query->condition("round", $match->round);
+  $query->condition("position", 1);
+  $query->condition("has_played", 1);
+  $query->fields("l");
+  
+  $query1 = $query;
+  $query1->condition("t_id", $match->t1_id);
+  
+  $result1 = $query1->execute();
+  $t1_reserves = $result1->rowCount();
+  
+  $query2 = $query;
+  $query2->condition("t_id", $match->t2_id);
+  $t2_reserves = $query2->execute()->rowCount();
+  
   return max($t1_reserves, $t2_reserves);
 }
 
 function get_amm_esp($amm, $esp) {
   if ($amm == 1)
-    return "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/yellow_card.png'>";
+    return "<i class='fa fa-lg fa-square' style='color:#EE3; transform: scale(0.75, 1);'></i>";
   elseif ($esp == 1)
-    return "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/red_card.png'>";
+    return "<i class='fa fa-lg fa-square' style='color:#D33; transform: scale(0.75, 1);'></i>";
   else
     return "";
 }
@@ -871,41 +929,38 @@ function get_penalty_result($vote) {
     return "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/penalty_missed.png'>";
 }
 
-function get_details_modificatori($t_id, $m_id) {
-  $sql = "SELECT * FROM {fanta_matches} " . "WHERE m_id = '%d' ";
-  $result = db_query($sql, $m_id);
-  while ($row = db_fetch_array($result)) {
-    if ($t_id == $row['t1_id']) {
-      $mod['por'] = $row['mod_por_1'];
-      $mod['dif'] = $row['mod_dif_2'];
-      $mod['centr'] = $row['mod_centr_1'];
-      $mod['att'] = $row['mod_att_1'];
-    }
-    if ($t_id == $row['t2_id']) {
-      $mod['por'] = $row['mod_por_2'];
-      $mod['dif'] = $row['mod_dif_1'];
-      $mod['centr'] = $row['mod_centr_2'];
-      $mod['att'] = $row['mod_att_2'];
-    }
+function get_details_modifiers($t_id, $m_id) {
+  $match = Match::get($m_id);
+  $modifier = array();
+  
+  if ($t_id == $match->t1_id) {
+    $modifier[0] = $match->mod_1_role_0;
+    $modifier[1] = $match->mod_1_role_1;
+    $modifier[2] = $match->mod_1_role_2;
+    $modifier[3] = $match->mod_1_role_3;
+  }
+  if ($t_id == $match->t2_id) {
+    $modifier[0] = $match->mod_2_role_0;
+    $modifier[1] = $match->mod_2_role_1;
+    $modifier[2] = $match->mod_2_role_2;
+    $modifier[3] = $match->mod_2_role_3;
   }
   
-  return $mod;
+  return $modifier;
 }
 
-function get_bonus($t_id, $c_id, $round) {
-  $sql = "SELECT * FROM {fanta_matches} 
-      WHERE g_id IN (SELECT g_id FROM {fanta_groups} WHERE c_id = '%d') 
-      AND round = '%d' 
-      AND (t1_id = '%d' OR t2_id = '%d')";
-  $result = db_query($sql, $c_id, $round, $t_id, $t_id);
-  while ($row = db_fetch_array($result)) {
-    if ($row['t1_id'] == $t_id)
-      $bonus = $row['bonus_t1'];
-    if ($row['t2_id'] == $t_id)
-      $bonus = $row['bonus_t2'];
+function get_bonus($t_id, $m_id) {
+  $match = Match::get($m_id);
+  $bonus = array();
+  
+  if ($t_id == $match->t1_id) {
+    $bonus = $match->bonus_t1;
+  }
+  if ($t_id == $match->t2_id) {
+    $bonus = $match->bonus_t2;
   }
   
-  return ($bonus > 0) ? $bonus : "";
+  return $bonus;
 }
 
 function get_details_class($value, $type = "") {

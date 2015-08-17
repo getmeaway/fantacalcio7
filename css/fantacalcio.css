@@ -628,3 +628,69 @@ td i.squad-player-role-3 {
 	*/
 	.collapse-table td:before { content: attr(data-title); }
 }
+
+.col-xs-10 {
+    border: 1px solid #444;
+    height: 45px;
+}
+
+.position-message {
+    height: 45px;
+    position: relative;
+    top: -65px;
+    text-align:center;
+    text-transform: uppercase;
+    font-weight:bold;
+    margin: 0px;
+    padding: 10px;
+    display: none;
+}
+
+.position-message-squad {
+    background-color:rgba(32, 32, 32, 0.75);
+}
+
+.position-message-regular {
+    background-color:rgba(0, 144, 0, 0.75);
+}
+
+.position-message-reserve {
+    background-color:rgba(196, 0, 0, 0.75);
+}
+
+.player-table {
+    width: 100%;
+    border: none;
+}
+
+.regular {
+    /*background-color: #cc3;*/
+}
+
+.reserve {
+    /*background-color: #3cc;*/
+}
+
+.player-role {
+    width: 10%;    
+}
+
+.player-name {
+    width: 40%;    
+}
+
+.player-team {
+    width: 30%;    
+}
+
+.player-status {
+    width: 10%;
+}
+
+.player-position {
+    width: 10%;
+}
+
+.lineup-group-container .row div {
+	padding: 0px;
+}

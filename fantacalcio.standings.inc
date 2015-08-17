@@ -1,4 +1,4 @@
-<?php
+  <?php
 /**
 * @file fantacalcio.standings.inc
 * 
@@ -47,6 +47,9 @@ function get_standing_table_sd($competition) {
 	  	$points = array();
 	  	$goals_for = array();
 	  	$points_for = array();
+	  	
+	  	$header = array();
+	  	$rows = array();
 	  	
 	  	if ($teams) {
 	

@@ -237,7 +237,7 @@ function fantacalcio_results_lineup_check($vote_round) {
           
           $module = array();
           
-          if ($lineup->check()) // ($module == array(1 => 11, 2 => 4, 3 => 3))
+          if ($lineup->check())
             $status = "<span style='color: green;'><i class='fa fa-check-circle'></i></span>";
           else
             $status = "<span style='color: red; font-weight:bold;'><i class='fa fa-minus-circle'></i></span>";
@@ -254,7 +254,7 @@ function fantacalcio_results_lineup_check($vote_round) {
             l($team->name, "formazioni/admin/" . $t_id), 
             array(
               "data" => "<span style='color: red; font-weight:bold;'>" . t("Non inserita") . "</span>", 
-              "colspan" => 2));
+              "colspan" => 3));
       }
       
       $out .= theme("table", array(
