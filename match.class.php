@@ -55,6 +55,7 @@ class Match {
       $match->date = $row->date;
       $match->round = $row->round;
       $match->round_label = $row->round_label;
+      $match->match_label = $row->match_label;
       $match->played = $row->played;
       $match->goals_1 = $row->goals_1;
       $match->goals_2 = $row->goals_2;
@@ -99,14 +100,21 @@ class Match {
     while ($row = $result->fetchObject()) {
       $match = new Match();
       $match->id = $row->m_id;
+      $match->t1_id = $row->t1_id;
+      $match->t2_id = $row->t2_id;
       $match->home_team = $row->home_team;
       $match->away_team = $row->away_team;
       $match->date = $row->date;
       $match->round = $row->round;
       $match->round_label = $row->round_label;
+      $match->match_label = $row->match_label;
       $match->played = $row->played;
       $match->goals_1 = $row->goals_1;
       $match->goals_2 = $row->goals_2;
+      $match->goals_ot_1 = $row->goals_ot_1;
+      $match->goals_ot_2 = $row->goals_ot_2;
+      $match->penalties_1 = $row->penalties_1;
+      $match->penalties_2 = $row->penalties_2;
       $match->tot_1 = $row->tot_1;
       $match->tot_2 = $row->tot_2;
       // $m_id = $row->m_id;
@@ -149,6 +157,7 @@ class Match {
       $match->date = $row->date;
       $match->round = $row->round;
       $match->round_label = $row->round_label;
+      $match->match_label = $row->match_label;
       $match->played = $row->played;
       $match->goals_1 = $row->goals_1;
       $match->goals_2 = $row->goals_2;
@@ -164,5 +173,33 @@ class Match {
     }
     
     return $matches;
+  }
+  
+  function isDraw() {
+    //return true;
+    if (empty($this->match_label))
+      return FALSE;
+    
+    $num_matches = 0;
+    $sql = "SELECT * FROM {fanta_matches} WHERE match_label = :label";
+    $result = db_query($sql, array(":label" => $this->match_label));
+    
+    $goals[$this->t1_id] = 0;
+    $goals[$this->t2_id] = 0;
+    $sum_goals[$this->t1_id] = 0;
+    $sum_goals[$this->t2_id] = 0;
+    
+    foreach ($result as $row) {
+      $goals[$this->t1_id] += $row->goals_1;
+      $goals[$this->t2_id] += $row->goals_2 * 2; //away goals
+      $sum_goals[$this->t1_id] += $row->goals_1;
+      $sum_goals[$this->t2_id] += $row->goals_2;
+      $num_matches++;
+    }
+    
+    if ($sum_goals[$this->t1_id] == $sum_goals[$this->t2_id] && ($goals[$this->t1_id] == $goals[$this->t2_id] || $num_matches == 1) )
+      return TRUE;
+    else
+      return FALSE;
   }
 }

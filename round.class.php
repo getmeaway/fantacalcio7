@@ -129,6 +129,7 @@ class Round
 		
 		foreach ($result as $row) {
 		  
+		  $round->round = $row->round;
 		  $round->date = $row->date;
 		  $round->end_date = $row->end_date;
 		  $round->status = $row->status;
@@ -169,6 +170,7 @@ class Round
 		
 		foreach ($result as $row) {
 		  
+		  $round->round = $row->round;
 		  $round->date = $row->date;
 		  $round->end_date = $row->end_date;
 		  $round->status = $row->status;
@@ -266,14 +268,16 @@ class Round
 	}
 
 	static function getLast() {
-		$query = db_select("fanta_votes", "r");
-		$query->addExpression("MAX(round)");
-		$result = $query->execute();
 		
-		if ($result->fetchField() == NULL)
+		$query = db_select('fanta_votes');
+		$query->addExpression('MAX(round)');
+		$max = $query->execute()->fetchField();
+		
+		if ($max == NULL) {
 			return 0;
+		}
 		
-		return $result->fetchField();
+		return $max;
 	}
 	
 	static function getNext() {

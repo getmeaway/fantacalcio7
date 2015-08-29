@@ -169,10 +169,10 @@ class Player {
   }
 
   function getPlayerRounds() {
-    $sql = "SELECT * FROM {fanta_players_teams} p, {fanta_real_teams} t
-      WHERE p.rt_id = t.rt_id
-      AND p.pl_id = :pl_id
-      ORDER BY p.round";
+//     $sql = "SELECT * FROM {fanta_players_teams} p, {fanta_real_teams} t
+//       WHERE p.rt_id = t.rt_id
+//       AND p.pl_id = :pl_id
+//       ORDER BY p.round";
     
     $query = db_select("fanta_players_rounds", "r");
     $query->join("fanta_real_teams", "rt", "r.rt_id = rt.rt_id");
@@ -182,6 +182,7 @@ class Player {
     
     $result = $query->execute();
     
+    $player = array();
     foreach ($result as $row) {
       $player[$row->round] = $row;
     }

@@ -2666,7 +2666,7 @@ function fantacalcio_admin_players_list_update_clear($form, &$form_state) {
 }
 
 function fantacalcio_admin_players_list_update_submit($form, &$form_state) {
-  $players_url = DATA_SOURCE_URL . "/players/" . variable_get("fantacalcio_votes_provider", 1) . ".json";
+  $players_url = DATA_SOURCE_URL . "/players/" . variable_get("fantacalcio_votes_provider", 1) . ".json?t=" . time();
   
   $players = json_decode(file_get_contents($players_url));
   

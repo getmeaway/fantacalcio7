@@ -280,6 +280,7 @@ function fantacalcio_lineup_insert_start($team_id = "", $competition_name = "") 
   		if ($team->inCompetition($c_id) && 
   		    ($competition->type == COMPETITION_TYPE_GP || ($competition->type == COMPETITION_TYPE_SD && $team->hasMatch($c_id, $competition->competition_round)) )) {
   			$lineups_to_insert[] = (object) array("team" => $team, "competition" => $competition);
+  			$lineup_competition = $competition;
   		}
   	}
   }
@@ -290,7 +291,7 @@ function fantacalcio_lineup_insert_start($team_id = "", $competition_name = "") 
   
 //   1 squadra --> redirect
   if (count($lineups_to_insert) == 1)
-  	return fantacalcio_lineup_insert($competition, $team, $competition->competition_round, $is_admin = FALSE);
+  	return fantacalcio_lineup_insert($lineup_competition, $team, $competition->competition_round, $is_admin = FALSE);
   
   //+1 squadre --> scelta
   if (count($lineups_to_insert) >= 1) {
@@ -302,11 +303,7 @@ function fantacalcio_lineup_insert_start($team_id = "", $competition_name = "") 
   		if ($lineup_to_insert->team->isConfirmed())
   			array_push($classes, "bold");
   			array_push($row, l($lineup_to_insert->team->name, "formazioni/insert/" . $lineup_to_insert->team->id . "/" . $lineup_to_insert->competition->sanitized_name) );
-  			if (Lineup::exists($lineup_to_insert->team->id, $lineup_to_insert->competition->id, $lineup_to_insert->competition->competition_round))
-  				$class = "fa fa-check-circle";
-  			else 
-  				$class = "fa fa-minus-circle";
-  			array_push($row, "<i class='" . $class . "'></i>");
+  			array_push($row, fantacalcio_check_value(Lineup::exists($lineup_to_insert->team->id, $lineup_to_insert->competition->id, $lineup_to_insert->competition->competition_round)));
   			array_push($row, $lineup_to_insert->competition->name . " - " . $lineup_to_insert->competition->round_label . "" );
   		array_push($own_teams_rows, array("data" => $row, "class" => $classes, "data-name" => $lineup_to_insert->team->name));
   	}
@@ -415,7 +412,7 @@ function fantacalcio_lineup_insert($competition, $team, $competition_round, $is_
 	drupal_set_title(t("Inserisci formazione") . " / " . $team->name . " - " . $competition->name);
 	
   	#lineup inserita in orario
-  	if ($round->date != time() || $is_admin) {
+  	if ($round->date > time() || $is_admin) {
 
     	$output["competition_name"] = ucwords($competition->name);
     	$output["round"] = $round->label;
@@ -1070,12 +1067,12 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
     $query->fields(array("t_id" => $t_id, "c_id" => $c_id, "round" => $round, "timestamp" => time(), "status" => 1 ));
     $query->execute();
     
-    watchdog('fantacalcio', '@team: lineup inserita correttamente', array('@team' => Team::get($t_id)->name), WATCHDOG_NOTICE);
+    watchdog('fantacalcio', '@team: formazione inserita correttamente', array('@team' => Team::get($t_id)->name), WATCHDOG_NOTICE);
   }
   elseif ($type == 'old') {
 
     if (Lineup::exists($t_id, $c_id, $round)) {
-      drupal_set_message("Hai già inserito la lineup");
+      drupal_set_message("Hai già inserito la formazione");
     }
     else{
       #registrazione lineup
@@ -1092,9 +1089,9 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
         "(" . $pl_id . ", " . $c_id . ", " . $t_id . ", " . $round . ", " . $position . "," . $user->uid . "," . time() . ")";
         $resulta = db_query($sqla);
       }
-      drupal_set_message("Userai la lineup della giornata precedente");
+      drupal_set_message("Userai la formazione della giornata precedente");
       $teams = get_teams();
-      watchdog('fantacalcio', '@team: lineup inserita in ritardo', array('@team' => $teams[$t_id]->name), WATCHDOG_NOTICE);
+      watchdog('fantacalcio', '@team: formazione inserita in ritardo', array('@team' => $teams[$t_id]->name), WATCHDOG_NOTICE);
     }
   }
   elseif ($type == 'confirm') {
@@ -1119,9 +1116,9 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
         "(" . $pl_id . ", " . $c_id . ", " . $t_id . ", " . $round . ", " . $position . "," . $user->uid . "," . time() . ")";
       $resulta = db_query($sqla);
     }
-    drupal_set_message("lineup confermata");
+    drupal_set_message("Formazione confermata");
     $teams = get_teams();
-    watchdog('fantacalcio', '@team: lineup confermata', array('@team' => $teams[$t_id]->name), WATCHDOG_NOTICE);
+    watchdog('fantacalcio', '@team: formazione confermata', array('@team' => $teams[$t_id]->name), WATCHDOG_NOTICE);
   }
 }
 

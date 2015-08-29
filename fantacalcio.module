@@ -103,10 +103,8 @@ function fantacalcio_user_login(&$edit, $account) {
 }
 
 function fantacalcio_check_role($account) { 
-  watchdog("fantacalcio", "BBB", array(), WATCHDOG_NOTICE);
   // controllo variabile
   if (variable_get("fantacalcio_assign_default_role", 0)) { 
-    watchdog("fantacalcio", "AAA", array(), WATCHDOG_NOTICE);
     //watchdog("fantacalcio", t("%team: Acquisto di %player (-%quotation crediti)"), array("%team" => $team->name, "%player" => $player->name, "%quotation" => $player->getQuotation()), WATCHDOG_INFO);
     if (!in_array($account->roles, "coach") && user_role_load_by_name('coach') != null) {
       $user_roles = $account->roles;
@@ -115,8 +113,8 @@ function fantacalcio_check_role($account) {
       module_invoke('user', 'save', $account, array('roles' => $user_roles));
     }
   }
-  else watchdog("fantacalcio", "BBB", array(), WATCHDOG_NOTICE);
 }
+
 // help
 function fantacalcio_help($section = '', $arg) {
   $output = '';
@@ -611,7 +609,7 @@ function fantacalcio_menu() {
   $items['mercato']  = array(
       'title' => t('Mercato'),
       'page callback' => 'fantamercato_group',
-      'access arguments' => array('gestione mercato'),
+      'access arguments' => array('administer draft'),
       'type' => MENU_NORMAL_ITEM,
     'file' => 'fantacalcio.draft.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -619,7 +617,7 @@ function fantacalcio_menu() {
   $items['mercato/group']  = array(
       'title' => t('Mercato'),
       'page callback' => 'fantamercato_group',
-      'access arguments' => array('gestione mercato'),
+      'access arguments' => array('administer draft'),
       'type' => MENU_CALLBACK,
       'file' => 'fantacalcio.draft.inc',
       'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -628,7 +626,7 @@ function fantacalcio_menu() {
       'title' => t('Mercato'),
       'page callback' => 'fantamercato_group',
       'page arguments' => array(2),
-      'access arguments' => array('gestione mercato'),
+      'access arguments' => array('administer draft'),
       'type' => MENU_CALLBACK,
       'file' => 'fantacalcio.draft.inc',
       'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -636,7 +634,7 @@ function fantacalcio_menu() {
   $items['mercato/team']  = array(
       'title' => t('Mercato'),
       'page callback' => 'fantamercato_team',
-      'access arguments' => array('visualizza sfide'),
+      'access arguments' => array('administer draft'),
       'type' => MENU_CALLBACK,
       'file' => 'fantacalcio.draft.inc',
       'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -645,7 +643,7 @@ function fantacalcio_menu() {
       'title' => t('Mercato'),
       'page callback' => 'fantamercato_team',
       'page arguments' => array(2, 3),
-      'access arguments' => array('gestione mercato'),
+      'access arguments' => array('administer draft'),
       'type' => MENU_CALLBACK,
       'file' => 'fantacalcio.draft.inc',
       'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -653,7 +651,7 @@ function fantacalcio_menu() {
   $items['mercato/swaps']  = array(
       'title' => t('Mercato'),
       'page callback' => 'fantamercato_swaps',
-      'access arguments' => array('gestione mercato'),
+      'access arguments' => array('administer draft'),
       'type' => MENU_CALLBACK,
       'file' => 'fantacalcio.draft.inc',
       'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -662,7 +660,7 @@ function fantacalcio_menu() {
       'title' => t('Mercato'),
       'page callback' => 'fantamercato_swaps',
       'page arguments' => array(2),
-      'access arguments' => array('gestione mercato'),
+      'access arguments' => array('administer draft'),
       'type' => MENU_CALLBACK,
       'file' => 'fantacalcio.draft.inc',
       'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -670,7 +668,7 @@ function fantacalcio_menu() {
   $items['mercato/view']  = array(
       'title' => t('Mercato'),
       'page callback' => 'fantamercato_view',
-      'access arguments' => array('gestione mercato'),
+      'access arguments' => array('administer team'),
       'type' => MENU_CALLBACK,
       'file' => 'fantacalcio.draft.inc',
       'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -679,7 +677,7 @@ function fantacalcio_menu() {
       'title' => t('Mercato'),
       'page callback' => 'fantamercato_view',
       'page arguments' => array(2),
-      'access arguments' => array('gestione mercato'),
+      'access arguments' => array('administer team'),
       'type' => MENU_CALLBACK,
       'file' => 'fantacalcio.draft.inc',
       'file path' => drupal_get_path('module', 'fantacalcio'));
