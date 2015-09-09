@@ -241,4 +241,21 @@ class Player {
   
     return theme_item_list($items);
   }
+  
+  function getStatus($round) {
+    
+    $status = null;
+    
+    $query = db_select("fanta_players_status", "s")
+      ->condition("pl_id", $this->id)
+      ->condition("round", $round)
+      ->fields("s");
+    $result = $query->execute();
+    
+    foreach($result as $row) {
+      $status = $row;
+    }
+    
+    return $status;
+  }
 }

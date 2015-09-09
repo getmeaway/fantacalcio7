@@ -41,7 +41,14 @@ function changePosition(pl_id, t_id, c_id, role, position) {
 	jQuery("#tmp-lineup").val("" + JSON.stringify(_line_up));
 
 	var checks = checkLineUp(_line_up);
-
+	
+	if (checks[0] && checks[1] && checks[2] && checks[3]) {
+		jQuery("#step-1-go").removeAttr('disabled');
+		//jQuery(window).unbind();
+	} else
+		jQuery("#step-1-go").attr('disabled', 'disabled');
+	
+/*
 	if (checks[0] && checks[1] && checks[2] && checks[3]) {
 		jQuery("#line_up_submit").button('enable');
 		jQuery(window).unbind();
@@ -63,7 +70,7 @@ function changePosition(pl_id, t_id, c_id, role, position) {
 		jQuery("#edit-clear").click(function() {
 			jQuery(window).unbind();
 		});
-	}
+	}*/
 }
 // END - mobile functions
 
@@ -399,4 +406,253 @@ function checkLineUp(line_up) {
 
 	return new Array(check_regulars_number, check_regulars_module,
 			check_reserves_number, check_reserves_module);
+}
+
+//preparo le riserve in modo che possano essere ordinate
+function prepareReserves() {
+	
+	var roles = ["P", "D", "C", "A"];
+    
+	var line_up = eval(_line_up);
+	var reserves = new Array();
+	
+	for ( var i = 0; i < Object.keys(line_up).length; i++) {
+		var key = Object.keys(line_up)[i];
+		if (line_up[key].position > 1) {
+			if (reserves[line_up[key].role] == undefined)
+				reserves[line_up[key].role] = new Array();
+			reserves[line_up[key].role].push(line_up[key]);
+		}
+	}
+    
+	var out = "";
+    for(var i = 0; i < reserves.length; i++) {
+    	
+    	if (reserves[i].length > 1) {
+
+    		out += '<table class="table player-table"><tbody>';
+    		
+    		reserves[i].sort(function(a, b) {
+    			if (a.position > b.position)
+    				return 1;
+    			if (a.position < b.position)
+    				return -1;
+    		});
+    	
+	    	for(var j = 0; j < reserves[i].length; j++) {
+	    		var reserve = reserves[i][j];
+	    			    		
+	    		out += '<tr data-position=' + (j + 2) + ' data-role=' + reserve.role + ' data-id=' + reserve.pl_id + '>'
+	    		out += '<td><i class="fa fa-arrows"></i></td>'
+    			out += '<td class="player-role"><span class="fa-stack">'
+	    		out += '<i class="fa fa-square fa-stack-2x squad-player-role-' + reserve.role + '"></i>'
+	    		out += '<i class="fa fa-stack-1x" style="color: white;"><span class="font-normal">' + roles[reserve.role] + '</span></i>'
+	    		out += '</span></td><td class="player-name">' + reserve.name + '</td><td class="player-team">' + reserve.team + '</td>'
+	    		out += '<td class="player-status"><i class="fa fa-lg fa-circle text-success"></i></td></tr>'
+
+	    		line_up[reserve.pl_id].position = j + 2;
+	        }
+	    	out += '</tbody></table>';
+    	
+    	}
+    }
+
+    jQuery("#lineup-reserves-sort").html(out);
+    
+    //attach event
+    jQuery("#lineup-reserves-sort table tbody").sortable({
+		over : function(event, ui) {
+			jQuery(event.target).parent().parent().addClass(
+					"dropping-group-choosed");
+		},
+		out : function(event, ui) {
+			jQuery(event.target).parent().parent().removeClass(
+					"dropping-group-choosed");
+		},
+		sort : function(event, ui) {
+			// jQuery(ui.item).addClass("dragging-item");
+			// jQuery(ui.helper).css("min-height",
+			// "30px").addClass("dropping-group");
+			// jQuery("#lineup-squad, #lineup-regulars,
+			// #lineup-reserves" ).css("min-height",
+			// "30px").addClass("dropping-group");
+			jQuery(".lineup-group-container").addClass(
+					"dropping-group");
+		},
+		stop : function(event, ui) {
+			jQuery(ui.item).removeClass("dragging-item");
+			jQuery(".lineup-group-container").removeClass(
+					"dropping-group");
+			var pl_id = jQuery(ui.item).attr('data-id');
+			var role = jQuery(ui.item).attr("data-role");
+
+			var position = jQuery(ui.item).attr('data-position');
+			
+			var rows = jQuery(ui.item).parent().parent().find(
+					'tbody tr');
+			console.log(pl_id);
+			var j = 0;
+			for ( var i = 0; i < rows.length; i++) {
+				if (jQuery(rows[i]).attr("data-role") == role) {
+					if (jQuery(rows[i]).attr("data-id") == pl_id) {
+						var blockPosition = j;
+						var position = j + 2;
+					}
+					j++;
+				}
+			}
+
+			var blocksNumber = j;
+						
+			// update position
+			var oldPosition = _line_up[pl_id].position;
+			_line_up[pl_id].position = position;
+
+			// update arrays
+
+			// scalo le riserve
+			// diminuisco la posizione delle riserve successive (solo stesso ruolo)
+			for ( var i = 0; i < Object.keys(_line_up).length; i++) {
+				var key = Object.keys(_line_up)[i];
+				if (key != pl_id && _line_up[key] != undefined) {
+					if (_line_up[key].role == _line_up[pl_id].role) {
+						if (_line_up[key].position >= oldPosition) {
+							_line_up[key].position = parseInt(_line_up[key].position) - 1;
+						}
+					}
+				}
+			}
+
+			// nuova posizione < 2 ---> diminuisco i successivi aumento la posizione delle riserve successive (solo stesso ruolo)
+			for ( var j = 0; j < Object.keys(_line_up).length; j++) {
+				var key = Object.keys(_line_up)[j];
+				if (key != pl_id
+						&& _line_up[key] != undefined) {
+					if (_line_up[key].role == _line_up[pl_id].role) {
+						if (_line_up[key].position >= position) {
+							_line_up[key].position = parseInt(_line_up[key].position) + 1;
+						}
+					}
+				}
+			}
+
+			jQuery("#tmp-lineup").val(
+					"" + JSON.stringify(_line_up));
+			
+		},
+		}).disableSelection();
+
+}
+
+//mostro un'anteprima della formazione
+function show_lineup_preview () {
+	
+	var roles = ["P", "D", "C", "A"];
+	
+	var line_up = eval(_line_up);
+	var new_line_up = new Array();
+	
+	for ( var i = 0; i < Object.keys(line_up).length; i++) {
+		var key = Object.keys(line_up)[i];
+		if (line_up[key].position > 0)
+			new_line_up.push(line_up[key]);
+	}
+    
+    //ordino per posizione
+	new_line_up.sort(function (a, b) {
+    	return a.position - b.position;
+    });
+	
+    var regulars = new_line_up.slice(0, 11);
+    var reserves = new_line_up.slice(11, new_line_up.length);
+    
+    console.log(Object.keys(line_up).length);
+    console.log(new_line_up.length);
+    console.log(regulars.length);
+    console.log(reserves.length);
+    
+    for(var j = 0; j < regulars.length; j ++) {
+    	console.log(regulars[j]);
+    }
+    for(var j = 0; j < reserves.length; j ++) {
+    	console.log(reserves[j]);
+    }
+    
+    //ordino titolari
+    regulars.sort(function(a, b) {
+    	if (a.role == b.role) {
+    		if (a.name < b.name)
+    		    return -1;
+    		  if (a.name > b.name)
+    		    return 1;
+    		  return 0;
+    	}
+        else {
+        	if (a.role < b.role)
+    		    return -1;
+    		  if (a.role > b.role)
+    		    return 1;
+        	return 0;
+        }
+    });
+    
+    reserves.sort(function(a, b) {
+    	if (a.role == b.role) {
+          if (a.position == b.position) {
+        	  if (a.name < b.name)
+      		    return -1;
+      		  if (a.name > b.name)
+      		    return 1;
+      		  return 0;
+          }
+          else {
+        	  if (a.position < b.position)
+      		    return -1;
+      		  if (a.position > b.position)
+      		    return 1;
+      		  return 0;
+          }
+       	}
+        else { 
+        	if (a.role < b.role)
+    		    return -1;
+    		  if (a.role > b.role)
+    		    return 1;
+        	return 0;
+        }
+    });
+    
+	var out = '<h3>Titolari</h3>';
+	out += '<table class="table player-table"><tbody>';
+    
+    for(var i = 0; i < regulars.length; i++) {
+    	var regular = regulars[i];
+    	if (regular != undefined) {
+    		out += '<tr><td class="player-role"><span class="fa-stack">'
+    		out += '<i class="fa fa-square fa-stack-2x squad-player-role-' + regular.role + '"></i>'
+    		out += '<i class="fa fa-stack-1x" style="color: white;"><span class="font-normal">' + roles[regular.role] + '</span></i>'
+    		out += '</span></td><td class="player-name">' + regular.name + '</td><td class="player-team">' + regular.team + '</td>'
+    		out += '<td class="player-status"><i class="fa fa-lg fa-circle text-success"></i></td></tr>'
+    	}
+    }
+    
+    out += "</tbody></table>";
+    
+    out += '<h3>Riserve</h3>';
+    out += '<table class="table player-table"><tbody>';
+    
+    for(var i = 0; i < reserves.length; i++) {
+    	var reserve = reserves[i];
+    	if (reserve != undefined) {
+    		out += '<tr><td class="player-role"><span class="fa-stack">'
+    		out += '<i class="fa fa-square fa-stack-2x squad-player-role-' + reserve.role + '"></i>'
+    		out += '<i class="fa fa-stack-1x" style="color: white;"><span class="font-normal">' + roles[reserve.role] + '</span></i>'
+    		out += '</span></td><td class="player-name">' + reserve.name + '</td><td class="player-team">' + reserve.team + '</td>'
+    		out += '<td class="player-status"><i class="fa fa-lg fa-circle text-success"></i></td></tr>'
+    	}
+    }
+    
+    out += "</tbody></table>";
+    
+    jQuery("#lineup-preview").html(out);
 }

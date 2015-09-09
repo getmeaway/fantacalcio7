@@ -691,6 +691,8 @@ td i.squad-player-role-3 {
     width: 10%;
 }
 
-.lineup-group-container .row div {
-	padding: 0px;
+.lineup-group-container-mobile .row div.player-row {
+	padding-left: 0px;
+	padding-right: 0px;
 }
+

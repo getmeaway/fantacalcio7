@@ -28,6 +28,8 @@ function _fantacalcio_lineup_view($competition_name, $round_number =  null, $t_i
   
   $competitions = Competition::all(array("has_lineups" => 1));
   
+  $competition_is_selected = false;
+  
   foreach($competitions as $c_id => $competition) {
   	
   	$round_number = (!isset($round_number) || $round_number == null || !Round::existsInCompetition($round_number, $c_id)) ? Round::getLastLineup($c_id) : $round_number;
@@ -42,6 +44,7 @@ function _fantacalcio_lineup_view($competition_name, $round_number =  null, $t_i
 
   	foreach($competition->groups as $g_id => $group) {
   		
+
   		$teams = Team::allByGroupLineups($c_id, $g_id, $round->competition_round);
   	
   		$expanded = false;
@@ -82,11 +85,17 @@ function _fantacalcio_lineup_view($competition_name, $round_number =  null, $t_i
   	$competition->output = theme("columns", $columns_output);  	 
   	  	
   	$competition->active = (isset($competition_name) && Competition::getByName($competition_name) != null && strtolower($competition->name) == strtolower($competition_name));
+  	$competition_is_selected = $competition->active;
   }
   
   $output = array();
+  
+  if (!$competition_is_selected) {
+    $default_competition = Competition::getDefault();
+    $competitions[$default_competition->id]->active = true;
+  }
+  
   $output["competitions"] = $competitions;
-  $output["active"] = 1;//TODO
   
   return theme("lineup-view", $output);
 }
@@ -754,7 +763,8 @@ function fantacalcio_lineup_form_validate($form, &$form_state) {
 }
 
 function make_lineup($team, $competition, $round, $admin = FALSE) {
-  
+    
+  drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.ui.js");  
   drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.ui.touch-punch.min.js");
   drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.mobile.custom.min.js");
     
@@ -789,19 +799,26 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
   
   //mobile
   $squad_mobile = "";
-  foreach ($squad as $player) {
+  foreach ($squad as $_player) {
     
-    $player->status = 1;
+    $player = new Player($_player->pl_id, $_player->name, $_player->role);
+    $player->pl_id = $_player->pl_id;
+    $player->name = $_player->name;
+    $player->role = $_player->role;
+    $player->team = $_player->team;
     
     $player->position = "";
     $position_class = "";
+    $position_class_icon = "";
     if (isset($lineup->positions) && isset($lineup->positions[1]) && array_key_exists($player->pl_id, $lineup->positions[1])) {
       $player->position = "T";
-      $position_class = "text-success";
+      $position_class = "regular";
+      $position_class_icon = "text-success";
     }
     else if (isset($lineup->positions) && isset($lineup->positions[2]) && array_key_exists($player->pl_id, $lineup_player_ids)) {
       $player->position = "R";
-      $position_class = "text-warning";
+      $position_class = "reserve";
+      $position_class_icon = "text-warning";
     }
     
     $position = " ";
@@ -810,14 +827,17 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
       $hidden = "hidden";
     
       $position = "<span class='fa fa-stack " . $hidden ."'>"
-        . "<i class='fa fa-stack-2x fa-circle-o position-class " . $position_class ."'></i>"
-            . "<i class='fa fa-stack-1x position " . $position_class ."'>"
+        . "<i class='fa fa-stack-2x fa-circle-o position-class " . $position_class_icon ."'></i>"
+            . "<i class='fa fa-stack-1x position " . $position_class_icon ."'>"
                 . $player->position
                 . "</i>"
                 . "</span>";
         
     $squad_mobile .= "<div class='row'>" 
-        . "<div class='col-xs-10 col-xs-offset-1' data-id='" . $player->pl_id . "' data-role='" . $player->role . "' data-team='" . $team->id . "' data-competition='" . $competition->id . "'>"
+        . "<div class='player-row col-xs-10 col-xs-offset-1 " . $position_class . "' data-id='" . $player->pl_id 
+            . "' data-role='" . $player->role 
+            . "' data-team='" . $team->id 
+            . "' data-competition='" . $competition->id . "'>"
             . "<table class='table player-table'><tr>"
                 . "<td class='player-role'>"
                     . fantacalcio_show_role($player->role)
@@ -826,7 +846,7 @@ function make_lineup($team, $competition, $round, $admin = FALSE) {
 . "<td class='player-team'>" . $player->team . "</td>"
             
                 . "<td class='player-status'>"
-					. fantacalcio_show_status($player->status)
+					. fantacalcio_show_status($player->name, $player->team, $player->getStatus($round->round))
                 . "</td>"
                 . "<td class='player-position'>"
                 . $position
@@ -1067,7 +1087,7 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
     $query->fields(array("t_id" => $t_id, "c_id" => $c_id, "round" => $round, "timestamp" => time(), "status" => 1 ));
     $query->execute();
     
-    watchdog('fantacalcio', '@team: formazione inserita correttamente', array('@team' => Team::get($t_id)->name), WATCHDOG_NOTICE);
+//     watchdog('fantacalcio', '@team: formazione inserita correttamente', array('@team' => Team::get($t_id)->name), WATCHDOG_NOTICE);
   }
   elseif ($type == 'old') {
 
@@ -1705,10 +1725,10 @@ function check_lineup_insert($t_id, $c_id, $round) {
 function show_line_up_check($checks, $values) {
 
 	$rows = array();
-    $rows[] = array("data" => array(t("Numero Titolari"), "<span id=\"regulars_number_value\" class=\"regulars_number_value\">" . $values["regulars_number"] . "</span>", "<span id=\"regulars_number\">" . fantacalcio_check_value($checks["regulars_number"]) . "</span>", 
-                                   t("Numero Riserve"), "<span id=\"reserves_number_value\" class=\"reserves_number_value\">" . $values["reserves_number"] . "</span>", "<span id=\"reserves_number\">" . fantacalcio_check_value($checks["reserves_number"]) . "</span>" ));
-    $rows[] = array("data" => array(t("Modulo Titolari"), "<span id=\"regulars_module_value\" class=\"regulars_module_value\">" . $values["regulars_module"] . "</span>", "<span id=\"regulars_module\">" . fantacalcio_check_value($checks["regulars_module"]) . "</span>", 
-                                   t("Modulo Riserve"), "<span id=\"reserves_module_value\" class=\"reserves_module_value\">" . $values["reserves_module"] . "</span>", "<span id=\"reserves_module\">" . fantacalcio_check_value($checks["reserves_module"]) . "</span>" ));					   
+    $rows[] = array("data" => array(t("Numero Titolari"), "<span id=\"regulars_number_value\" class=\"regulars_number_value\">" . $values["regulars_number"] . "</span>", "<span id=\"regulars_number\" class=\"regulars_number\">" . fantacalcio_check_value($checks["regulars_number"]) . "</span>", 
+                                   t("Numero Riserve"), "<span id=\"reserves_number_value\" class=\"reserves_number_value\">" . $values["reserves_number"] . "</span>", "<span id=\"reserves_number\" class=\"reserves_number\">" . fantacalcio_check_value($checks["reserves_number"]) . "</span>" ));
+    $rows[] = array("data" => array(t("Modulo Titolari"), "<span id=\"regulars_module_value\" class=\"regulars_module_value\">" . $values["regulars_module"] . "</span>", "<span id=\"regulars_module\" class=\"regulars_module\">" . fantacalcio_check_value($checks["regulars_module"]) . "</span>", 
+                                   t("Modulo Riserve"), "<span id=\"reserves_module_value\" class=\"reserves_module_value\">" . $values["reserves_module"] . "</span>", "<span id=\"reserves_module\" class=\"reserves_module\">" . fantacalcio_check_value($checks["reserves_module"]) . "</span>" ));					   
 								   
     return theme("table", array("header" => array(), "rows" => $rows, "attributes" => array("class" => array("table", "well", "table-responsive"))));
   

@@ -56,7 +56,7 @@
       		    <?php print render($lineup_form_confirm); ?>
       	    </div>
 			<div class="col-xs-12">
-				<div class="lineup-group-container">
+				<div class="lineup-group-container-mobile">
     			<?php print render($squad_mobile);?>
     		    </div>
 
@@ -70,7 +70,7 @@
 					</div>
 					<div class="col-xs-6">
 						<div class="center-block">
-							<button id="step-1-go" type="button" class="btn btn-success">
+							<button id="step-1-go" type="button" class="btn btn-success" disabled>
             				<?php print t("Avanti");?>
             				</button>
 						</div>
@@ -82,6 +82,9 @@
 		<div class="row hidden" id="step-2">
 			<div class="col-xs-12">
 				<h4>Ordina Riserve</h4>
+				<div class="row">
+				  <div class="col-xs-12" id="lineup-reserves-sort"></div>
+				</div>
 				<div class="row">
 					<div class="col-xs-6">
 						<div class="center-block">
@@ -100,10 +103,13 @@
 				</div>
 			</div>
 		</div>
-		<!-- Rigoristi -->
+		<!-- Conferma -->
 		<div class="row hidden" id="step-3">
 			<div class="col-xs-12">
-				<h4>Ordina Rigoristi</h4>
+				<h4>Anteprima</h4>
+				<div class="row">
+				  <div class="col-xs-12" id="lineup-preview"></div>
+				</div>
 				<div class="row">
 					<div class="col-xs-6">
 						<div class="center-block">
@@ -115,28 +121,6 @@
 					<div class="col-xs-6">
 						<div class="center-block">
 							<button id="step-3-go" type="button" class="btn btn-success">
-            				<?php print t("Avanti");?>
-            				</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<!-- Conferma -->
-		<div class="row hidden" id="step-4">
-			<div class="col-xs-12">
-				<h4>Conferma</h4>
-				<div class="row">
-					<div class="col-xs-6">
-						<div class="center-block">
-							<button id="step-4-back" type="button" class="btn btn-default">
-            				<?php print t("Indietro");?>
-            				</button>
-						</div>
-					</div>
-					<div class="col-xs-6">
-						<div class="center-block">
-							<button id="step-4-go" type="button" class="btn btn-success">
             				<?php print t("Conferma");?>
             				</button>
 						</div>
@@ -172,7 +156,7 @@
 	</div>
 </div>
 
-<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
 <script
 	src="<?php print base_path() . drupal_get_path("module", "fantacalcio"); ?>/js/lineup_insert.js"></script>
 <script>
@@ -186,15 +170,19 @@ jQuery(function() {
 	jQuery("#step-1-go").click(function () {
 		jQuery("#step-1").addClass("hidden");
 		jQuery("#step-2").removeClass("hidden");
+		prepareReserves();
 	});
 	jQuery("#step-2-go").click(function () {
 		jQuery("#step-2").addClass("hidden");
+
 		jQuery("#step-3").removeClass("hidden");
+        show_lineup_preview ();
 	});
+
 	jQuery("#step-3-go").click(function () {
-		jQuery("#step-3").addClass("hidden");
-		jQuery("#step-4").removeClass("hidden");
+		jQuery("#line_up_submit").trigger("click");
 	});
+	
 	jQuery("#step-2-back").click(function () {
 		jQuery("#step-2").addClass("hidden");
 		jQuery("#step-1").removeClass("hidden");
@@ -203,20 +191,23 @@ jQuery(function() {
 		jQuery("#step-3").addClass("hidden");
 		jQuery("#step-2").removeClass("hidden");
 	});
-	jQuery("#step-4-back").click(function () {
-		jQuery("#step-4").addClass("hidden");
-		jQuery("#step-3").removeClass("hidden");
-	});
+	// jQuery("#step-4-back").click(function () {
+// 		jQuery("#step-4").addClass("hidden");
+// 		jQuery("#step-3").removeClass("hidden");
+// 	});
 });
 
 jQuery(document).ready(function() {
-	jQuery(".lineup-group-container .row div").on("swiperight", function() {
+
+// 	var _line_up = null;
+	
+	  function swiperight(item) {
 		//da titolare a tribuna
-		if (jQuery(this).hasClass("regular")) {
+		if (jQuery(item).hasClass("regular")) {
 	       
-			jQuery(this).removeClass("col-xs-offset-1").addClass("col-xs-offset-2").removeClass("regular");
+			jQuery(item).removeClass("col-xs-offset-1").addClass("col-xs-offset-2").removeClass("regular");
 	        
-	        jQuery(this).find(".position-message").addClass("position-message-squad").html("Tribuna").fadeIn().delay(500).fadeOut(500, function() {
+	        jQuery(item).find(".position-message").addClass("position-message-squad").html("Tribuna").fadeIn().delay(500).fadeOut(500, function() {
 	            jQuery(this).removeClass("position-message-squad")
 	            jQuery(this).parent().find(".player-position span").addClass("hidden")
 	            //jQuery(this).parent().find("player-position i.position").html("T")
@@ -224,13 +215,14 @@ jQuery(document).ready(function() {
 	            jQuery(this).parent().removeClass("col-xs-offset-2").addClass("col-xs-offset-1")
 	        });
 
-	        changePosition(jQuery(this).attr("data-id"), jQuery(this).attr("data-team"), jQuery(this).attr("data-competition"), jQuery(this).attr("data-role"), 0);
+	        changePosition(jQuery(item).attr("data-id"), jQuery(item).attr("data-team"), jQuery(item).attr("data-competition"), jQuery(item).attr("data-role"), 0);
+// 	        checkLineUp(_line_up);
 	    }
 	    //da tribuna a titolare
 		else {
-			jQuery(this).removeClass("col-xs-offset-1").addClass("col-xs-offset-2").addClass("regular");
+			jQuery(item).removeClass("col-xs-offset-1").addClass("col-xs-offset-2").addClass("regular");
 	        
-	        jQuery(this).find(".position-message").addClass("position-message-regular").html("Titolare").fadeIn().delay(500).fadeOut(500, function() {
+	        jQuery(item).find(".position-message").addClass("position-message-regular").html("Titolare").fadeIn().delay(500).fadeOut(500, function() {
 	            jQuery(this).removeClass("position-message-regular")
 	            jQuery(this).parent().find(".player-position span").removeClass("hidden")
 	            jQuery(this).parent().find(".player-position i.position").removeClass("text-warning").addClass("text-success").html("T")
@@ -238,20 +230,26 @@ jQuery(document).ready(function() {
 	            jQuery(this).parent().removeClass("col-xs-offset-2").addClass("col-xs-offset-1")
 	        });
 
-	        changePosition(jQuery(this).attr("data-id"), jQuery(this).attr("data-team"), jQuery(this).attr("data-competition"), jQuery(this).attr("data-role"), 1);
+	        changePosition(jQuery(item).attr("data-id"), jQuery(item).attr("data-team"), jQuery(item).attr("data-competition"), jQuery(item).attr("data-role"), 1);
+// 	        checkLineUp(_line_up);
 		}
 
-	   		    
-	});
+		jQuery(item).on("swiperight", function() {
+	  		var _item = jQuery(this); 
+	  		jQuery(_item).off("swiperight");
+	  		swiperight(_item);
+	  	});    
+	}
 
-	jQuery(".lineup-group-container .row div").on("swipeleft", function() {
 
+	function swipeleft(item) {
+	
 	    //da riserva a tribuna
-		if (jQuery(this).hasClass("reserve")) {
+		if (jQuery(item).hasClass("reserve")) {
 		       
-	        jQuery(this).removeClass("col-xs-offset-1").addClass("col-xs-offset-0").removeClass("reserve");
+	        jQuery(item).removeClass("col-xs-offset-1").addClass("col-xs-offset-0").removeClass("reserve");
 	        
-	        jQuery(this).find(".position-message").addClass("position-message-squad").html("Tribuna").fadeIn().delay(500).fadeOut(500, function() {
+	        jQuery(item).find(".position-message").addClass("position-message-squad").html("Tribuna").fadeIn().delay(500).fadeOut(500, function() {
 	            jQuery(this).removeClass("position-message-squad")
 	            jQuery(this).parent().find(".player-position span").addClass("hidden")
 	            //jQuery(this).parent().find("player-position i.position").html("T")
@@ -259,14 +257,21 @@ jQuery(document).ready(function() {
 	            jQuery(this).parent().removeClass("col-xs-offset-0").addClass("col-xs-offset-1")
 	        });
 
-	        changePosition(jQuery(this).attr("data-id"), jQuery(this).attr("data-team"), jQuery(this).attr("data-competition"), jQuery(this).attr("data-role"), 0);
-	        checkLineUp(_line_up);
+	        changePosition(jQuery(item).attr("data-id"), jQuery(item).attr("data-team"), jQuery(item).attr("data-competition"), jQuery(item).attr("data-role"), 0);
+// 	        checkLineUp(_line_up);
+
+
+// 			jQuery(item).one("swipeleft", function() {
+// 		  		var _item = jQuery(this); 
+// //	 	  		jQuery(_item).off("swipeleft");
+// 		  		swipeleft(_item);
+// 		  	});
 	    }
 	    //da tribuna a riserva
 		else {
-			jQuery(this).removeClass("col-xs-offset-1").addClass("col-xs-offset-0").addClass("reserve");
+			jQuery(item).removeClass("col-xs-offset-1").addClass("col-xs-offset-0").addClass("reserve");
 	        
-	        jQuery(this).find(".position-message").addClass("position-message-reserve").html("Riserva").fadeIn().delay(500).fadeOut(500, function() {
+	        jQuery(item).find(".position-message").addClass("position-message-reserve").html("Riserva").fadeIn().delay(500).fadeOut(500, function() {
 	            jQuery(this).removeClass("position-message-reserve")
 	            jQuery(this).parent().find(".player-position span").removeClass("hidden")
 	            jQuery(this).parent().find(".player-position i.position").removeClass("text-success").addClass("text-warning").html("R")
@@ -274,10 +279,39 @@ jQuery(document).ready(function() {
 	            jQuery(this).parent().removeClass("col-xs-offset-0").addClass("col-xs-offset-1")
 	        });
 
-	        changePosition(jQuery(this).attr("data-id"), jQuery(this).attr("data-team"), jQuery(this).attr("data-competition"), jQuery(this).attr("data-role"), 2);
-	        checkLineUp(_line_up);
+	        changePosition(jQuery(item).attr("data-id"), jQuery(item).attr("data-team"), jQuery(item).attr("data-competition"), jQuery(item).attr("data-role"), 2);
+// 	        checkLineUp(_line_up);
+	  	
 		}
+
+		jQuery(item).on("swipeleft", function() {
+	  		var _item = jQuery(this); 
+	  		jQuery(_item).off("swipeleft");
+	  		swipeleft(_item);
+	  	});
+	}
+
+
+	jQuery(".lineup-group-container-mobile .row div").on("swipeleft", function() {
+		  var item = jQuery(this); 
+		  jQuery(item).off("swipeleft");
+		  swipeleft(item);
 	});
 
+	jQuery(".lineup-group-container-mobile .row div").on("swiperight", function() {
+		  var item = jQuery(this); 
+		  jQuery(item).off("swiperight");
+		  swiperight(item);
+	});
+	
+	jQuery("#tmp-lineup").val("" + JSON.stringify(_line_up));
+
+	var checks = checkLineUp(_line_up);
+	
+	if (checks[0] && checks[1] && checks[2] && checks[3]) {
+		jQuery("#step-1-go").removeAttr('disabled');
+		//jQuery(window).unbind();
+	} else
+		jQuery("#step-1-go").attr('disabled', 'disabled');
 });
 </script>

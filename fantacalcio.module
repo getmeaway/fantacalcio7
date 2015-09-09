@@ -668,7 +668,7 @@ function fantacalcio_menu() {
   $items['mercato/view']  = array(
       'title' => t('Mercato'),
       'page callback' => 'fantamercato_view',
-      'access arguments' => array('administer team'),
+      'access arguments' => array('access content fantacalcio'),
       'type' => MENU_CALLBACK,
       'file' => 'fantacalcio.draft.inc',
       'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -677,7 +677,7 @@ function fantacalcio_menu() {
       'title' => t('Mercato'),
       'page callback' => 'fantamercato_view',
       'page arguments' => array(2),
-      'access arguments' => array('administer team'),
+      'access arguments' => array('access content fantacalcio'),
       'type' => MENU_CALLBACK,
       'file' => 'fantacalcio.draft.inc',
       'file path' => drupal_get_path('module', 'fantacalcio'));
@@ -1140,19 +1140,26 @@ function fantacalcio_show_role($role) {
 				</span>";
 }
 
-function fantacalcio_show_status($status) {
+function fantacalcio_show_status($name, $team, $player_status) {
   
-  switch($status) {
-    case 1:
-      $status_class = "text-success";
-      break;
-    case 0:
-      $status_class = "text-warning";
-      break;
-    case -1:
+  switch($player_status->status) {
+    case "injured":
       $status_class = "text-danger";
+      break;
+    case "suspended":
+      $status_class = "text-danger";
+      break;
+    case "ok":
+      $status_class = $player_status->position == 1 ? "text-success" : "text-warning";
       break;
   }
   
-  return "<i class='fa fa-lg fa-circle " . $status_class . "'></i>";
+  $out = "<a href='#' data-toggle='tooltip' title='" . $name . " (" . $team . ")" . "'>";
+  
+  $out .= "<i class='fa fa-lg fa-circle " . $status_class . "'></i>";
+  
+  $out .= "</a>";
+  
+  return $out;
+  
 }

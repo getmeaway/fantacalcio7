@@ -933,8 +933,8 @@ function fantacalcio_get_modifiers($vote_round) {
       }
       
       if (variable_get('fantacalcio_modifier_role_1', '0')) {
-        $mod_1_role_1 = fantacalcio_get_modifier_role_1($t1_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
-        $mod_2_role_1 = fantacalcio_get_modifier_role_1($t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+        $mod_1_role_1 = fantacalcio_get_modifier_role_1($t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+        $mod_2_role_1 = fantacalcio_get_modifier_role_1($t1_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
       }
       else {
         $mod_1_role_1 = 0;

@@ -313,8 +313,8 @@ function choose_players_stats_submit($form, &$form_state) {
   $in_team = $form_state["values"]["in_team"];
   
   $roles_list = "";
-  if ($form_state['clicked_button']['#post']['roles']) {
-    foreach ($form_state['clicked_button']['#post']['roles'] as $key => $value) {
+  if ($form_state['values']['roles']) {
+    foreach ($form_state['values']['roles'] as $key => $value) {
       if ($value != '')
         $roles_list .= $key . "-";
     }
@@ -332,16 +332,8 @@ function choose_players_stats_clear($form, &$form_state) {
 
 function players_stats($type, $round_start, $round_stop, $presences, $roles_list, $number, $sort, $g_id, $in_team) {
   $roles = explode("-", $roles_list);
-  // $players = get_players();
-  // $teams_groups = get_teams_groups();
-  // ksort($teams_groups);
-  // $groups = get_groups();
   
   $avg_types = array("vote", "total");
-  
-  $sql = "SELECT * FROM {fanta_votes} v, {fanta_players} p
-      WHERE v.pl_id = p.pl_id 
-	  AND v.provider = '%d' ";
   
   $query = db_select("fanta_players", "p");
   $query->join("fanta_votes", "v", "v.pl_id = p.pl_id");
@@ -355,10 +347,8 @@ function players_stats($type, $round_start, $round_stop, $presences, $roles_list
   
   if (count($roles) > 0 && count($roles) < 4)
     $query->condition("role", $roles, "IN");
-    // $sql .= " AND p.role IN (" . implode(",", $roles) . ")";
     
-  // tesserati
-  
+  // tesserati  
   $subquery2 = db_select("fanta_teams_groups", "g");
   $subquery2->condition("g_id", $g_id);
   $subquery2->addField("g", "t_id", "t_id");
@@ -383,7 +373,9 @@ function players_stats($type, $round_start, $round_stop, $presences, $roles_list
   $stats = array();
   
   foreach ($result as $row) {
-    $stats[$row->pl_id] = array("name" => "", "pl_id" => "", "value" => 0, "votes" => 0, "presences" => 0);
+    if (!isset($stats[$row->pl_id]))
+      $stats[$row->pl_id] = array("name" => "", "pl_id" => "", "value" => 0, "votes" => 0, "presences" => 0);
+    
     if ($row->round >= $round_start && $row->round <= $round_stop) {
       $stats[$row->pl_id]["pl_id"] = $row->pl_id;
       $stats[$row->pl_id]["name"] = $row->name;
@@ -396,7 +388,10 @@ function players_stats($type, $round_start, $round_stop, $presences, $roles_list
   }
   
   if (count($stats) > 0) {
-    $i = 0;
+    
+    $values = array();
+    $rows = array();
+    
     foreach ($stats as $pl_id => $stat) {
       if ($stat["presences"] >= $presences && $stat['votes'] > 0) {
         if (in_array($type, $avg_types))
@@ -409,6 +404,7 @@ function players_stats($type, $round_start, $round_stop, $presences, $roles_list
     
     $flag = ($sort == "asc") ? SORT_ASC : SORT_DESC;
     array_multisort($values, $flag, $stats);
+    $i = 0;
     
     foreach ($stats as $pl_id => $stat) {
       
@@ -419,7 +415,7 @@ function players_stats($type, $round_start, $round_stop, $presences, $roles_list
           ucwords(strtolower($stat['team'])), 
           $stat['votes'], 
           $stat['value'], 
-          get_player_fantateams($stat), 
+          get_player_fantateams($stat['pl_id']), 
           l("<i class='fa fa-bar-chart'></i>", "scheda/giocatore/" . $stat['pl_id'], array(
             "html" => TRUE, 
             "attributes" => array(

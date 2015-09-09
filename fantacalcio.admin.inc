@@ -2620,7 +2620,8 @@ function fantacalcio_admin_players_list_player_form_submit($form, &$form_state) 
   
   $result = $query->execute();
   
-  $player_rounds = get_player_rounds($form_state["values"]["pl_id"]);
+  $player = Player::get($form_state["values"]["pl_id"]);
+  $player_rounds = $player->getPlayerRounds();
   foreach ($player_rounds as $round => $player) {
     // $sql = "UPDATE {fanta_players_teams}
     // SET team = '%s',
@@ -2631,7 +2632,7 @@ function fantacalcio_admin_players_list_player_form_submit($form, &$form_state) 
     
     $query = db_update("fanta_players_rounds");
     $query->fields(array(
-      "team" => $form_state["values"]["team_" . $round], 
+      "rt_id" => $form_state["values"]["team_" . $round], 
       "active" => $form_state["values"]["active_" . $round]));
     $query->condition("pl_id", $form_state["values"]["pl_id"]);
     $query->condition("round", $round);
@@ -2670,20 +2671,7 @@ function fantacalcio_admin_players_list_update_submit($form, &$form_state) {
   
   $players = json_decode(file_get_contents($players_url));
   
-  // $text = $form_state["values"]["text"];
-  
-  // $sql = "select max(round) from {fanta_votes};";
-  // $result = db_query($sql);
-  // $round = db_result($result);
-  
-  $query = db_select("fanta_votes");
-  $query->addExpression("MAX(round)", "AS max");
-  $result = $query->execute();
-  
-  if ($result->fetchField() !== null)
-    $round = $result->fetchField()->max;
-  else
-    $round = 0;
+    $round = Round::getLast();
   
   insert_players($players, $round + 1);
 }

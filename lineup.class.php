@@ -61,22 +61,28 @@ class Lineup {
 		
 		foreach ($squad as $player) {
 			$pl_id = $player->pl_id;
-			$lineup[$pl_id] = array("pl_id" => $pl_id, "role" => $player->role, "position" => 0);
+			$lineup[$pl_id] = array("pl_id" => $pl_id, "name" => $player->name, "team" => $player->team, "role" => $player->role, "position" => 0);
 		}
+		
+		$round = Round::getByCompetitionRound($competition_round, $competition_id);
 		
 		$query = db_select("fanta_lineups", "l");
 		$query->join("fanta_players", "p", "p.pl_id = l.pl_id");
+		$query->join("fanta_players_rounds", "pr", "p.pl_id = pr.pl_id");
+		$query->join("fanta_real_teams", "rt", "rt.rt_id = pr.rt_id");
 		$query->condition("l.t_id", $team_id);
 		$query->condition("l.c_id", $competition_id);
 		$query->condition("l.round", $competition_round);
+		$query->condition("pr.round", $round->round);
 		$query->fields("l");
-		$query->fields("p");		
+		$query->fields("p");
+		$query->addField("rt", "name", "team");
 	
 		$result = $query->execute();
 	
 		foreach ($result as $row) {
 			$pl_id = $row->pl_id;
-			$lineup[$pl_id] = array("pl_id" => $pl_id, "role" => $row->role, "position" => $row->position);
+			$lineup[$pl_id] = array("pl_id" => $pl_id, "name" => $row->name, "team" => $row->team, "role" => $row->role, "position" => $row->position);
 		}
 		
 		return $lineup;
