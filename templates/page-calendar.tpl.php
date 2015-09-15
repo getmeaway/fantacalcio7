@@ -37,7 +37,21 @@
 			<table class="table table-responsive">
 			<?php foreach ($round_matches as $match): ?>
 				<tr>
-					<td><?php print $match->home_team . " - " . $match->away_team; ?></td>
+					<td>
+					   <?php 
+					     $attributes_1 = array();
+					     if (in_array($match->t1_id, $user_teams))
+					       $attributes_1 = array("attributes" => array("class" => array("bold")));
+					     
+					     $attributes_2 = array();
+					     if (in_array($match->t2_id, $user_teams))
+					       $attributes_2 = array("attributes" => array("class" => array("bold")));
+					     
+					     print l($match->home_team, "squadre/" . $match->t1_id, $attributes_1) 
+					       . " - " 
+	                       . l($match->away_team, "squadre/" . $match->t2_id, $attributes_2); 
+					   ?>
+					</td>
 					<?php if ($is_main_competition): ?>
 					<td><small><em><?php print date("d-m-Y H:i", $match->date); ?></em></small></td>
 					<?php endif; ?>

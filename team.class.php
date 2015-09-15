@@ -231,7 +231,7 @@ class Team {
 		$query = db_select("fanta_squads", "s");
 		$query->join("fanta_players", "p", "s.pl_id = p.pl_id");
 		$query->join("fanta_players_rounds", "r", "s.pl_id = r.pl_id");
-		$query->join("fanta_real_teams", "rt", "rt.rt_id = r.rt_id");
+		$query->leftJoin("fanta_real_teams", "rt", "rt.rt_id = r.rt_id");
 		$query->condition("s.t_id", $this->id);
 		$query->condition("r.round", $round);
 		$query->fields("s");
@@ -350,6 +350,28 @@ class Team {
 		}
 	
 		return $competitions;
+	}
+	
+	function getGroups() {
+	  $groups = array();
+	  
+	  $query = db_select("fanta_teams_groups", "tg");
+	  $query->join("fanta_groups", "g", "g.g_id = tg.g_id");
+	  $query->join("fanta_competitions", "c", "c.c_id = g.c_id");
+	  $query->fields("tg");
+	  $query->fields("g");
+	  $query->addField("c", "name", "competition_name");
+	  $query->condition("tg.t_id", $this->id);
+	  $query->condition("tg.active", 1);
+	  $query->condition("g.active", 1);
+	  
+	  $result = $query->execute();
+	  
+	  foreach($result as $row) {
+	    $groups[$row->c_id] = $row;
+	  }
+	  
+	  return $groups;
 	}
 	
 	function inCompetition($c_id) {
@@ -860,16 +882,44 @@ class Team {
 	}
 	
 	function getPosition($competition) {
+	  
+	  $groups = $this->getGroups();
 		
 		$query = db_select("fanta_matches", "m");
-		$query->condition("g_id", array_keys($competition->groups), "IN");
+		$query->condition("g_id", $groups[$competition->id]->g_id);
 		$query->condition("played", 1);
 		$query->fields("m");
 		$result = $query->execute();
 		
 		$points = array();
+		$goals = array();
+		$totals = array();
+		$teams = array();
 		
 		foreach($result as $row) {
+		  
+		    $teams[$row->t1_id] = $row->t1_id;
+		    $teams[$row->t2_id] = $row->t2_id;
+		    
+		    if (!isset($goals[$row->t1_id]))
+		      $goals[$row->t1_id] = 0;
+		    $goals[$row->t1_id] += $row->goals_1; 
+		    if (!isset($goals[$row->t2_id]))
+		      $goals[$row->t2_id] = 0;
+		    $goals[$row->t2_id] += $row->goals_2; 
+
+		    if (!isset($totals[$row->t1_id]))
+		      $totals[$row->t1_id] = 0;
+		    $totals[$row->t1_id] += $row->tot_1; 
+		    if (!isset($totals[$row->t2_id]))
+		      $totals[$row->t2_id] = 0;
+		    $totals[$row->t2_id] += $row->tot_2; 
+		    
+		    if (!isset($points[$row->t1_id]))
+		      $points[$row->t1_id] = 0;
+		    if (!isset($points[$row->t2_id]))
+		      $points[$row->t2_id] = 0;
+			
 			switch ($row->winner_id) {
 				case $row->t1_id:
 					if (!isset($points[$row->t1_id]))
@@ -906,11 +956,10 @@ class Team {
 				}
 			}
 		
-			rsort($points);
-			$points_teams = array_flip($points);
-		
-			if (isset($position_point) && isset($points_teams[$position_point]))
-				return $points_teams[$position_point] +1;
+			array_multisort($points, SORT_DESC, $goals, SORT_DESC, $totals, SORT_DESC, $teams);
+					
+			if (isset($position_point) )
+				return array_search($this->id, $teams) +1;
 			else 
 				return null;
 		}
@@ -947,16 +996,18 @@ class Team {
 	}
 	
 	function getGap($competition) {
+	  
+	  $groups = $this->getGroups();
 	
 		$query = db_select("fanta_matches", "m");
-		$query->condition("g_id", array_keys($competition->groups), "IN");
+		$query->condition("g_id", $groups[$competition->id]->g_id);
 		$query->condition("played", 1);
 		
 		$db_and = db_and();
 		
 		$db_and->condition('t1_id', $this->id, '!=');
 		$db_and->condition('t2_id', $this->id, '!=');
-		$query->condition($db_and);
+// 		$query->condition($db_and);
 		
 		$query->fields("m");
 		$result = $query->execute();
@@ -964,32 +1015,28 @@ class Team {
 		$points = array();
 	
 		foreach($result as $row) {
-			switch ($row->winner_id) {
+		  if (!isset($points[$row->t1_id]))
+		    $points[$row->t1_id] = 0;
+		  if (!isset($points[$row->t2_id]))
+		    $points[$row->t2_id] = 0;
+		  
+		  switch ($row->winner_id) {
 				case $row->t1_id:
-					if (!isset($points[$row->t1_id]))
-						$points[$row->t1_id] = 0;
-						$points[$row->t1_id] += 3;
-						break;
+					$points[$row->t1_id] += 3;
+					break;
 				case $row->t2_id:
-					if (!isset($points[$row->t2_id]))
-						$points[$row->t2_id] = 0;
-						$points[$row->t2_id] += 3;
-						break;
+					$points[$row->t2_id] += 3;
+					break;
 				case -1:
-					if (!isset($points[$row->t1_id]))
-						$points[$row->t1_id] = 0;
-						$points[$row->t1_id] += 1;
-							
-						if (!isset($points[$row->t2_id]))
-							$points[$row->t2_id] = 0;
-						$points[$row->t2_id] += 1;
-						break;
+					$points[$row->t1_id] += 1;  							
+					$points[$row->t2_id] += 1;
+					break;
 			}
 		}
 	
 		if ($points) {
 	
-			return max($points);
+			return abs(max($points) - $points[$this->id]);
 		}
 	}
 	

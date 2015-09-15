@@ -54,13 +54,13 @@ function changePosition(pl_id, t_id, c_id, role, position) {
 		jQuery(window).unbind();
 	} else
 		jQuery("#line_up_submit").button('disable');
-
+*/
 	if (jQuery("#tmp-lineup").val() == ''
 			|| jQuery("#tmp-lineup").val() == _old_json_line_up)
 		jQuery(window).unbind();
 	else {
 		jQuery(window).bind("beforeunload", function() {
-			return "Sicuro di voler uscire dalla pagina?";
+			return;// "Sicuro di voler uscire dalla pagina?";
 		});
 
 		jQuery("#line_up_submit").click(function() {
@@ -70,7 +70,7 @@ function changePosition(pl_id, t_id, c_id, role, position) {
 		jQuery("#edit-clear").click(function() {
 			jQuery(window).unbind();
 		});
-	}*/
+	}
 }
 // END - mobile functions
 
@@ -241,7 +241,7 @@ jQuery(function() {
 				jQuery("#lineup-reserves tbody tr.empty-row")
 						.hide();
 		},
-		}).disableSelection();
+		});//.disableSelection();
 });
 
 function inArray(needle, haystack) {
@@ -448,7 +448,7 @@ function prepareReserves() {
 	    		out += '<i class="fa fa-square fa-stack-2x squad-player-role-' + reserve.role + '"></i>'
 	    		out += '<i class="fa fa-stack-1x" style="color: white;"><span class="font-normal">' + roles[reserve.role] + '</span></i>'
 	    		out += '</span></td><td class="player-name">' + reserve.name + '</td><td class="player-team">' + reserve.team + '</td>'
-	    		out += '<td class="player-status"><i class="fa fa-lg fa-circle text-success"></i></td></tr>'
+	    		out += '<td class="player-status"><i class="fa fa-lg fa-circle ' + reserve.status_class + '"></i></td></tr>'
 
 	    		line_up[reserve.pl_id].position = j + 2;
 	        }
@@ -540,7 +540,9 @@ function prepareReserves() {
 					"" + JSON.stringify(_line_up));
 			
 		},
-		}).disableSelection();
+		});//.disableSelection();
+		
+	jQuery(".player-status a").popover()
 
 }
 
@@ -632,7 +634,7 @@ function show_lineup_preview () {
     		out += '<i class="fa fa-square fa-stack-2x squad-player-role-' + regular.role + '"></i>'
     		out += '<i class="fa fa-stack-1x" style="color: white;"><span class="font-normal">' + roles[regular.role] + '</span></i>'
     		out += '</span></td><td class="player-name">' + regular.name + '</td><td class="player-team">' + regular.team + '</td>'
-    		out += '<td class="player-status"><i class="fa fa-lg fa-circle text-success"></i></td></tr>'
+    		out += '<td class="player-status"><i class="fa fa-lg fa-circle ' + regular.status_class + '"></i></td></tr>'
     	}
     }
     
@@ -648,11 +650,13 @@ function show_lineup_preview () {
     		out += '<i class="fa fa-square fa-stack-2x squad-player-role-' + reserve.role + '"></i>'
     		out += '<i class="fa fa-stack-1x" style="color: white;"><span class="font-normal">' + roles[reserve.role] + '</span></i>'
     		out += '</span></td><td class="player-name">' + reserve.name + '</td><td class="player-team">' + reserve.team + '</td>'
-    		out += '<td class="player-status"><i class="fa fa-lg fa-circle text-success"></i></td></tr>'
+    		out += '<td class="player-status"><i class="fa fa-lg fa-circle ' + reserve.status_class + '"></i></td></tr>'
     	}
     }
     
     out += "</tbody></table>";
     
     jQuery("#lineup-preview").html(out);
+    
+   	jQuery(".player-status a").popover()
 }

@@ -334,9 +334,13 @@ function fantacalcio_show_teams($t_id = "") {
     foreach ($teams as $team_id => $team) {
       
       $classes = array("list-group-item");
-      if (isset($array_args["t_id"]) && $team_id == $t_id)
-        array_push($classes, "active");
-      if ($team->user == $user->uid) {
+      if (isset($t_id) && is_numeric($t_id)) {
+        if ($team_id == $t_id) {        
+          array_push($classes, "active");
+          $expanded = true;
+        }
+      }
+      else if ($team->user == $user->uid) {
         array_push($classes, "mine");
         $expanded = true;
       }
@@ -485,6 +489,7 @@ function show_team_rounds($t_id) {
     $query->join("fanta_rounds", "r", "r.round = tr.round");
     $query->join("fanta_rounds_competitions", "rc", "rc.round = r.round");
     $query->condition("tr.t_id", $t_id);
+    $query->condition("rc.c_id", Competition::getDefault()->id);
     $query->fields("tr");
     $query->fields("r");
     $query->fields("rc");
@@ -537,6 +542,7 @@ function show_team_rounds($t_id) {
     $or->condition("m.t1_id", $t_id);
     $or->condition("m.t2_id", $t_id);
     $query->condition($or);
+    $query->condition("g_id", array_keys(Competition::getDefault()->groups), "IN");
     $query->fields("m");
     $query->addField("t1", "name", "t1_name");
     $query->addField("t2", "name", "t2_name");

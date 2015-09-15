@@ -70,7 +70,9 @@ function fantacalcio_init() {
 //     'type' => 'external'));
   
   if ($user->uid > 0 && !isset($user->groups)) {
-    
+
+    $teams = Team::allByUser($user->uid);
+    $user->teams = $teams;
     // t_id
     // $result = (db_query("SELECT t_id FROM {fanta_teams} WHERE active = 1 AND uid = :t_id", array(
     // ":t_id" => $user->uid
@@ -1141,20 +1143,22 @@ function fantacalcio_show_role($role) {
 }
 
 function fantacalcio_show_status($name, $team, $player_status) {
+    
+  $status_class = fantacalcio_get_status_classes($player_status->status, $player_status->position);
   
-  switch($player_status->status) {
-    case "injured":
-      $status_class = "text-danger";
-      break;
-    case "suspended":
-      $status_class = "text-danger";
-      break;
-    case "ok":
-      $status_class = $player_status->position == 1 ? "text-success" : "text-warning";
-      break;
+  if ($player_status->status == "ok") {
+    $position = $player_status->position == 1 ? t("Titolare") : t("Riserva");
+    $content = "<table class=\"table\"><tr><th>Posizione probabile:</th><td>" . $position ."</td></tr><tr><th>Probabilità di giocare:</th><td>" . $player_status->percent . "%</td></tr></table><i class=\"caption\">Ultimo aggiornamento: " . date("d-m-Y H:i", $player_status->updated) . "</i>";
+  }
+  else {
+    $status = $player_status->status == "injured" ? t("Infortunato") : t("Squalificato");
+    $content = "<table class=\"table\"><tr><th>Stato:</th><td>" . $status . "</td></tr></table><i class=\"caption\">Ultimo aggiornamento: " . date("d-m-Y H:i", $player_status->updated) . "</i>";
   }
   
-  $out = "<a href='#' data-toggle='tooltip' title='" . $name . " (" . $team . ")" . "'>";
+  $out = "<a tabindex='0' role='button' data-trigger='focus' data-toggle='popover' data-placement='top' title='" . $name . " (" . $team . ")" 
+. "' data-content='" . $content 
+. "' data-html='" . true 
+. "'>";
   
   $out .= "<i class='fa fa-lg fa-circle " . $status_class . "'></i>";
   
@@ -1162,4 +1166,18 @@ function fantacalcio_show_status($name, $team, $player_status) {
   
   return $out;
   
+}
+
+function fantacalcio_get_status_classes($status, $status_position) {
+  switch($status) {
+    case "injured":
+      return "text-danger";
+      break;
+    case "suspended":
+      return "text-danger";
+      break;
+    case "ok":
+      return $status_position == 1 ? "text-success" : "text-warning";
+      break;
+  }
 }

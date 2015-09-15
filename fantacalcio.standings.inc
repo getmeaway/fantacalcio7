@@ -79,8 +79,10 @@ function get_standing_table_sd($competition) {
 			foreach ($teams as $t_id => $team) {
 		
 		    	$i++;
-			
-		    	$team_class = ($team->user == $user->uid) ? " class=bold" : "";
+		    	
+		    	$team_class = array();
+		    	if ($team->user == $user->uid)
+		    	   array_push($team_class, "bold");
 		
 		    	$rows[$t_id][] = array("data" => $i, "data-title" => t("Posizione"));
 			    $rows[$t_id][] = array("data" => l($team->name, "squadre/" . $team->id), "data-title" => t("Squadra"), "class" => $team_class);

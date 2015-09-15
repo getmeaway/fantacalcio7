@@ -66,6 +66,7 @@ function get_matches_table($competition) {
         "empty" => ""));
       
       $group->output = theme("calendar", array(
+        "user_teams" => isset($user->teams) ? array_keys($user->teams) : null,
         "matches" => $matches, 
         "rounds" => $rounds, 
         "rounds_list" => null, 
@@ -715,7 +716,7 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $empt
       $points += $votes[$pl_id]->total;
     }
     else
-      $data[] = array("data" => "", "colspan" => 10);
+      $data[] = array("data" => "", "colspan" => 9);
     
     $rows[$pl_id] = array(
       "data" => $data, 
@@ -769,9 +770,9 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $empt
         
         $played_reserves++;
       }
-      else {
-        $data[] = array("data" => "", "colspan" => 10);
-    }
+//       else {
+//         $data[] = array("data" => "", "colspan" => 10);
+//     }
     
     $rows[$pl_id] = array(
       "data" => $data, 
@@ -780,7 +781,7 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $empt
   
   for ($i = $played_reserves; $i < $empty_rows; $i++)
     $rows[] = array(
-      "data" => array("", "&nbsp;"), 
+      "data" => array(array("data" => "", "colspan" => 13)),
       "class" => array("team-details-empty-row"));
   
   $out .= "<div class='team-details-lineup'>" . theme("table", array(
@@ -908,7 +909,7 @@ function get_details_reserves($t_id, $c_id, $round, $vote_round) {
     $roles[] = $row->role;
     $positions[] = $row->position;
   }
-  array_multisort($positions, SORT_ASC, $roles, SORT_ASC, $names, SORT_ASC, $lineup);
+  array_multisort($roles, SORT_ASC, $positions, SORT_ASC, $names, SORT_ASC, $lineup);
   
   return $lineup;
 }
