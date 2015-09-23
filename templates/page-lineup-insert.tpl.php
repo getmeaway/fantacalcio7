@@ -5,10 +5,10 @@
 
 <style>
 #check-lineup-nav.affix {
-    position: fixed;
-    top: 55px;
-    width: 100%;
-    z-index:10;
+	position: fixed;
+	top: 55px;
+	width: 100%;
+	z-index: 10;
 }
 </style>
 
@@ -21,19 +21,21 @@
 	<div class="col-xs-12 col-sm-2 hidden-xs">
 		<div class="row">
 			<div class="col-xs-6 col-sm-12 col-md-12">
-			    <div class="hidden">
+				<div class="hidden">
 				<?php print render($lineup_form_clean); ?>
 				</div>
-				<button type="button" class="center-block btn btn-sm btn-warning" data-toggle="modal" data-target="#lineup-reset-modal">
+				<button type="button" class="center-block btn btn-sm btn-warning"
+					data-toggle="modal" data-target="#lineup-reset-modal">
 				  <?php print t("Cancella");?>
 				</button>
 			</div>
 			<?php if (count($confirm) > 0 ) : ?>
 			<div class="col-xs-6 col-sm-12 col-md-12">
-			    <div class="hidden">
+				<div class="hidden">
 				<?php print render($lineup_form_confirm); ?>
 			     </div>
-			     <button type="button" class="center-block btn btn-sm btn-primary" data-toggle="modal" data-target="#lineup-confirm-modal">
+				<button type="button" class="center-block btn btn-sm btn-primary"
+					data-toggle="modal" data-target="#lineup-confirm-modal">
 				  <?php print t("Conferma");?>
 				</button>
 			</div>
@@ -72,43 +74,57 @@
 <div class="row">
 	<div class="col-xs-12 visible-xs">
 		<div class="row" id="step-1">
-					    <a data-toggle="modal" data-target="#lineup-info-modal">
-			    <i class="fa fa-2x fa-info-circle"></i>
-			    </a>
-		<div id="check-lineup-nav">
-			<div class="navbar navbar-static">
-			<div class="navbar-collapse">
-
-      		    <?php print render($lineup_check); ?>
-      	    </div>
-      	  </div>
-      	        	  </div>
-      	        	  
+			<a data-toggle="modal" data-target="#lineup-info-modal"> <i
+				class="fa fa-2x fa-info-circle"></i>
+			</a>
+			<div id="check-lineup-nav">
+				<div class="navbar navbar-static">
+					<div class="navbar-collapse">
+      		        <?php print render($lineup_check); ?>
+      	            </div>
+				</div>
+			</div>
+			<div class="row">
+			    <div class="col-xs-6">
       		    <?php 
       		      if (count($confirm) > 0)
       		        print render($lineup_form_confirm); 
       		    ?>
+      		    </div>
+      		    <div class="col-xs-6">
+        		    <button id="step-1-back" type="button"
+					class="center-block btn btn-sm btn-warning" data-toggle="modal"
+					data-target="#lineup-delete-modal">
+  	            <?php print t("Cancella");?>
+  	            </button>
+  	            </div>
+			</div>
+			<div class="row">
+			    <div class="col-xs-6">&nbsp;</div>
+			</div>
 			<div class="col-xs-12">
 				<div class="lineup-group-container-mobile">
     			<?php print render($squad_mobile);?>
     		    </div>
-                
+
 				<div class="row">
 					<div class="col-xs-12">&nbsp;</div>
 				</div>
-                    
+
 				<div class="row">
 					<div class="col-xs-6">
 						<div class="center-block">
-							<button id="step-1-back" type="button" class="center-block btn btn-default" data-toggle="modal" data-target="#lineup-reset-modal">
-				            <?php print t("Annulla");?>
-				            </button>
-				            
+
+							<button type="button" class="center-block btn btn-default"
+								data-toggle="modal" data-target="#lineup-reset-modal">
+            				  <?php print t("Annulla");?>
+            				</button>
 						</div>
 					</div>
 					<div class="col-xs-6">
 						<div class="center-block">
-							<button id="step-1-go" type="button" class="center-block btn btn-success" disabled>
+							<button id="step-1-go" type="button"
+								class="center-block btn btn-success" disabled>
             				<?php print t("Avanti");?>
             				</button>
 						</div>
@@ -121,19 +137,21 @@
 			<div class="col-xs-12">
 				<h4>Ordina Riserve</h4>
 				<div class="row">
-				  <div class="col-xs-12" id="lineup-reserves-sort"></div>
+					<div class="col-xs-12" id="lineup-reserves-sort"></div>
 				</div>
 				<div class="row">
 					<div class="col-xs-6">
 						<div class="center-block">
-							<button id="step-2-back" type="button" class="center-block btn btn-default">
+							<button id="step-2-back" type="button"
+								class="center-block btn btn-default">
             				<?php print t("Indietro");?>
             				</button>
 						</div>
 					</div>
 					<div class="col-xs-6">
 						<div class="center-block">
-							<button id="step-2-go" type="button" class="center-block btn btn-success">
+							<button id="step-2-go" type="button"
+								class="center-block btn btn-success">
             				<?php print t("Avanti");?>
             				</button>
 						</div>
@@ -146,19 +164,21 @@
 			<div class="col-xs-12">
 				<h4>Anteprima</h4>
 				<div class="row">
-				  <div class="col-xs-12" id="lineup-preview"></div>
+					<div class="col-xs-12" id="lineup-preview"></div>
 				</div>
 				<div class="row">
 					<div class="col-xs-6">
 						<div class="center-block">
-							<button id="step-3-back" type="button" class="center-block btn btn-default">
+							<button id="step-3-back" type="button"
+								class="center-block btn btn-default">
             				<?php print t("Indietro");?>
             				</button>
 						</div>
 					</div>
 					<div class="col-xs-6">
 						<div class="center-block">
-							<button id="step-3-go" type="button" class="center-block btn btn-success">
+							<button id="step-3-go" type="button"
+								class="center-block btn btn-success">
             				<?php print t("Conferma");?>
             				</button>
 						</div>
@@ -172,43 +192,83 @@
 <?php if (count($confirm) > 0) : ?>
 <div id='lineup-confirm-modal' class='modal' tabindex='-1'
 	style='z-index: 2000' role='dialog' aria-hidden='true'>
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title"><?php print t("Conferma formazione"); ?></h4>
-      </div>
-      <div class="modal-body">
-        <p><?php print t("Sei sicuro di voler confermare la formazione?"); ?></p>
-        <p><?php print "(" . $confirm['competition'] ." - " . $confirm['round_label'] . ")"; ?></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal"><?php print t("Annulla"); ?></button>
-        <button type="button" class="btn btn-success" id="lineup-confirm-button"><?php print t("Ok"); ?></button>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title"><?php print t("Conferma formazione"); ?></h4>
+			</div>
+			<div class="modal-body">
+				<p><?php print t("Sei sicuro di voler confermare la formazione?"); ?></p>
+				<p><?php print "(" . $confirm['competition'] ." - " . $confirm['round_label'] . ")"; ?></p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal"><?php print t("Annulla"); ?></button>
+				<button type="button" class="btn btn-success"
+					id="lineup-confirm-button"><?php print t("Ok"); ?></button>
+			</div>
+		</div>
+		<!-- /.modal-content -->
+	</div>
+	<!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
 <?php endif; ?>
 
 <div id='lineup-reset-modal' class='modal' tabindex='-1'
 	style='z-index: 2000' role='dialog' aria-hidden='true'>
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title"><?php print t("Cancella formazione"); ?></h4>
-      </div>
-      <div class="modal-body">
-        <p><?php print t("Sei sicuro di voler cancellare la formazione?"); ?></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal"><?php print t("Annulla"); ?></button>
-        <button type="button" class="btn btn-success" id="lineup-reset-button"><?php print t("Ok"); ?></button>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title"><?php print t("Annulla modifiche"); ?></h4>
+			</div>
+			<div class="modal-body">
+				<p><?php print t("Sei sicuro di voler annullare le modifiche apportate?"); ?></p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal"><?php print t("Annulla"); ?></button>
+				<button type="button" class="btn btn-success"
+					id="lineup-reset-button"><?php print t("Ok"); ?></button>
+			</div>
+		</div>
+		<!-- /.modal-content -->
+	</div>
+	<!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+
+<div id='lineup-delete-modal' class='modal' tabindex='-1'
+	style='z-index: 2000' role='dialog' aria-hidden='true'>
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title"><?php print t("Cancella formazione"); ?></h4>
+			</div>
+			<div class="modal-body">
+				<p><?php print t("Sei sicuro di voler cancellare la formazione?"); ?></p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal"><?php print t("Annulla"); ?></button>
+				<button type="button" class="btn btn-success"
+					id="lineup-delete-button"><?php print t("Ok"); ?></button>
+			</div>
+		</div>
+		<!-- /.modal-content -->
+	</div>
+	<!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
 
 <div id='lineup-form-modal' class='modal' tabindex='-1'
 	style='z-index: 2000' role='dialog'
@@ -236,7 +296,7 @@
 </div>
 
 <div id='lineup-info-modal' class='modal' tabindex='-1'
-	style='z-index: 2000' role='dialog'	aria-hidden='true'>
+	style='z-index: 2000' role='dialog' aria-hidden='true'>
 	<div class='modal-dialog'>
 		<div class='modal-content'>
 			<div class='modal-header'>
@@ -247,39 +307,45 @@
 				<h4 class='modal-title'>Inserimento formazione</h4>
 			</div>
 			<div class='modal-body'>
-				<p>Per inserire la formazione trascina i giocatori a destra o a sinistra.</p>
-				<p>Sposta un giocatore a destra per inserirlo tra i titolari, a sinistra per inserirlo tra le riserve. 
-				Spostandolo di nuovo lo posizionerai in tribuna.</p>
+				<p>Per inserire la formazione trascina i giocatori a destra o a
+					sinistra.</p>
+				<p>Sposta un giocatore a destra per inserirlo tra i titolari, a
+					sinistra per inserirlo tra le riserve. Spostandolo di nuovo lo
+					posizionerai in tribuna.</p>
 				<p>Una volta sistemati tutti i giocatori potrai ordinare le riserve.</p>
 				<br>
 				<h4>Legenda</h4>
 				<table class="table">
-				  <tr>
-				    <td><span class="fa fa-stack  "><i class="fa fa-stack-2x fa-circle-o position-class text-success"></i><i class="fa fa-stack-1x position text-success">T</i></span></td>
-				    <td>Giocatore aggiunto ai titolari</td>
-				  </tr>
-				  <tr>
-				    <td><span class="fa fa-stack  "><i class="fa fa-stack-2x fa-circle-o position-class text-warning"></i><i class="fa fa-stack-1x position text-warning">R</i></span></td>
-				    <td>Giocatore aggiunto alle riserve</td>
-				  </tr>
-				  <tr>
-				    <td colspan=2><hr/></td>
-				  </tr>
-				  <tr>
-				    <td><i class="fa fa-lg fa-circle text-success"></i></td>
-				    <td>Probabile titolare</td>
-				  </tr>
-				  <tr>
-				    <td><i class="fa fa-lg fa-circle text-warning"></i></td>
-				    <td>Probabile riserva</td>
-				  </tr>
-				  <tr>
-				    <td><i class="fa fa-lg fa-circle text-danger"></i></td>
-				    <td>Infortunato / Squalificato</td>
-				  </tr>
-				  
+					<tr>
+						<td><span class="fa fa-stack  "><i
+								class="fa fa-stack-2x fa-circle-o position-class text-success"></i><i
+								class="fa fa-stack-1x position text-success">T</i></span></td>
+						<td>Giocatore aggiunto ai titolari</td>
+					</tr>
+					<tr>
+						<td><span class="fa fa-stack  "><i
+								class="fa fa-stack-2x fa-circle-o position-class text-warning"></i><i
+								class="fa fa-stack-1x position text-warning">R</i></span></td>
+						<td>Giocatore aggiunto alle riserve</td>
+					</tr>
+					<tr>
+						<td colspan=2><hr /></td>
+					</tr>
+					<tr>
+						<td><i class="fa fa-lg fa-circle text-success"></i></td>
+						<td>Probabile titolare</td>
+					</tr>
+					<tr>
+						<td><i class="fa fa-lg fa-circle text-warning"></i></td>
+						<td>Probabile riserva</td>
+					</tr>
+					<tr>
+						<td><i class="fa fa-lg fa-circle text-danger"></i></td>
+						<td>Infortunato / Squalificato</td>
+					</tr>
+
 				</table>
-			</div>			
+			</div>
 		</div>
 	</div>
 </div>
@@ -314,6 +380,11 @@ jQuery(function() {
 	});
 
 	jQuery("#lineup-reset-button").click(function () {
+		jQuery(window).unbind();
+		location.reload();
+	});
+
+	jQuery("#lineup-delete-button").click(function () {
 		jQuery("#line_up_clean").trigger("click");
 	});
 

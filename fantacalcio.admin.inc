@@ -2671,18 +2671,18 @@ function fantacalcio_admin_players_list_update_submit($form, &$form_state) {
   
   $players = json_decode(file_get_contents($players_url));
   
-    $round = Round::getLast();
+  $round = Round::getLast();
   
   insert_players($players, $round + 1);
 }
 
 function insert_players($players, $round) {
+  
   if (count($players) > 0 && $round >= 0) {
     
     // real teams
     $real_teams = RealTeam::allNames();
     $real_teams = array_flip($real_teams);
-    // print_r($real_teams);die();
     
     // player ids
     $players_ids = Player::getIdList();
@@ -2691,7 +2691,6 @@ function insert_players($players, $round) {
     $new_players = array();
     
     foreach ($players as $player) {
-      // separo i campi della riga con il carattere \t "tab"
       
       if (isset($players_ids[$player->name])) {
         $tmp_player = (object) array(
@@ -2714,30 +2713,40 @@ function insert_players($players, $round) {
         
         $new_players[] = $new_player;
       }
-      // array_push($pl_ids, $player['pl_id']);
     }
-    
-    // print_r($new_players);die();
-    
-    // $sql = "DELETE FROM {fanta_players_teams}
-    // WHERE round = '%d' AND pl_id IN (" . implode(",", $pl_ids) . ")";
-    // $result = db_query($sql, $round);
     
     // cancello giocatori inseriti
     $query = db_delete("fanta_players_rounds");
     $query->condition("round", $round);
     $query->execute();
     
+    //reinserisco tutti i giocatori presenti la giornata precedente (dati default)
+    $query = db_select("fanta_players_rounds", "pr");
+    $query->condition("round", $round - 1);
+    $query->fields("pr");
+    
+    $result = $query->execute();
+    
+    foreach($result as $row) {
+      db_insert("fanta_players_rounds")->fields(array(
+      "pl_id" => $row->pl_id,
+      "rt_id" => $row->rt_id,
+      "quotation" => 0,
+      "not_rounded_quotation" => 0,
+      "round" => $round,
+      "active" => 0))->execute();
+    }
+    
     // aggiorno i giocatori già presenti
     if (count($tmp_players) > 0) {
       foreach ($tmp_players as $player) {
-        db_insert("fanta_players_rounds")->fields(array(
+        db_update("fanta_players_rounds")->fields(array(
           "pl_id" => $player->pl_id, 
           "rt_id" => $player->team, 
           "quotation" => $player->quotation, 
           "not_rounded_quotation" => $player->not_rounded_quotation, 
           "round" => $round, 
-          "active" => 1))->execute();
+          "active" => 1))->condition("pl_id", $player->pl_id)->execute();
       }
     }
     

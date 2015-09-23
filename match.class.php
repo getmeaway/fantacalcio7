@@ -175,6 +175,67 @@ class Match {
     return $matches;
   }
   
+  static function getByTeamAndRound($team_id, $competition_id, $competition_round) {
+    
+    $match = new Match();
+    
+    $query = db_select("fanta_matches", "m");
+    $query->join("fanta_teams", "t1", "t1.t_id = m.t1_id");
+    $query->join("fanta_teams", "t2", "t2.t_id = m.t2_id");
+    $query->join("fanta_groups", "g", "g.g_id = m.g_id");
+    $query->join("fanta_rounds_competitions", "rc", "rc.competition_round = m.round AND rc.c_id = g.c_id");
+    $query->join("fanta_rounds", "r", "r.round = rc.round");
+    $query->fields("m");
+    $query->addField("t1", "name", "home_team");
+    $query->addField("t2", "name", "away_team");
+    $query->addField("r", "date", "date");
+    $query->addField("rc", "round_label", "round_label");
+    
+    $team_condition = db_or()->condition('t1_id', $team_id)->condition('t2_id', $team_id);
+    
+    $query->condition($team_condition);
+    $query->condition("g.c_id", $competition_id);
+    $query->condition("rc.competition_round", $competition_round);
+    
+    $result = $query->execute();
+    
+    while ($row = $result->fetchObject()) {
+      $match = new Match();
+      $match->id = $row->m_id;
+      $match->t1_id = $row->t1_id;
+      $match->t2_id = $row->t2_id;
+      $match->home_team = $row->home_team;
+      $match->away_team = $row->away_team;
+      $match->date = $row->date;
+      $match->round = $row->round;
+      $match->round_label = $row->round_label;
+      $match->match_label = $row->match_label;
+      $match->played = $row->played;
+      $match->goals_1 = $row->goals_1;
+      $match->goals_2 = $row->goals_2;
+      $match->tot_1 = $row->tot_1;
+      $match->tot_2 = $row->tot_2;
+      // $m_id = $row->m_id;
+      // $matches[$m_id] = $row;
+      // $c_id = $groups[$row->g_id];
+      // $matches[$m_id]->date = $dates[$c_id][$row->round];
+    
+//       $matches[$match->id] = $match;
+    }
+    
+    return $match;
+  }
+  
+  static function updateRoundDate() {
+    
+    $round = Round::getNext();
+    
+    //TODO
+    //legge il file fantacalciocircus.altervista.org/matches/4.json
+    //prende il valore minimo delle date e lo imposta come "date" della giornata
+    //prende il valore massimo delle date e lo usa per calcolare "end_date" della giornata
+  }
+  
   function isDraw() {
     //return true;
     if (empty($this->match_label))

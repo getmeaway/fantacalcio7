@@ -20,19 +20,19 @@ function fantacalcio_results($round = '', $action = '') {
   
   $actions = array(
     'giornata' => array(
-      'name' => 'Scegli giornata', 
+      'name' => t('Scegli giornata'), 
       'function' => 'fantacalcio_results_choose_round', 
       'order' => $order++), 
     'formazioni' => array(
-      'name' => 'Controlla Formazioni', 
+      'name' => t('Controlla Formazioni'), 
       'function' => 'fantacalcio_results_lineup_check', 
       'order' => $order++), 
     'voti' => array(
-      'name' => 'Carica Voti', 
+      'name' => t('Carica Voti'), 
       'function' => 'fantacalcio_upload_votes', 
       'order' => $order++), 
     'titolari' => array(
-      'name' => 'Trova titolari', 
+      'name' => t('Trova titolari'), 
       'function' => 'fantacalcio_find_regulars', 
       'order' => $order++), 
     'modificatori' => array(
@@ -40,7 +40,7 @@ function fantacalcio_results($round = '', $action = '') {
       'function' => 'fantacalcio_get_modifiers', 
       'order' => $order++), 
     'totali' => array(
-      'name' => 'Calcola totali', 
+      'name' => t('Calcola totali'), 
       'function' => 'fantacalcio_get_totals', 
       'order' => $order++), 
     
@@ -50,9 +50,9 @@ function fantacalcio_results($round = '', $action = '') {
     // 'order' => $order++
     // ),
     
-    'news' => array(
-      'name' => 'Inserisci news', 
-      'function' => 'fantacalcio_create_news', 
+    'fine' => array(
+      'name' => t('Chiudi giornata'), 
+      'function' => 'fantacalcio_close_round', 
       'order' => $order++));
   
   if (module_exists('fantasfide'))
@@ -501,6 +501,7 @@ function import_lineups($vote_round) {
       foreach ($missing_lineups as $team) {
         $i++;
         // importo formazione (giornata precedente / default)
+        Lineup::import($team, $competition, $round->competitions[$competition->id]->competition_round);
       }
       // echo $i."%";
     }
@@ -864,15 +865,12 @@ function update_players($round) {
   $result = $query->execute(); // ($sql, ($round - 1));
   
   foreach ($result as $row) {
-//     $sqla .= " (" . $row->pl_id . ", " . $round . ", " . $row->rt_id . ", " . $row->quotation . ", " . $row->not_rounded_quotation . ", " . $row->active . "),";
     $i++;
     
     db_insert("fanta_players_rounds")
     ->fields(array("pl_id" => $row->pl_id, "round" => $round, "rt_id" => $row->rt_id, "quotation" => $row->quotation, "not_rounded_quotation" => $row->not_rounded_quotation, "active" => $row->active))
     ->execute();
   }
-//   $sqla = substr($sqla, 0, -1);
-//   db_query($sqla);
   
   $message = "Giocatori aggiornati: " . $i . " (Giornata #" . $round . ")";
   drupal_set_message(check_plain($message));
@@ -2180,41 +2178,56 @@ function get_matches_next($vote_round) {
 /**
  * *********************
  */
-function fantacalcio_crea_news($vote_round) {
-  drupal_set_title(filter_xss('Risultati ' . $vote_round . '&ordf; giornata'));
+function fantacalcio_close_round($vote_round) {
+  drupal_set_title(t('Risultati: Giornata #@round', array(
+    "@round" => $vote_round)));
   
   global $user;
   
-  $competitions = get_competitions();
+  $competitions = Competition::all();
   
-  $sql = "SELECT * FROM {fanta_rounds_competitions} WHERE round = '%d'";
-  $result = db_query($sql, $vote_round);
-  while ($row = db_fetch_object($result)) {
-    $rounds[$row->c_id] = (!empty($row->round_label)) ? $row->round_label : $row->competition_round . "&ordf; giornata";
-  }
+  $round = Round::getByRound($vote_round);
   
   $body = "";
-  foreach ($rounds as $c_id => $round) {
-    $body .= $round . " " . $competitions[$c_id]->name . ", ";
+  foreach ($round->competitions as $c_id => $competition_round) {
+    $body .= $competition_round->label . " " . $competitions[$c_id]->name . ", ";
   }
   
   $main_c_id = variable_get("fantacalcio_main_competition", 1);
-  $main_competition = get_competition_name(variable_get("fantacalcio_main_competition", 1));
-  $body = substr($body, 0, -2) . ": Pronti i risultati";
-  $body .= "<br/>" . base_path() . "calendario/" . $main_competition . "/" . $rounds[$main_c_id];
+  $main_competition = Competition::getDefault();//get_competition_name(variable_get("fantacalcio_main_competition", 1));
+  $body = "Risultati calcolati per: " . substr($body, 0, -2);
+  $body .= "<br/>" . base_path() . "calendario/" . $main_competition->sanitized_name ;
   
-  $title = "Risultati " . $vote_round . "&ordf; Giornata";
+  $title = "Risultati " . $vote_round . "ª Giornata";
+
+  $node = new stdClass(); // We create a new node object
+  $node->type = "news"; // Or any other content type you want
+  $node->title = $title;
+  $node->language = LANGUAGE_NONE; // Or any language code if Locale module is enabled. More on this below *
+  $node->path = array('alias' => 'news/risultati-' . $vote_round); // Setting a node path
+  node_object_prepare($node); // Set some default values.
+  $node->uid = $user->uid; // Or any id you wish
   
-  $news = (object) array(
-    'title' => $title, 
-    'body' => $body, 
-    'type' => 'news', 
-    'uid' => $user->uid, 
-    'language' => 'it');
-  node_save($news);
+  $node->title = $title;
+  
+  $field_langcode = field_language('node', $node, 'body');
+  $node->body[$field_langcode][0]['value'] = "ddadasdsad".$body;
+  $node->body[$field_langcode][0]['summary'] = "ddadasdsad".text_summary($body);
+  $node->body[$field_langcode][0]['format'] = 'filtered_html';
+  
+  $node->revision = 0;
+  
+  $node->status = 1;   // (1 or 0): published or unpublished
+  $node->promote = 0;  // (1 or 0): promoted to front page or not
+  $node->sticky = 0;  // (1 or 0): sticky at top of lists or not
+  $node->comment = 0;  // 2 = comments open, 1 = comments closed, 0 = comments hidden
+
+  $node = node_submit($node); // Prepare node for saving
+  node_save($node);
   
   // rimuovi "risultati provvisori"
-  db_query("UPDATE {fanta_rounds} SET status = 1 WHERE round = '%d'", $vote_round);
+  db_update("fanta_rounds")->fields(array("status" => 1))->condition("round", $vote_round)->execute();
+  
   variable_set("fantacalcio_results_round", ($vote_round + 1));
   
   return "News creata";

@@ -28,9 +28,9 @@ include "lineup.class.php";
 include "match.class.php";
 include "round.class.php";
 include "user.class.php";
-// include "fantacalcio.common.inc";
 include "fantacalcio.block.inc";
 include "fantacalcio.tooltip.inc";
+include "fantacalcio.cron.inc";
 
 define("COMPETITION_TYPE_SD", 1);
 define("COMPETITION_TYPE_GP", 2);
@@ -73,6 +73,26 @@ function fantacalcio_init() {
 
     $teams = Team::allByUser($user->uid);
     $user->teams = $teams;
+    
+    $groups = array();
+    if (count($teams) > 0) {
+      
+      $query = db_select("fanta_teams_groups", "tg");
+      $query->join("fanta_groups", "g", "tg.g_id = g.g_id");
+      $query->condition("tg.t_id", array_keys($teams), "IN");
+      $query->fields("g");
+      
+      $result = $query->execute();
+      
+      foreach($result as $row) {
+        if (!isset($groups[$row->c_id]))
+          $groups[$row->c_id] = array();
+        
+        array_push($groups[$row->c_id], $row->g_id);
+      }
+    }
+    
+    $user->groups = $groups;
     // t_id
     // $result = (db_query("SELECT t_id FROM {fanta_teams} WHERE active = 1 AND uid = :t_id", array(
     // ":t_id" => $user->uid
@@ -286,7 +306,7 @@ function fantacalcio_menu() {
   
   $items['formazioni/multe'] = array(
     'title' => 'Multe', 
-    'page callback' => 'fantacalcio_show_multe', 
+    'page callback' => 'fantacalcio_show_payments', 
     'access arguments' => array('administer team'), 
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.lineups.inc', 
@@ -1017,59 +1037,59 @@ function fantacalcio_menu() {
 }
 
 // Blocks
-function fantacalcio_block($op = 'list', $delta = 0) {
-  if (user_access('access content')) {
-    if ($op == 'list') {
-      $blocks[0]['info'] = 'Riepilogo';
-      $blocks[1]['info'] = 'LastNews';
-      $blocks[2]['info'] = 'Wall';
-      $blocks[3]['info'] = 'LastRss';
-      $blocks[4]['info'] = 'Situation';
-      $blocks[5]['info'] = 'Countdown';
-      $blocks[6]['info'] = 'Risultati provvisori';
-      return $blocks;
-    }
-    elseif ($op == 'view') {
-      switch ($delta) {
-        case 0 :
-          $block['subject'] = 'Riepilogo';
-          $block['content'] = fantacalcio_block_riepilogo();
-          break;
-        case 1 :
-          $block['subject'] = 'LastNews';
-          $block['content'] = home_last_blog_post(5);
-          break;
-        case 2 :
-          $block['subject'] = 'Wall';
-          $block['content'] = home_last_wall_messages(10);
-          break;
-        case 3 :
-          $block['subject'] = 'LastRss';
-          $block['content'] = home_last_rss_news(5);
-          break;
-        case 4 :
-          $block['subject'] = 'Situation';
-          $block['content'] = fantacalcio_home_situation();
-          break;
-        case 5 :
-          $block['subject'] = 'Countdown';
-          $block['content'] = fantacalcio_block_countdown();
-          break;
-        case 6 :
-          $block['subject'] = 'Risultati provvisori';
-          $block['content'] = fantacalcio_block_risultati_provvisori();
-          break;
-      }
-      return $block;
-    }
+function fantacalcio_block_info() {
+  $blocks['user_summary'] = array(
+      // The name that will appear in the block list.
+      'info' => t('User summary'),
+      // Default setting.
+      'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  $blocks['competition_summary'] = array(
+      // The name that will appear in the block list.
+      'info' => t('Competition summary'),
+      // Default setting.
+      'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  $blocks['wall_last_messages'] = array(
+      // The name that will appear in the block list.
+      'info' => t('Wall'),
+      // Default setting.
+      'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  return $blocks;
+}
+
+function fantacalcio_block_view($delta = '') {
+  
+  switch ($delta) {
+    case 'user_summary' :
+      $block['subject'] = fantacalcio_block_user_summary_title();
+      $block['content'] = fantacalcio_block_user_summary();
+      break;
+    case 'competition_summary' :
+      $block['subject'] = t('Competition summary');
+      $block['content'] = fantacalcio_block_competition_summary();
+      break;
+    case 'wall_last_messages' :
+      $block['subject'] = t('Wall');
+      $block['content'] = fantacalcio_block_last_wall_messages();
+      break;
   }
+  return $block;
+  
 }
 
 // cron
 function fantacalcio_cron() {
-  include "fantacalcio.cron.inc";
-  // fantacalcio_send_formazioni_email();
-  // fantacalcio_results();
+  
+  //status giocatori
+  Player::updateStatus();
+  
+  //giornate
+  Match::updateRoundDate();
+  
+  //calcola risultati 
+  fantacalcio_cron_calculate_results();
 }
 
 // theme functions
@@ -1148,10 +1168,22 @@ function fantacalcio_show_status($name, $team, $player_status) {
   
   if ($player_status->status == "ok") {
     $position = $player_status->position == 1 ? t("Titolare") : t("Riserva");
-    $content = "<table class=\"table\"><tr><th>Posizione probabile:</th><td>" . $position ."</td></tr><tr><th>Probabilità di giocare:</th><td>" . $player_status->percent . "%</td></tr></table><i class=\"caption\">Ultimo aggiornamento: " . date("d-m-Y H:i", $player_status->updated) . "</i>";
+  $content = "<p>" . $player_status->match . "</p>";
+    $content .= "<table class=\"table\"><tr><th>Posizione probabile:</th><td>" . $position ."</td></tr><tr><th>Probabilità di giocare:</th><td>" . $player_status->percent . "%</td></tr></table><i class=\"caption\">Ultimo aggiornamento: " . date("d-m-Y H:i", $player_status->updated) . "</i>";
   }
   else {
-    $status = $player_status->status == "injured" ? t("Infortunato") : t("Squalificato");
+    switch ($player_status->status) {
+      case "injured":
+        $status = "Infortunato";
+        break;
+      case "suspended":
+        $status = "Squalificato";
+        break;
+      case "not_found":
+        $status = "Non trovato";
+        break;
+    }
+    
     $content = "<table class=\"table\"><tr><th>Stato:</th><td>" . $status . "</td></tr></table><i class=\"caption\">Ultimo aggiornamento: " . date("d-m-Y H:i", $player_status->updated) . "</i>";
   }
   
@@ -1174,6 +1206,9 @@ function fantacalcio_get_status_classes($status, $status_position) {
       return "text-danger";
       break;
     case "suspended":
+      return "text-danger";
+      break;
+    case "not_found":
       return "text-danger";
       break;
     case "ok":

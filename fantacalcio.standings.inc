@@ -102,7 +102,17 @@ function get_standing_table_sd($competition) {
 		}
 	  	
 		$group->output = theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("class" => "collapse-table table table-responsive standings", "id" => "classifica_" . $g_id), "sticky" => "", "empty" => ""));
-	  	$group->active = (isset($user_group) && $g_id == $user_group) || $index == 1;
+	  	
+		if (isset($user->groups)) {
+		  if (in_array($g_id, $user->groups[$competition->id]))
+		    $group->active = true;
+		  else
+		    $group->active = false;
+		}
+		else if ($index == 1)
+		  $group->active = true;
+		else
+		  $group->active = false;
 	  		
 	  	$groups[$g_id] = $group;
 	  	

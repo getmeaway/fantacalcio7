@@ -21,8 +21,8 @@ function _fantacalcio_lineup() {
     $items[] = l("Inserisci", "formazioni/insert");
   if (user_access("administer team"))
     $items[] = l("Multe", "formazioni/multe");
-  if (user_access("administer fantacalcio"))
-    $items[] = l("Amministra", "formazioni/admin");
+//   if (user_access("administer fantacalcio"))
+//     $items[] = l("Amministra", "formazioni/admin");
   return theme_item_list(array(
     "items" => $items, 
     "title" => "", 
@@ -460,6 +460,11 @@ function fantacalcio_lineup_insert_start_admin($t_id, $competition_name = '') {
  */
 // fantacalcio_lineup_insert_start
 function fantacalcio_lineup_insert($competition, $team, $competition_round, $is_admin = FALSE) {
+  
+  global $user;
+  
+  if ($team->user != $user->uid)
+    return drupal_goto(drupal_access_denied());
   
   // squadra non confermata --> redirect
   if (!$team->isSquadComplete()) {
@@ -1223,22 +1228,22 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
     }
     else {
       // registrazione lineup
-      $sql = "INSERT INTO {fanta_lineups_inserts} (t_id, c_id, round, status, timestamp) VALUES ('%d', '%d', '%d', 0, '%d')";
-      $result = db_query($sql, $t_id, $c_id, $round, time());
+//       $sql = "INSERT INTO {fanta_lineups_inserts} (t_id, c_id, round, status, timestamp) VALUES ('%d', '%d', '%d', 0, '%d')";
+//       $result = db_query($sql, $t_id, $c_id, $round, time());
       
-      // inserimento lineup giornata precedente
-      $sql = "SELECT * FROM {fanta_lineups} WHERE c_id = '%d' AND t_id='%d' AND round = '%d'";
-      $result = db_query($sql, $c_id, $t_id, $round - 1);
-      while ($row = db_fetch_array($result)) {
-        $pl_id = $row['pl_id'];
-        $position = $row['position'];
-        $sqla = "INSERT INTO {fanta_lineups} (pl_id, c_id, t_id, round, position, uid, timestamp) VALUES " . "(" . $pl_id . ", " . $c_id . ", " . $t_id . ", " . $round . ", " . $position . "," . $user->uid . "," . time() . ")";
-        $resulta = db_query($sqla);
-      }
-      drupal_set_message("Userai la formazione della giornata precedente");
-      $teams = get_teams();
-      watchdog('fantacalcio', '@team: formazione inserita in ritardo', array(
-        '@team' => $teams[$t_id]->name), WATCHDOG_NOTICE);
+//       // inserimento lineup giornata precedente
+//       $sql = "SELECT * FROM {fanta_lineups} WHERE c_id = '%d' AND t_id='%d' AND round = '%d'";
+//       $result = db_query($sql, $c_id, $t_id, $round - 1);
+//       while ($row = db_fetch_array($result)) {
+//         $pl_id = $row['pl_id'];
+//         $position = $row['position'];
+//         $sqla = "INSERT INTO {fanta_lineups} (pl_id, c_id, t_id, round, position, uid, timestamp) VALUES " . "(" . $pl_id . ", " . $c_id . ", " . $t_id . ", " . $round . ", " . $position . "," . $user->uid . "," . time() . ")";
+//         $resulta = db_query($sqla);
+//       }
+//       drupal_set_message("Userai la formazione della giornata precedente");
+//       $teams = get_teams();
+//       watchdog('fantacalcio', '@team: formazione inserita in ritardo', array(
+//         '@team' => $teams[$t_id]->name), WATCHDOG_NOTICE);
     }
   }
   elseif ($type == 'confirm') {
@@ -1575,18 +1580,23 @@ function theme_insert_penalties_form($form) {
 /**
  * *****************************
  */
-function fantacalcio_show_multe() {
+function fantacalcio_show_payments() {
   $out = '';
-  $multe = array();
+  $payments = array();
   
-  $teams = get_teams();
+  $teams = Team::allActive();
   
   $fines_sum = 0;
+  $default_competition = Competition::getDefault();
+  
   foreach ($teams as $t_id => $team) {
     
-    $sql = "SELECT * FROM {fanta_payments} WHERE t_id = '%d'";
-    $result = db_query($sql, $t_id);
-    while ($row = db_fetch_object($result)) {
+    $query = db_select("fanta_payments", "p");
+    $query->condition("t_id", $t_id);
+    $query->fields("p");
+    $result = $query->execute();
+    
+    foreach ($result as $row) {
       $quota = $row->initial_quota;
       $payed = $row->payed;
       $win_quota = $row->win_quota;
@@ -1596,12 +1606,22 @@ function fantacalcio_show_multe() {
     
     $lineups_fine = 0;
     $lineups_rounds = array();
-    $sql = "SELECT * FROM {fanta_lineups_inserts} WHERE status = 0 AND c_id = '%d' AND t_id = '%d'";
-    $result = db_query($sql, variable_get("fantacalcio_main_competition", 1), $t_id);
-    while ($row = db_fetch_object($result)) {
+//     $sql = "SELECT * FROM {fanta_lineups_inserts} WHERE status = 0 AND c_id = '%d' AND t_id = '%d'";
+//     $result = db_query($sql, variable_get("fantacalcio_main_competition", 1), $t_id);
+//     while ($row = db_fetch_object($result)) {
+      
+    $query = db_select("fanta_lineups_inserts", "l");
+    $query->condition("t_id", $t_id);
+    $query->condition("status", 0);
+    $query->condition("c_id", $default_competition->id);
+    $query->fields("l");
+    $result = $query->execute();
+      
+    foreach ($result as $row) {        
       $lineups_fine++;
       array_push($lineups_rounds, $row->round);
     }
+    
     $lineups_fine = $lineups_fine * ($lineups_fine + 1) / 2;
     $lineups_rounds = ($lineups_fine > 0 ? implode(",", $lineups_rounds) : "");
     
@@ -1636,12 +1656,12 @@ function fantacalcio_show_multe() {
     array("data" => "Giornate", "class" => "text-right"), 
     array("data" => "Saldo", "class" => "text-right"));
   
-  $out = theme_table(array(
+  $out = theme("table", array(
     "header" => $header, 
     "rows" => $rows, 
     "attributes" => array("class" => "text-right")));
   
-  $out .= theme_table(array(
+  $out .= theme("table", array(
     "header" => array(), 
     "rows" => array(
       array(
@@ -1653,9 +1673,9 @@ function fantacalcio_show_multe() {
   return $out;
 }
 
-function fantacalcio_calcola_multe($num_multe) {
+function fantacalcio_calculate_fine($num) {
   // calcola la multa totale per ciascuna squadra
-  return $num_multe * ($num_multe + 1) / 2;
+  return $num * ($num + 1) / 2;
 }
 
 /**

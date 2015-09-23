@@ -473,9 +473,13 @@ h3.home-block-title {
 	margin: 2px -4px 0px -4px;
 }
 
+ul.home-wall-block {
+	list-style-type: none;
+}
+
 li.home-wall-message {
 	background: none;
-	padding: 0px;
+	padding: 5px 0px;
 }
 
 li.odd {
@@ -484,7 +488,6 @@ li.odd {
 
 div.home-wall-text{
 	float:left;
-	width: 270px;
 	display: block;
 }
 
@@ -696,3 +699,19 @@ td i.squad-player-role-3 {
 	padding-right: 0px;
 }
 
+.nav-pills li:nth-child(1), .nav-pills li:nth-child(4), .nav-pills li:nth-child(7), 
+.nav-pills li:nth-child(1).active, .nav-pills li:nth-child(4), .nav-pills li:nth-child(7), {
+    background: #93c54b;
+}
+
+.nav-pills li:nth-child(2), .nav-pills li:nth-child(5), .nav-pills li:nth-child(8) {
+    background: #f47c3c;
+}
+
+.nav-pills li:nth-child(3), .nav-pills li:nth-child(6), .nav-pills li:nth-child(9) {
+    background: #29abe0;
+}
+
+.nav-pills.active {
+	
+}

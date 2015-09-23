@@ -44,6 +44,7 @@
 	<div class="tab-content responsive">
 		<div role="tabpanel" class="tab-pane active" id="squad">
 		<?php print render($squad); ?>
+		<?php print render($credits); ?>
 		</div>
 		<div role="tabpanel" class="tab-pane" id="details">
 		<?php print render($details); ?>

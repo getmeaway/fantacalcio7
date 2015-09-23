@@ -37,6 +37,9 @@
 			<div class='col-md-12 col-lg-12'>
 				<?php print render($squad); ?>
 			</div>
+			<div class='col-md-12 col-lg-12'>
+				<?php print render($credits); ?>
+			</div>
 		</div>
 	</div>
 </div>

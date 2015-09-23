@@ -23,6 +23,19 @@ function fantacalcio_send_formazioni_email() {
   }
 }
 
+function fantacalcio_cron_calculate_results() {
+  //round
+  
+  //se status != giocata && time() > end_date
+    //calcolo risultati
+    // 1. importo formazioni
+    // 2. ottengo voti
+    // 3. trovo titolari
+    // 4. calcolo modificatori
+    // 5. calcolo totali
+    // 6. chiudo giornata
+}
+
 function fantacalcio_results_cron() {
 /*
   $votes_round = variable_get("fantacalcio_results_round", 0);

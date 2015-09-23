@@ -709,6 +709,7 @@ class Team {
 			$result = $query->execute();
 			
 			foreach($result as $row) {
+			  if ($row->t_id != $this->id)
 				$gap_points = max($gap_points, $row->sum);
 			}
 			
@@ -757,6 +758,7 @@ class Team {
 			 
 			$result = $query->execute();
 			$points_home = $result->fetchObject()->n;
+			$points_home = $points_home != null ? $points_home : 10000;
 			 
 			$query = db_select("fanta_matches", "m");
 			$query->condition("t2_id", $this->id);
@@ -766,6 +768,7 @@ class Team {
 		
 			$result = $query->execute();
 			$points_away = $result->fetchObject()->n;
+			$points_away = $points_away != null ? $points_away : 10000;
 			
 			return min($points_home, $points_away);
 		}
@@ -1035,8 +1038,9 @@ class Team {
 		}
 	
 		if ($points) {
-	
-			return abs(max($points) - $points[$this->id]);
+		    $team_points = $points[$this->id];
+	       unset($points[$this->id]); 
+			return abs(max($points) - $team_points);
 		}
 	}
 	

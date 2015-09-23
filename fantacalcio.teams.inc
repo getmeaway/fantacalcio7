@@ -5,7 +5,6 @@
 * 
 */
 function fantacalcio_team_form($form, $form_state, $id) {
-  
   global $user;
   
   if ($id == null)
@@ -323,59 +322,60 @@ function fantacalcio_show_teams($t_id = "") {
   $teams_list = array();
   
   if ($competition) {
-  
-  foreach ($competition->groups as $g_id => $group) {
     
-    $teams = Team::allByGroup($g_id);
-    
-    $expanded = false;
-    
-    $teams_group_list = array();
-    foreach ($teams as $team_id => $team) {
+    foreach ($competition->groups as $g_id => $group) {
       
-      $classes = array("list-group-item");
-      if (isset($t_id) && is_numeric($t_id)) {
-        if ($team_id == $t_id) {        
-          array_push($classes, "active");
-          $expanded = true;
+      $teams = Team::allByGroup($g_id);
+      
+      $expanded = false;
+      
+      $teams_group_list = array();
+      foreach ($teams as $team_id => $team) {
+        
+        $classes = array("list-group-item");
+        if (isset($t_id) && is_numeric($t_id)) {
+          if ($team_id == $t_id) {
+            array_push($classes, "active");
+            $expanded = true;
+          }
         }
-      }
-      else if ($team->user == $user->uid) {
-        array_push($classes, "mine");
-        $expanded = true;
+        else 
+          if ($team->user == $user->uid) {
+            array_push($classes, "mine");
+            $expanded = true;
+          }
+        
+        array_push($teams_group_list, array(
+          "data" => l($team->name, "squadre/" . $team->id), 
+          "class" => $classes, 
+          "data-name" => $team->name));
       }
       
-      array_push($teams_group_list, array(
-        "data" => l($team->name, "squadre/" . $team->id), 
-        "class" => $classes, 
-        "data-name" => $team->name));
+      $teams_list[$g_id] = array(
+        "group_name" => $group->name, 
+        "teams" => theme_item_list(array(
+          "items" => $teams_group_list, 
+          "attributes" => array("class" => array("list-group")), 
+          "type" => "ul", 
+          "title" => "")), 
+        "expanded" => $expanded);
     }
     
-    $teams_list[$g_id] = array(
-      "group_name" => $group->name, 
-      "teams" => theme_item_list(array(
-        "items" => $teams_group_list, 
-        "attributes" => array("class" => array("list-group")), 
-        "type" => "ul", 
-        "title" => "")), 
-      "expanded" => $expanded);
-  }
-  
-  // print_r($teams_list);
-  
-  // $output = array(
-  // "teams_list" => array(
-  // "#items" => $teams_list,
-  // "#theme" => "item_list",
-  // ));
-  
-  $output["teams_list"] = $teams_list;
-  
-  if (isset($t_id) && Team::get($t_id) != null) {
-    $output["main_output"] = show_team_data($t_id);
-  }
-  
-  return theme("columns", $output);
+    // print_r($teams_list);
+    
+    // $output = array(
+    // "teams_list" => array(
+    // "#items" => $teams_list,
+    // "#theme" => "item_list",
+    // ));
+    
+    $output["teams_list"] = $teams_list;
+    
+    if (isset($t_id) && Team::get($t_id) != null) {
+      $output["main_output"] = show_team_data($t_id);
+    }
+    
+    return theme("columns", $output);
   }
   else {
     return t("Nessuna competizione");
@@ -394,6 +394,11 @@ function show_team_data($t_id) {
     "squad" => array(
       "#type" => "markup", 
       "#markup" => theme_table(show_team_squad($t_id))), 
+    
+    "credits" => array(
+      "#type" => "markup", 
+      "#markup" => theme_table(show_team_credits($t_id))), 
+    
     "details" => array(
       "#type" => "markup", 
       "#markup" => theme_table(show_team_details($t_id))), 
@@ -402,7 +407,10 @@ function show_team_data($t_id) {
       "#type" => "markup", 
       "#markup" => theme_table(show_team_rounds($t_id))), 
     
-    "stats" => array("#type" => "markup", "#markup" => show_team_stats($t_id)), 
+    "stats" => array(
+        "#type" => "markup", 
+        "#markup" => show_team_stats($t_id)), 
+    
     "is_own_team" => Team::get($t_id)->user == $user->uid, 
     "team" => Team::get($t_id));
   
@@ -435,21 +443,58 @@ function show_team_squad($t_id) {
       $player->cost);
     if (variable_get("fantacalcio_free_movements", 1) == 1)
       array_push($squad_rows[$pl_id], $player->quotation);
-    array_push($squad_rows[$pl_id], l("<i class=\"fa fa-bar-chart\"></i>", "scheda/giocatore/" . $pl_id, array("html" => true, "attributes" => array("data-toggle" => "modal", "data-target" => "#player-stats-modal"))));
+    array_push($squad_rows[$pl_id], l("<i class=\"fa fa-bar-chart\"></i>", "scheda/giocatore/" . $pl_id, array(
+      "html" => true, 
+      "attributes" => array(
+        "data-toggle" => "modal", 
+        "data-target" => "#player-stats-modal"))));
   }
   
-  $squad = array(
+  $squad_table = array(
     "header" => $header, 
     "rows" => $squad_rows, 
     "attributes" => array(
       "class" => array("table table-responsive table-striped")), 
     "caption" => "", 
-    "empty" => "Nessun giocatore", 
+    "empty" => t("Nessun giocatore"), 
     "sticky" => TRUE, 
     "colgroups" => array(), 
     "theme" => "table");
   
-  return $squad;
+  return $squad_table;
+}
+
+function show_team_credits($t_id) {
+  $spent = 0;
+  $credits = variable_get("fantacalcio_credits", 1000);
+  
+  $query = db_select("fanta_squads", "s");
+  $query->condition("t_id", $t_id);
+  $query->fields("s");
+  
+  $result = $query->execute();
+  
+  foreach ($result as $row) {
+    $spent += $row->status == 1 ? $row->cost : ceil($row->cost / 2);
+  }
+  
+  $credits_rows = array();
+  $credits_rows[0] = array(t("Crediti"), $credits);
+  $credits_rows[1] = array(t("Crediti spesi"), $spent);
+  $credits_rows[2] = array(t("Crediti rimasti"), ($credits - $spent));
+  
+  $credits_table = array(
+    "header" => array(), 
+    "rows" => $credits_rows, 
+    "attributes" => array(
+      "class" => array("table table-responsive table-striped")), 
+    "caption" => "", 
+    "empty" => "", 
+    "sticky" => TRUE, 
+    "colgroups" => array(), 
+    "theme" => "table");
+  
+  return $credits_table;
 }
 
 function show_team_details($t_id = "") {
@@ -479,7 +524,6 @@ function show_team_details($t_id = "") {
 }
 
 function show_team_rounds($t_id) {
-  
   if (Competition::getDefault()->type == COMPETITION_TYPE_GP) {
     
     $rounds = array();
@@ -580,57 +624,56 @@ function show_team_rounds($t_id) {
 }
 
 function show_team_stats($t_id) {
-  
   if (count(Round::allPlayed()) > 0) {
-  drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/Chart.min.js");
-  
-  $team = Team::get($t_id);
-  
-  $default_competition = Competition::getDefault();
-  
-  $rows = array();
-  
-  $position = $team->statPosition($default_competition);
-  
-  $rows[] = array(t("Posizione attuale"), $position);
-  $rows[] = array(
-    t("Punteggio attuale"), 
-    $team->statPoints($default_competition));
-  
-  if ($position == 1)
+    drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/Chart.min.js");
+    
+    $team = Team::get($t_id);
+    
+    $default_competition = Competition::getDefault();
+    
+    $rows = array();
+    
+    $position = $team->statPosition($default_competition);
+    
+    $rows[] = array(t("Posizione attuale"), $position);
     $rows[] = array(
-      t("Distacco dal secondo"), 
-      $team->statGap($default_competition));
-  else
+      t("Punteggio attuale"), 
+      $team->statPoints($default_competition));
+    
+    if ($position == 1)
+      $rows[] = array(
+        t("Distacco dal secondo"), 
+        $team->statGap($default_competition));
+    else
+      $rows[] = array(
+        t("Distacco dal primo"), 
+        $team->statGap($default_competition));
+    
     $rows[] = array(
-      t("Distacco dal primo"), 
-      $team->statGap($default_competition));
-  
-  $rows[] = array(
-    t("Miglior punteggio"), 
-    $team->statMaxPoints($default_competition));
-  $rows[] = array(
-    t("Peggior punteggio"), 
-    $team->statMinPoints($default_competition));
-  $rows[] = array(
-    t("Punteggio medio"), 
-    $team->statAvgPoints($default_competition));
-  
-  $stats = array(
-    "header" => array("", ""), 
-    "rows" => $rows, 
-    "attributes" => array("class" => array("table", "table-responsive")));
-  
-  $points = $team->getRoundsPoints($default_competition);
-  
-  $points_chart = "<div class=\"row\">
+      t("Miglior punteggio"), 
+      $team->statMaxPoints($default_competition));
+    $rows[] = array(
+      t("Peggior punteggio"), 
+      $team->statMinPoints($default_competition));
+    $rows[] = array(
+      t("Punteggio medio"), 
+      $team->statAvgPoints($default_competition));
+    
+    $stats = array(
+      "header" => array("", ""), 
+      "rows" => $rows, 
+      "attributes" => array("class" => array("table", "table-responsive")));
+    
+    $points = $team->getRoundsPoints($default_competition);
+    
+    $points_chart = "<div class=\"row\">
 			<div class=\"cols-xs-12\">
 			<label>" . t("Punteggi") . "</label><br>
 			<canvas id=\"pointsChart\" style='width:100%; height: 200px'></canvas>
 			</div>
 			</div>";
-  
-  $points_chart_js = "jQuery(document).on('ready', function() {
+    
+    $points_chart_js = "jQuery(document).on('ready', function() {
 		var ctx = jQuery('#pointsChart').get(0).getContext('2d');
 		var data = {
 			labels: [" . implode(", ", array_keys($points)) . "],
@@ -650,19 +693,19 @@ function show_team_stats($t_id) {
 		
 		new Chart(ctx).Line(data);
 		});";
-  
-  drupal_add_js($points_chart_js, "inline");
-  
-  $round_positions = $team->getRoundsPositions($default_competition);
-  
-  $round_positions_chart = "<div class=\"row\">
+    
+    drupal_add_js($points_chart_js, "inline");
+    
+    $round_positions = $team->getRoundsPositions($default_competition);
+    
+    $round_positions_chart = "<div class=\"row\">
 			<div class=\"cols-xs-12\">
 			<label>" . t("Posizioni giornata") . "</label><br>
 			<canvas id=\"positionsChart\" style='width:100%; height: 200px'></canvas>
 			</div>
 			</div>";
-  
-  $round_positions_chart_js = "jQuery(document).ready(function() {
+    
+    $round_positions_chart_js = "jQuery(document).ready(function() {
 		var ctx = jQuery('#positionsChart').get(0).getContext('2d');
 		var data = {
 			labels: [" . implode(", ", array_keys($round_positions)) . "],
@@ -682,23 +725,23 @@ function show_team_stats($t_id) {
 	
 		new Chart(ctx).Line(data);
 		});";
-  
-  drupal_add_js($round_positions_chart_js, "inline");
-  
-  $season_position_chart = "";
-  $matches_chart = "";
-  
-  if ($default_competition->type == COMPETITION_TYPE_GP) {
-    $season_position_chart = "<div class=\"row\">
+    
+    drupal_add_js($round_positions_chart_js, "inline");
+    
+    $season_position_chart = "";
+    $matches_chart = "";
+    
+    if ($default_competition->type == COMPETITION_TYPE_GP) {
+      $season_position_chart = "<div class=\"row\">
 				<div class=\"cols-xs-12\">
 				<label>" . t("Posizioni stagione") . "</label><br>
 				<canvas id=\"seasonPositionsChart\" style='width:100%; height: 200px'></canvas>
 				</div>
 				</div>";
-    
-    $season_positions = $team->getRoundsPositions($default_competition);
-    
-    $season_positions_js = "jQuery(document).ready(function() {
+      
+      $season_positions = $team->getRoundsPositions($default_competition);
+      
+      $season_positions_js = "jQuery(document).ready(function() {
 			var ctx = jQuery('#seasonPositionsChart').get(0).getContext('2d');
 			var data = {
 				labels: [" . implode(", ", array_keys($season_positions)) . "],
@@ -718,22 +761,22 @@ function show_team_stats($t_id) {
 		
 			new Chart(ctx).Line(data);
 			});";
+      
+      drupal_add_js($season_positions_js, "inline");
+    }
     
-    drupal_add_js($season_positions_js, "inline");
-  }
-  
-  else 
-    if ($default_competition->type == COMPETITION_TYPE_SD) {
-      $matches_chart = "<div class=\"row\">
+    else 
+      if ($default_competition->type == COMPETITION_TYPE_SD) {
+        $matches_chart = "<div class=\"row\">
 				<div class=\"cols-xs-12\">
 				<label>" . t("Partite") . "</label><br>
 				<canvas id=\"matchesChart\" style='width:100%; height: 200px'></canvas>
 				</div>
 				</div>";
-      
-      $matches = $team->getMatchesResults($default_competition);
-      
-      $matches_js = "jQuery(document).ready(function() {
+        
+        $matches = $team->getMatchesResults($default_competition);
+        
+        $matches_js = "jQuery(document).ready(function() {
 			var ctx = jQuery('#matchesChart').get(0).getContext('2d');
 			var data = [
 			    {
@@ -758,16 +801,15 @@ function show_team_stats($t_id) {
 		
 			new Chart(ctx).Pie(data);
 			});";
-      
-      drupal_add_js($matches_js, "inline");
-    }
-  
-    return theme("table", $stats) . $points_chart . $round_positions_chart . $season_position_chart . $matches_chart;
+        
+        drupal_add_js($matches_js, "inline");
+      }
+    
+    return theme("table", $stats);// . $points_chart . $round_positions_chart . $season_position_chart . $matches_chart;
   }
   else {
     return t("Nessuna giornata giocata");
-  } 
-    
+  }
 }
 
 function theme_team_history($history) {
@@ -876,8 +918,6 @@ function fantacalcio_squad_edit($t_id) {
         "<a href=\"#\" data-toggle=\"modal\" data-target=\"#player-stats-modal\" class=\"player-stats\" id=\"player-stat-" . $pl_id . "\"><i class=\"fa fa-bar-chart\"></i></a>", 
         drupal_render($sell_player_form)), 
       "class" => array("squad-player-role-" . $player->role));
-
-    
     
     $outflow += $player->cost;
     $bought_players_role[$player->role]++;
@@ -1260,7 +1300,7 @@ function fantacalcio_squad_movements($t_id) {
   
   if ($team == null || $team->user !== $user->uid)
     drupal_goto(drupal_access_denied());
-    
+  
   drupal_set_title($team->name . " - Lista movimenti", $output = CHECK_PLAIN);
   
   $rows = $team->getMovements();

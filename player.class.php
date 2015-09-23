@@ -148,6 +148,7 @@ class Player {
     $players_status = json_decode(file_get_contents(DATA_SOURCE_URL . "/status/" . $round . ".json"));
     
     $players_ids = self::getIdList();
+    $updated_players_ids = array();
     
     foreach ($players_status->data as $player_name => $player_status) {
       if (array_key_exists($player_name, $players_ids)) {
@@ -164,8 +165,28 @@ class Player {
           "position" => $position, 
           "percent" => !isset($player_status->percent) ? 0 : $player_status->percent, 
           "updated" => $player_status->updated))->execute();
+        
+        array_push($updated_players_ids, $pl_id);
       }
     }
+    
+    foreach ($players_ids as $pl_id) {
+      if (!in_array($pl_id, $updated_players_ids)) {
+        $pl_id = $players_ids[$player_name];
+                
+        db_delete("fanta_players_status")->condition("pl_id", $pl_id)->condition("round", $round)->execute();
+        
+        db_insert("fanta_players_status")->fields(array(
+          "pl_id" => $pl_id, 
+          "round" => $round, 
+          "status" => "not_found", 
+          "position" => 0, 
+          "percent" => 0, 
+          "updated" => time()))->execute();        
+      }
+    }
+    
+    watchdog("fantacalcio", t("Status giocatori aggiornati"), null, WATCHDOG_INFO);
   }
 
   function getPlayerRounds() {
@@ -255,6 +276,32 @@ class Player {
     foreach($result as $row) {
       $status = $row;
     }
+    
+    //partita
+    $query = db_select("fanta_players_rounds", "pr");
+    $query->condition("pl_id", $this->id);
+     $query->condition("round", $round);
+       $query->addField("pr", "rt_id", "rt_id");
+        
+    $result = $query->execute();
+    $rt_id = $result->fetchField();
+    
+    $query = db_select("fanta_real_teams_matches", "m");
+    	$query->join("fanta_real_teams", "t1", "m.rt1_id = t1.rt_id");
+        $query->join("fanta_real_teams", "t2", "m.rt2_id = t2.rt_id");
+        $query->condition("round", $round);
+        $query->fields("m");
+        $query->addField("t1", "name", "home_team");
+        $query->addField("t2", "name", "away_team");
+        
+    $result = $query->execute();
+    
+    foreach($result as $row) {
+    	if ($row->rt1_id == $rt_id || $row->rt2_id == $rt_id) {
+        	$status->match = $row->home_team . " - " . $row->away_team;
+        }
+    } 
+     
     
     return $status;
   }

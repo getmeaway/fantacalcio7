@@ -4,7 +4,73 @@
 * 
 */
 
+function fantacalcio_block_user_summary_title() {
+  global $user;
+  
+  $teams = Team::allByUser($user->uid);  
+  $team = array_pop($teams);
+  
+  return $team->name;
+}
+
 #Funzioni per la visualizzazione dei blocchi del modulo fantacalcio
+function fantacalcio_block_user_summary() {
+
+  global $user;
+  
+  $teams = Team::allByUser($user->uid);
+  
+  //giornata
+  $vote_round = Round::getNext();
+  $round = Round::getByRound($vote_round);
+  
+  //orario giornata
+  $date = $round->date;
+
+  //per ogni competizione
+  $out_competitions = "";
+  foreach($round->competitions as $competition_id => $competition_round) {
+    
+    $competition = Competition::get($competition_id);
+    
+    //per ogni squadra dell'utente
+    $rows = array();
+    foreach($teams as $t_id => $team) {
+
+      //partita utente?
+      if ($team->hasMatch($competition_id, $competition_round->competition_round)) {
+        //partita 
+        $match = Match::getByTeamAndRound($t_id, $competition_id, $competition_round->competition_round);
+        //formazione inserita o no
+//         $rows[$t_id][] = l($match->home_team . " - " . $match->away_team, "scheda/partita/" . $match->id);
+        $rows[$t_id][] = $match->home_team . " - " . $match->away_team;
+        
+        $lineup = Lineup::get($competition_id, $t_id, $competition_round->competition_round);
+        
+        if ($lineup != null)
+          $rows[$t_id][] = "<i>" . t("Formazione inserita") . "</i>";
+        else 
+          $rows[$t_id][] = "<i>" . l(t("Inserisci formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
+      }
+      
+    }
+
+    if (count($rows) > 0) {
+      $out_competitions .= $competition->name . " - " . $competition_round->label;
+      $out_competitions .= theme("table", array("rows" => $rows, "attributes" => array("class" => array("table", "table-responsive"))));
+    }
+  }
+  
+  $out = "<h4 class='pull-right'>" . date("d-m-Y H:i", $round->date) . "</h4>";
+  $out .= $out_competitions;
+  
+  return $out;
+}
+
+function fantacalcio_block_competition_summary() {
+  return "competition summary";
+}
+
 
 function fantacalcio_block_riepilogo() {
 
@@ -25,143 +91,6 @@ function fantacalcio_block_riepilogo() {
         </div>";
 
   return $out;
-}
-
-function fantacalcio_avviso_formazioni() {
-
-  $check = check_formazione_inserita();
-  if ($check['errors'] != 0) {
-    $text = "Inserire la formazione entro " . date_transform($check['date']);
-    $out = l($text, 'formazioni/insert');
-  }
-  else $out = '';
-
-  if (empty($out)) return;
-  return "\n<li>" . $out . "</li>";
-}
-
-function fantacalcio_avviso_sondaggi() {
-
-  $non_voted_polls = get_non_voted_polls();
-  
-  if (count($non_voted_polls) > 0) {
-    $sondaggi = count($non_voted_polls) == 1 ? 'sondaggio non votato' : 'sondaggi non votati';
-    $out = l(count($non_voted_polls) . ' ' . $sondaggi, 'node/' . $non_voted_polls[0]);
-  }
-  else $out = '';
-
-  if (empty($out)) return;
-  return "\n<li>" . $out . "</li>";
-}
-
-function fantacalcio_avviso_bacheca() {
-
-  global $user;
-
-  $ts_last_round = get_ts_last_round();
-
-  $sql = "SELECT sid, uid, pid, status_time, status FROM {facebook_status} 
-      WHERE pid = '%d' 
-      AND status_time > '%d' 
-      UNION 
-      SELECT cid, sid, uid, comment_time, comment FROM {fbssc} 
-      WHERE uid = '%d' 
-      AND comment_time > '%d' " ;
-  $result = db_query($sql, $user->uid, $ts_last_round, $user->uid, $ts_last_round);
-  if (db_affected_rows($result) == 0)
-    return "<li>" . l('Non hai lasciato un messaggio in bacheca', 'bacheca') . "</li>";
-
-  return;
-
-}
-
-function fantacalcio_avviso_messaggi() {
-  global $user;
-
-  $sql = "SELECT count(*) FROM {pm_index} 
-      WHERE uid = '%d' 
-      AND is_new = 1
-      AND deleted = 0 ";
-  $result = db_query($sql, $user->uid);
-  $messages = db_result($result);
-  if ($messages == 1)
-    return "<li>" . l('1 messaggio non letto', 'messages') . "</li>";
-  elseif ($messages > 1)
-    return "<li>" . l($messages . ' messaggi non letti', 'messages') . "</li>";
-
-  return;
-
-}
-
-function get_non_voted_polls() {
-
-  global $user;
-
-  if ($user->uid > 0) {
-
-    #active polls
-    $active_polls = array();
-    $sql = "SELECT nid FROM {poll} WHERE active = 1";
-    $result = db_query($sql);
-    while ($row = db_fetch_array($result)) {
-      array_push($active_polls, $row['nid']);
-    }
-
-    #active decisions without electoral list
-    $sql = "SELECT nid FROM {decisions} WHERE active = 1 AND uselist = 0";
-    $result = db_query($sql);
-    while ($row = db_fetch_array($result)) {
-      array_push($active_polls, $row['nid']);
-    }
-
-    #active decisions with electoral list
-    $sql = "SELECT nid FROM {decisions_electoral_list} WHERE uid = '%d' AND nid IN (SELECT nid FROM {decisions} WHERE active = 1 AND uselist = 1)";
-    $result = db_query($sql, $user->uid);
-    while ($row = db_fetch_array($result)) {
-      array_push($active_polls, $row['nid']);
-    }
-
-    #voted_polls
-    $voted_polls = array();
-    $sql = "SELECT * FROM {poll_votes} WHERE uid = '%d'";
-    $result = db_query($sql, $user->uid);
-    while ($row = db_fetch_array($result)) {
-      $voted_polls[] = $row['nid'];
-    }
-
-    #voted decisions
-    $sql = "SELECT DISTINCT content_id FROM {votingapi_vote} WHERE uid = '%d'";
-    $result = db_query($sql, $user->uid);
-    while ($row = db_fetch_array($result)) {
-      $voted_polls[] = $row['content_id'];
-    }
-
-    $non_voted_polls = array();
-    foreach ($active_polls as $poll_id => $poll) {
-      if (!in_array($poll, $voted_polls))
-        $non_voted_polls[] = $poll;
-    }
-
-    return $non_voted_polls;
-
-  }
-  else return array();
-}
-
-function get_ts_last_round() {
-
-  $sql = "SELECT MAX(date) FROM {fanta_rounds} WHERE date < '" . time() . "'";
-  $result = db_query($sql);
-  return db_result($result);
-
-}
-
-function get_ts_next_round() {
-
-  $sql = "SELECT MIN(date) FROM {fanta_rounds} WHERE date > '" . time() . "'";
-  $result = db_query($sql);
-  return db_result($result);
-
 }
 
 function check_formazione_inserita() {
@@ -204,41 +133,6 @@ function check_formazione_inserita() {
 
 }
 
-function fantacalcio_avviso_sfide() {
-
-  global $user;
-
-  $t_id = get_team_id_by_user($user->uid);
-
-  $sql = "SELECT * FROM {fanta_sfide}
-    WHERE t2_id = '%d' 
-    AND status = 0";
-  $result = db_query($sql, $t_id);
-  if (db_affected_rows($result) > 0) {
-    $sfide = (db_affected_rows($result) == 1) ? "1 sfida" : db_affected_rows($result) . " sfide";
-    return "<li>" . l('Hai ricevuto ' . $sfide, 'sfide/personali') . "</li>";
-  }
-  return;
-}
-
-function fantacalcio_avviso_scommesse() {
-  global $user;
-
-  $round = get_last_votes() + 1;
-  $ts_match = get_ts_next_round();
-
-  $sql = "SELECT DISTINCT u_id FROM {bets}
-    WHERE u_id = '%d' 
-    AND round = '%d'";
-  $result = db_query($sql, $user->uid, $round);
-  if (db_result($result) != $user->uid) {
-    if ( ($ts_match - time() ) < 86400 && ($ts_match - time() ) > 0 ) {
-      return "<li>" . l('Non hai ancora scommesso', 'scommesse/gioca') . "</li>";
-    }
-  }
-  return;
-  
-}
 
 function fantacalcio_block_countdown() {
 
@@ -273,11 +167,58 @@ function fantacalcio_block_countdown() {
   }
 }
 
-function fantacalcio_block_risultati_provvisori() {
-  $round = db_result(db_query("SELECT MAX(round) FROM {fanta_votes}"));
+function fantacalcio_block_last_wall_messages($n = 5) {
+  
+  $query = db_select("statuses", "s");
+  $query->join("users", "u", "u.uid = s.sender");
+  $query->fields("s");
+  $query->fields("u");
+  $query->orderBy("s.created", "DESC");
+  $query->range(0, $n);
+  
+  $result = $query->execute();
+  
+  $out_messages = "";
+  foreach($result as $row) {
+    $out_messages .= fantacalcio_block_wall_message_theme($row);
+  }
+  
+  if ($out_messages != "") {
+    $out = "<ul class='home-wall-block'>";
+    $out .= $out_messages;
+    $out .= "\n</ul>";
+    $out .= "<p style='width:100%;text-align:right;'>" . l(t("Leggi tutto") ." &raquo;", "bacheca", array("html" => "true")) . "</p>";
+    return $out;
+  }
+  else
+    return "";
+}
 
-  $played = db_result(db_query("SELECT status FROM {fanta_rounds} WHERE round = '%d'", $round));
+function fantacalcio_block_wall_message_theme($status) {
 
-  if ($played == -1)
-    return "<h3>" . strtoupper(t("Risultati provvisori")) . "</h3>";
+  if (strlen($status->message) < 100) 
+    $status_text = $status->message;
+  else {
+    $truncated = substr($status->message, 0, 100);
+    $last_space = strrpos($truncated, " ");
+    $status_text = substr($truncated, 0, $last_space) . "...";
+  }
+  
+  if (isset($status->picture) && $status->picture != 0) {
+    $user = user_load($status->sender);
+    $status_picture = theme('image_style', array('path' => $user->picture->uri, 'style_name' => 'mini', 'attributes' => array("class" => array("img-circle", "img-responsive", "pull-left"))));
+  }
+  else
+    $status_picture = "<span class='fa fa-user fa-lg' style='padding-top: 10px;'></span>";
+  
+  $out = "\n<li class='home-wall-message'>"
+      . "<div class='home-wall-picture'>"
+          . $status_picture
+          . "</div>"
+              . "<div class='home-wall-text'><strong>"
+                  . $status->name                  
+                  . "</strong> " . $status_text . "</div>"
+                      . "<div class='clearfix'></div>"
+                          . "</li>";
+  return $out;
 }

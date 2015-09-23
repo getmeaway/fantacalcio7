@@ -6,7 +6,7 @@
  */
  
 function statistiche_topflop_all() {
-  $round = get_last_votes();
+  $round = Round::getLast();
   return drupal_get_form("topflop_choose_round_all_form", $c_id, $round) . topflop_all_round($round);
 }
 
@@ -15,7 +15,7 @@ function statistiche_topflop_all_round($round) {
 }
 
 function statistiche_topflop() {
-  $round = get_last_votes();
+  $round = Round::getLast();
   return make_columns("topflop_round_team", "statistiche/topflop/" . $round, array("round" => $round, "t_id" => $t_id), "", "topflop_choose_round_form");
 }
 
@@ -28,10 +28,11 @@ function statistiche_topflop_round_team($round, $t_id) {
 }
 
 function topflop_round_team($args) {
+  
   $round = $args["round"];
   $t_id = $args["t_id"];
   
-  $team = get_team_data($t_id);
+  $team = Team::get($t_id);
   $top = top_round_team_lineup($round, $t_id);
   $flop = flop_round_team_lineup($round, $t_id);
   $tot_match = get_tot_match($round, $t_id);
@@ -45,26 +46,26 @@ function topflop_round_team($args) {
   //TOP
   $out .= "<p><strong>TOP</strong></p>";
   $out .= "<p><strong>" . substr($top['module'], 2) . "</strong></p>";
-  $out .= theme_table($header, $top['line_up']);
+  $out .= theme("table", array("header" => $header, "rows" => $top['line_up']));
   
   //TOP - differenza col totale
   $rows_summary = array();
   $rows_summary[] = array("Totale Partita", $tot_match);
   $rows_summary[] = array("Totale Top", $top['total']);
   $rows_summary[] = array("Differenza", ($tot_match - $top['total']));
-  $out .= theme_table(array(), $rows_summary);
+  $out .= theme("table", array("rows" => $top['total']));
 
   //FLOP
   $out .= "<p><strong>FLOP</strong></p>";
   $out .= "<p><strong>" . substr($flop['module'], 2) . "</strong></p>";
-  $out .= theme_table($header, $flop['line_up']);
+  $out .= theme("table", array("header" => $header, "rows" => $top['line_up']));
   
   //FLOP - differenza col totale
   $rows_summary = array();
   $rows_summary[] = array("Totale Partita", $tot_match);
   $rows_summary[] = array("Totale Flop", $flop['total']);
   $rows_summary[] = array("Differenza", ($tot_match - $flop['total']));
-  $out .= theme_table(array(), $rows_summary);
+  $out .= theme("table", array("rows" => $rows_summary));
   
   return $out;
 }
@@ -242,22 +243,22 @@ function topflop_all_round($round) {
   //TOP
   $out .= "<p><strong>TOP</strong></p>";
   $out .= "<p><strong>" . substr($top['module'], 2) . "</strong></p>";
-  $out .= theme_table($header, $top['line_up']);
+  $out .= theme("table", array("header" => $header, "rows" => $top['line_up']));
   
   //TOP - differenza col totale
   $rows_summary = array();
   $rows_summary[] = array("Totale Top", array("data" => $top['total'], "class" => "bold"));
-  $out .= theme_table(array(), $rows_summary);
+  $out .= theme("table", array("header" => array(), "rows" => $rows_summary));
 
   //FLOP
   $out .= "<p><strong>FLOP</strong></p>";
   $out .= "<p><strong>" . substr($flop['module'], 2) . "</strong></p>";
-  $out .= theme_table($header, $flop['line_up']);
+  $out .= theme("table", array("header" => $header, "rows" => $flop['line_up']));
   
   //FLOP - differenza col totale
   $rows_summary = array();
   $rows_summary[] = array("Totale Flop", array("data" => $flop['total'], "class" => "bold"));
-  $out .= theme_table(array(), $rows_summary);
+  $out .= theme("table", array("header" => array(), "rows" => $rows_summary));
   
   return $out;
 }

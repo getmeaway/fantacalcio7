@@ -199,6 +199,38 @@ class Lineup {
     else
       return FALSE;
   }
+  
+  static function import($team, $competition, $competition_round) {
+    $lineup = self::get($competition->id, $team->id, $competition_round);
+    
+    $confirm_lineup = self::getLastForTeam($competition->id, $team->id, $competition_round);
+    //   print_r($confirm_lineup);die();
+    //inserisco la formazione
+    foreach ($confirm_lineup->positions as $position => $positions_player) {
+      foreach ($positions_player as $pl_id => $player) {
+        // insert
+        $query = db_insert("fanta_lineups");
+        $query->fields(array(
+            "t_id" => $form_state['values']['t_id'],
+            "pl_id" => $pl_id,
+            "c_id" => $form_state['values']['c_id'],
+            "round" => $form_state['values']['round'],
+            "position" => $position,
+            "timestamp" => time(),
+            "uid" => $user->uid));
+        $query->execute();
+      }
+    }
+    
+    fantacalcio_lineup_insert_players('new', $form_state['values']['t_id'], $form_state['values']['c_id'], $form_state['values']['round']);
+    
+    //fantacalcio_lineup_insert_players('confirm', $form_state['values']['t_id'], $form_state['values']['c_id'], $form_state['values']['round'], $form_state['values']['other_c_id'], $form_state['values']['other_round'], $form_state['values']['multa']);
+    
+    drupal_set_message(t("Formazione confermata"));
+    
+    watchdog('fantacalcio', '@team: formazione confermata', array(
+    '@team' => Team::get($form_state['values']['t_id'])->name), WATCHDOG_NOTICE);
+  }
 
   function getCheckValues() {
     // massima posizione

@@ -50,30 +50,62 @@ function get_matches_table($competition) {
           $rounds[$round] = (object) array("date" => $match[0]->date);
         }
       }
+
+      $last_round = Round::getLast($competition->id);
+      $next_round = Round::getNext($competition->id);
       
-      $last_round = theme("table", array(
-        "header" => array(), 
-        "rows" => array(), 
-        "attributes" => array(), 
-        "sticky" => false, 
-        "empty" => ""));
+      if ($last_round != null && $last_round > 0 && isset($matches[$last_round])) {
+        $last_round_data = new stdClass();
+        $last_round_data->matches = $matches[$last_round];
+        $last_round_data->round = $last_round;
+      }
+      else {
+        $last_round_data = null;
+      }
       
-      $next_round = theme("table", array(
-        "header" => array(), 
-        "rows" => array(), 
-        "attributes" => array(), 
-        "sticky" => false, 
-        "empty" => ""));
+      if ($next_round != null && $next_round > 0 && isset($matches[$next_round])) {
+        $next_round_data = new stdClass();
+        $next_round_data->matches = $matches[$next_round];
+        $next_round_data->round = $next_round;
+      }
+      else {
+        $next_round_data = null;
+      }
+//       theme("table", array(
+//         "header" => array(), 
+//         "rows" => $matches[1], 
+//         "attributes" => array(), 
+//         "sticky" => false, 
+//         "empty" => ""));
+      
+//       $next_round = theme("table", array(
+//         "header" => array(), 
+//         "rows" => $matches[2], 
+//         "attributes" => array(), 
+//         "sticky" => false, 
+//         "empty" => ""));
+      
+//       print_r($user);
       
       $group->output = theme("calendar", array(
-        "user_teams" => isset($user->teams) ? array_keys($user->teams) : null,
+        "user_teams" => isset($user->teams) ? array_keys($user->teams) : array(),
         "matches" => $matches, 
         "rounds" => $rounds, 
         "rounds_list" => null, 
         "is_main_competition" => false, 
-        "last_round" => $last_round, 
-        "next_round" => $next_round)); // "ABC";//theme_table(array("header" => $header, "rows" => $rows, "attributes" => array("class" => "table table-responsive tablesorter tablesorter-blue classifica", "id" => "classifica_" . $g_id), "caption" => "", "sticky" => "", "empty" => "", "colgroups" => array()));
-      $group->active = (isset($user_group) && $g_id == $user_group) || $index == 1;
+        "last_round" => $last_round_data, 
+        "next_round" => $next_round_data));
+      
+      if (isset($user->groups)) { 
+        if (in_array($g_id, $user->groups[$competition->id]))
+          $group->active = true;
+        else 
+          $group->active = false;
+      }
+      else if ($index == 1)
+        $group->active = true;
+      else 
+        $group->active = false;
       
       $groups[$g_id] = $group;
     }
@@ -829,10 +861,143 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $empt
 }
 
 function show_team_details_not_played($t_id, $competition_round, $c_id, $m_id, $empty_rows) {
-  return show_formazione(array(
-    "t_id" => $t_id, 
-    "round" => $competition_round, 
-    "c_id" => $c_id));
+  
+  // squadra trovata
+  if (Team::exists($t_id)) {
+    
+    $team = Team::get($t_id);
+    $competition = Competition::get($c_id);
+    $round = Round::get($competition_round, $c_id);
+    
+    $round_label = isset($round->label) ? $round->label : $round->competitions[$c_id]->competition_round. "a giornata";
+    
+//     drupal_set_title(filter_xss($competition->name . " - " . $round_label));
+    
+    $out = "<h3 class='team_name'>" . $team->name . "</h3><br>";
+    
+    $out .= "<div class='shirt'><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></div>";
+    
+    $lineup = Lineup::get($competition->id, $team->id, $round->competitions[$c_id]->competition_round);
+     
+    if ($lineup) {
+      
+      ksort($lineup->positions);
+      
+      // ordino i titolari(ruolo, nome)
+      $roles = array();
+      $names = array();
+      $module = array(0, 0, 0, 0);
+      
+      foreach ($lineup->positions[1] as $starting_player) {
+        $module[$starting_player->role]++;
+        $roles[] = $starting_player->role;
+        $names[] = $starting_player->name;
+      }
+      
+      array_multisort($roles, SORT_ASC, $names, SORT_ASC, $lineup->positions[1]);
+      
+      // ordino le riserve(ruolo, posizione, nome)
+      // ordino i titolari(ruolo, nome)
+      $roles = array();
+      $names = array();
+      
+      $reserves = array();
+      foreach ($lineup->positions as $position => $players_positions) {
+        if ($position > 1)
+          $reserves = array_merge($reserves, $players_positions);
+      }
+      
+      foreach ($reserves as $reserve_player) {
+        $roles[] = $reserve_player->role;
+        $names[] = $reserve_player->name;
+      }
+      
+      array_multisort($roles, SORT_ASC, $names, SORT_ASC, $reserves);
+      
+      // modulo
+      if ($module) {
+        ksort($module);
+        
+        unset($module[0]);
+        $out .= "<p><strong>" . implode(" - ", $module) . "</strong></p>";
+      }
+      
+      // mostra l'ordine dei rigoristi se è previsto il passaggio del turno
+      $show_penalties = $round->next;
+      
+      // titolari
+      $header_startings = array(array("data" => t("Titolari"), "colspan" => 5));
+      $rows_startings = team_details_show_position($lineup->positions[1], $show_penalties);
+      
+      // riserve
+      $header_reserves = array(array("data" => t("Riserve"), "colspan" => 5));
+      $rows_reserves = team_details_show_position($reserves);
+      
+      $out .= theme_table(array(
+        "header" => $header_startings, 
+        "rows" => $rows_startings, 
+        "attributes" => array("class" => "table table-responsive"), 
+        "colgroups" => array(), 
+        "sticky" => "", 
+        "caption" => "", 
+        "empty" => ""));
+      $out .= theme_table(array(
+        "header" => $header_reserves, 
+        "rows" => $rows_reserves, 
+        "attributes" => array("class" => "table table-responsive"), 
+        "colgroups" => array(), 
+        "sticky" => "", 
+        "caption" => "", 
+        "empty" => ""));
+      
+    }
+    else
+      $out .= "<p>" . t("Formazione non trovata") . "</p>";
+  }
+  
+  else
+    $out = "<h3>" . t("Squadra inesistente") . "</h3><br>";
+  
+  return $out;
+
+}
+
+function team_details_show_position($position, $show_penalties = FALSE) {
+  $rows = array();
+
+  if ($position) {
+    $positions = array();
+    foreach ($position as $pl_id => $player) {
+      $roles[] = $player->role;
+      $names[] = $player->name;
+      $positions[] = $player->position;
+    }
+
+    array_multisort($roles, $positions, $names, $position);
+
+    foreach ($position as $p_id => $player) {
+      $rows[] = array(
+          "data" => array(
+              array(
+                  "data" => fantacalcio_show_role($player->role),
+                  "class" => "role"),
+              array("data" => $player->name, "class" => "name"),
+              ucwords(strtolower($player->team)),
+
+              // "<a href=\"scheda/giocatore/1\" data-toggle='modal' data-target='#player-stat-modal' class=\"player-stats\" id=\"player-stat-" . $pl_id . "\"><i class=\"fa fa-bar-chart\"></i></a>",
+              l("<i class=\"fa fa-bar-chart\"></i>", "scheda/giocatore/" . $player->id, array(
+                  "html" => true,
+                  "attributes" => array(
+                      "data-toggle" => "modal",
+                      "data-target" => "#player-stats-modal"))),
+
+              // '<a tabindex="0" class="player-stats" data-toggle="popover" data-placement="top" data-template="<div class=\'popover\' role=\'tooltip\'><div class=\'arrow\'></div><p class=\'text-danger popover-title\'></h1><div class=\'popover-content\'></div></div>" data-trigger="focus" title="' . $player->name . '" data-content="And hers some amazing content. Its very engaging. Right?"><i class="fa fa-bar-chart"></i></a>',
+              $show_penalties ? "<span title='Ordine rigoristi'>(" . ($player->penalty_position + 12) . ")</span>" : ""),
+          "class" => array("role-" . $player->role));
+    }
+  }
+
+  return $rows;
 }
 
 function get_details_regulars($t_id, $c_id, $round, $vote_round) {

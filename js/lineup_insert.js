@@ -60,7 +60,7 @@ function changePosition(pl_id, t_id, c_id, role, position) {
 		jQuery(window).unbind();
 	else {
 		jQuery(window).bind("beforeunload", function() {
-			return;// "Sicuro di voler uscire dalla pagina?";
+			return "Sicuro di voler uscire dalla pagina?";
 		});
 
 		jQuery("#line_up_submit").click(function() {
@@ -456,6 +456,8 @@ function prepareReserves() {
     	
     	}
     }
+
+	jQuery("#tmp-lineup").val("" + JSON.stringify(_line_up));
 
     jQuery("#lineup-reserves-sort").html(out);
     
