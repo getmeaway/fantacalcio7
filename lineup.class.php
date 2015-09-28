@@ -74,6 +74,7 @@ class Lineup {
         "status_position" => $player_status->position, 
         "status_class" => fantacalcio_get_status_classes($player_status->status, $player_status->position), 
         "updated" => $player_status->updated,
+        "match" => $player_status->match,
         "position" => 0);
     }
         
@@ -109,6 +110,7 @@ class Lineup {
         "status_position" => $row->status_position, 
         "status_class" => fantacalcio_get_status_classes($row->status, $row->status_position), 
         "updated" => $row->updated, 
+        "match" => $player_status->match,
         "position" => $row->position);
     }
     
@@ -201,6 +203,9 @@ class Lineup {
   }
   
   static function import($team, $competition, $competition_round) {
+    
+    global $user;
+    
     $lineup = self::get($competition->id, $team->id, $competition_round);
     
     $confirm_lineup = self::getLastForTeam($competition->id, $team->id, $competition_round);
@@ -211,10 +216,10 @@ class Lineup {
         // insert
         $query = db_insert("fanta_lineups");
         $query->fields(array(
-            "t_id" => $form_state['values']['t_id'],
+            "t_id" => $team->id,
             "pl_id" => $pl_id,
-            "c_id" => $form_state['values']['c_id'],
-            "round" => $form_state['values']['round'],
+            "c_id" => $competition->id,
+            "round" => $competition_round,
             "position" => $position,
             "timestamp" => time(),
             "uid" => $user->uid));
@@ -222,14 +227,21 @@ class Lineup {
       }
     }
     
-    fantacalcio_lineup_insert_players('new', $form_state['values']['t_id'], $form_state['values']['c_id'], $form_state['values']['round']);
+    $query = db_insert("fanta_lineups_inserts");
+    $query->fields(array(
+      "t_id" => $team->id, 
+      "c_id" => $competition->id, 
+      "round" => $competition_round, 
+      "timestamp" => time(), 
+      "status" => 1));
+    $query->execute();
     
     //fantacalcio_lineup_insert_players('confirm', $form_state['values']['t_id'], $form_state['values']['c_id'], $form_state['values']['round'], $form_state['values']['other_c_id'], $form_state['values']['other_round'], $form_state['values']['multa']);
     
-    drupal_set_message(t("Formazione confermata"));
+    drupal_set_message($team->name . ": " . t("Formazione importata"));
     
-    watchdog('fantacalcio', '@team: formazione confermata', array(
-    '@team' => Team::get($form_state['values']['t_id'])->name), WATCHDOG_NOTICE);
+    watchdog('fantacalcio', '@team: formazione importata', array(
+    '@team' => $team->name), WATCHDOG_NOTICE);
   }
 
   function getCheckValues() {
@@ -381,5 +393,22 @@ class Lineup {
     $result = $query->execute();
     
     return $result->fetchObject()->timestamp;
+  }
+  
+  static function getPlayerPosition($pl_id, $c_id, $t_id, $round) {
+    
+    $query = db_select("fanta_lineups", "l");
+    $query->condition("t_id", $t_id);
+    $query->condition("c_id", $c_id);
+    $query->condition("round", $round);
+    $query->condition("pl_id", $pl_id);
+    $query->fields("l", array("position"));
+    
+    $result = $query->execute();
+    
+    if ($result->rowCount() == 1)
+      return $result->fetchObject()->position;
+    else 
+      return 0;
   }
 }

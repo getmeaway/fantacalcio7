@@ -44,17 +44,15 @@ function changePosition(pl_id, t_id, c_id, role, position) {
 	
 	if (checks[0] && checks[1] && checks[2] && checks[3]) {
 		jQuery("#step-1-go").removeAttr('disabled');
-		//jQuery(window).unbind();
+		// jQuery(window).unbind();
 	} else
 		jQuery("#step-1-go").attr('disabled', 'disabled');
 	
 /*
-	if (checks[0] && checks[1] && checks[2] && checks[3]) {
-		jQuery("#line_up_submit").button('enable');
-		jQuery(window).unbind();
-	} else
-		jQuery("#line_up_submit").button('disable');
-*/
+ * if (checks[0] && checks[1] && checks[2] && checks[3]) {
+ * jQuery("#line_up_submit").button('enable'); jQuery(window).unbind(); } else
+ * jQuery("#line_up_submit").button('disable');
+ */
 	if (jQuery("#tmp-lineup").val() == ''
 			|| jQuery("#tmp-lineup").val() == _old_json_line_up)
 		jQuery(window).unbind();
@@ -241,7 +239,25 @@ jQuery(function() {
 				jQuery("#lineup-reserves tbody tr.empty-row")
 						.hide();
 		},
-		});//.disableSelection();
+		});// .disableSelection();
+	
+	      jQuery('[data-toggle=popover]').attr("data-rel", "tooltip");
+
+	      var showPopover = function() {
+	          jQuery(this).popover('toggle');
+	      };
+	      jQuery("[data-rel='tooltip']").click(showPopover);
+
+	
+	jQuery('body').on('click', function (e) {
+	    jQuery('[data-toggle="popover"]').each(function () {
+	        // the 'is' for buttons that trigger popups
+	        // the 'has' for icons within a button that triggers a popup
+	        if (!jQuery(this).is(e.target) && jQuery(this).has(e.target).length === 0 && jQuery('.popover').has(e.target).length === 0) {
+	            jQuery(this).popover('hide');
+	        }
+	    });
+	});
 });
 
 function inArray(needle, haystack) {
@@ -408,7 +424,7 @@ function checkLineUp(line_up) {
 			check_reserves_number, check_reserves_module);
 }
 
-//preparo le riserve in modo che possano essere ordinate
+// preparo le riserve in modo che possano essere ordinate
 function prepareReserves() {
 	
 	var roles = ["P", "D", "C", "A"];
@@ -448,7 +464,8 @@ function prepareReserves() {
 	    		out += '<i class="fa fa-square fa-stack-2x squad-player-role-' + reserve.role + '"></i>'
 	    		out += '<i class="fa fa-stack-1x" style="color: white;"><span class="font-normal">' + roles[reserve.role] + '</span></i>'
 	    		out += '</span></td><td class="player-name">' + reserve.name + '</td><td class="player-team">' + reserve.team + '</td>'
-	    		out += '<td class="player-status"><i class="fa fa-lg fa-circle ' + reserve.status_class + '"></i></td></tr>'
+//	    		out += '<td class="player-status"><i class="fa fa-lg fa-circle ' + reserve.status_class + '"></i></td></tr>'
+	    		out += '<td class="player-status">' + fantacalcio_show_status(reserve) + '</td></tr>'
 
 	    		line_up[reserve.pl_id].position = j + 2;
 	        }
@@ -461,7 +478,7 @@ function prepareReserves() {
 
     jQuery("#lineup-reserves-sort").html(out);
     
-    //attach event
+    // attach event
     jQuery("#lineup-reserves-sort table tbody").sortable({
 		over : function(event, ui) {
 			jQuery(event.target).parent().parent().addClass(
@@ -513,7 +530,8 @@ function prepareReserves() {
 			// update arrays
 
 			// scalo le riserve
-			// diminuisco la posizione delle riserve successive (solo stesso ruolo)
+			// diminuisco la posizione delle riserve successive (solo stesso
+			// ruolo)
 			for ( var i = 0; i < Object.keys(_line_up).length; i++) {
 				var key = Object.keys(_line_up)[i];
 				if (key != pl_id && _line_up[key] != undefined) {
@@ -525,7 +543,8 @@ function prepareReserves() {
 				}
 			}
 
-			// nuova posizione < 2 ---> diminuisco i successivi aumento la posizione delle riserve successive (solo stesso ruolo)
+			// nuova posizione < 2 ---> diminuisco i successivi aumento la
+			// posizione delle riserve successive (solo stesso ruolo)
 			for ( var j = 0; j < Object.keys(_line_up).length; j++) {
 				var key = Object.keys(_line_up)[j];
 				if (key != pl_id
@@ -542,13 +561,31 @@ function prepareReserves() {
 					"" + JSON.stringify(_line_up));
 			
 		},
-		});//.disableSelection();
+		});// .disableSelection();
 		
 	jQuery(".player-status a").popover()
+	
+    jQuery('[data-toggle=popover]').attr("data-rel", "tooltip");
+
+    var showPopover = function() {
+        jQuery(this).popover('toggle');
+    };
+    jQuery("[data-rel='tooltip']").click(showPopover);
+
+
+	jQuery('body').on('click', function (e) {
+	  jQuery('[data-toggle="popover"]').each(function () {
+	      // the 'is' for buttons that trigger popups
+	      // the 'has' for icons within a button that triggers a popup
+	      if (!jQuery(this).is(e.target) && jQuery(this).has(e.target).length === 0 && jQuery('.popover').has(e.target).length === 0) {
+	          jQuery(this).popover('hide');
+	      }
+	  });
+	});
 
 }
 
-//mostro un'anteprima della formazione
+// mostro un'anteprima della formazione
 function show_lineup_preview () {
 	
 	var roles = ["P", "D", "C", "A"];
@@ -562,7 +599,7 @@ function show_lineup_preview () {
 			new_line_up.push(line_up[key]);
 	}
     
-    //ordino per posizione
+    // ordino per posizione
 	new_line_up.sort(function (a, b) {
     	return a.position - b.position;
     });
@@ -582,7 +619,7 @@ function show_lineup_preview () {
     	console.log(reserves[j]);
     }
     
-    //ordino titolari
+    // ordino titolari
     regulars.sort(function(a, b) {
     	if (a.role == b.role) {
     		if (a.name < b.name)
@@ -636,7 +673,8 @@ function show_lineup_preview () {
     		out += '<i class="fa fa-square fa-stack-2x squad-player-role-' + regular.role + '"></i>'
     		out += '<i class="fa fa-stack-1x" style="color: white;"><span class="font-normal">' + roles[regular.role] + '</span></i>'
     		out += '</span></td><td class="player-name">' + regular.name + '</td><td class="player-team">' + regular.team + '</td>'
-    		out += '<td class="player-status"><i class="fa fa-lg fa-circle ' + regular.status_class + '"></i></td></tr>'
+//    		out += '<td class="player-status"><i class="fa fa-lg fa-circle ' + regular.status_class + '"></i></td></tr>'
+    		out += '<td class="player-status">' + fantacalcio_show_status(regular) + '</td></tr>'
     	}
     }
     
@@ -652,7 +690,8 @@ function show_lineup_preview () {
     		out += '<i class="fa fa-square fa-stack-2x squad-player-role-' + reserve.role + '"></i>'
     		out += '<i class="fa fa-stack-1x" style="color: white;"><span class="font-normal">' + roles[reserve.role] + '</span></i>'
     		out += '</span></td><td class="player-name">' + reserve.name + '</td><td class="player-team">' + reserve.team + '</td>'
-    		out += '<td class="player-status"><i class="fa fa-lg fa-circle ' + reserve.status_class + '"></i></td></tr>'
+//    		out += '<td class="player-status"><i class="fa fa-lg fa-circle ' + reserve.status_class + '"></i></td></tr>'
+    		out += '<td class="player-status">' + fantacalcio_show_status(reserve) + '</td></tr>'
     	}
     }
     
@@ -661,4 +700,86 @@ function show_lineup_preview () {
     jQuery("#lineup-preview").html(out);
     
    	jQuery(".player-status a").popover()
+   	
+    jQuery('[data-toggle=popover]').attr("data-rel", "tooltip");
+
+    var showPopover = function() {
+        jQuery(this).popover('toggle');
+    };
+    jQuery("[data-rel='tooltip']").click(showPopover);
+
+
+jQuery('body').on('click', function (e) {
+  jQuery('[data-toggle="popover"]').each(function () {
+      // the 'is' for buttons that trigger popups
+      // the 'has' for icons within a button that triggers a popup
+      if (!jQuery(this).is(e.target) && jQuery(this).has(e.target).length === 0 && jQuery('.popover').has(e.target).length === 0) {
+          jQuery(this).popover('hide');
+      }
+  });
+});
+}
+
+
+function fantacalcio_show_status(player) {
+    
+var date = new Date(player.updated *1000);
+var year = date.getFullYear();
+var month = date.getMonth() + 1 > 9 ? date.getMonth() + 1 : "0" + parseInt(date.getMonth() + 1);
+var day = date.getDate() > 9 ? date.getDate() : "0" + parseInt(date.getDate());
+var hours = date.getHours();
+var minutes = "0" + date.getMinutes();
+
+var updated = day + "-" + month + "-" + year + " " + hours + ':' + minutes.substr(-2);
+
+  if (player.status == "ok") {
+    var position = player.status_position == 1 ? "Titolare" : "Riserva";
+    var content = "";
+    var content = "<p>" + player.match + "</p>";
+    content += "<table class=\"table\"><tr><th>Posizione probabile:</th><td>" + position + "</td></tr><tr><th>Probabilità di giocare:</th><td>" + player.status_percent + "%</td></tr></table><i class=\"caption\">Ultimo aggiornamento: " + updated + "</i>";
+  }
+  else {
+    switch (player.status) {
+      case "injured":
+        var status = "Infortunato";
+        break;
+      case "suspended":
+        var status = "Squalificato";
+        break;
+      case "not_found":
+        var status = "Non trovato";
+        break;
+    }
+    
+    var content = "<table class=\"table\"><tr><th>Stato:</th><td>" + status + "</td></tr></table><i class=\"caption\">Ultimo aggiornamento: " + updated + "</i>";
+  }
+  
+  var out = "<a tabindex='0' role='button' data-trigger='focus' data-toggle='popover' data-placement='top' title='" + player.name + " (" + player.team + ")" 
++ "' data-content='" + content 
++ "' data-html='" + true 
++ "'>";
+  
+  out += "<i class='fa fa-lg fa-circle " + player.status_class + "'></i>";
+  
+  out += "</a>";
+  
+  return out;
+  
+}
+
+function fantacalcio_get_status_classes(status, status_position) {
+  switch(status) {
+    case "injured":
+      return "text-danger";
+      break;
+    case "suspended":
+      return "text-danger";
+      break;
+    case "not_found":
+      return "text-danger";
+      break;
+    case "ok":
+      return status_position == 1 ? "text-success" : "text-warning";
+      break;
+  }
 }

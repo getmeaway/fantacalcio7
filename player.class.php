@@ -172,7 +172,7 @@ class Player {
     
     foreach ($players_ids as $pl_id) {
       if (!in_array($pl_id, $updated_players_ids)) {
-        $pl_id = $players_ids[$player_name];
+        //$pl_id = $players_ids[$player_name];
                 
         db_delete("fanta_players_status")->condition("pl_id", $pl_id)->condition("round", $round)->execute();
         

@@ -206,6 +206,12 @@ function fantacalcio_results_lineup_check($vote_round) {
   $teams = Team::all();
   $competitions = Competition::allForRound($vote_round);
   
+  $round = Round::getByRound($vote_round);
+
+  //importo formazioni se il termine di invio è scaduto
+  if (time() > $round->date)
+    import_lineups($vote_round);
+  
   $lineups = array();
   
   $out = "";
@@ -213,8 +219,6 @@ function fantacalcio_results_lineup_check($vote_round) {
   foreach ($competitions as $c_id => $competition) {
     
     $competition->groups = Group::allByCompetition($competition->id);
-    
-    $round = Round::getCompetitionRound($vote_round, $competition->id);
     
     // squadre per competizione
     $teams = array();
@@ -242,11 +246,21 @@ function fantacalcio_results_lineup_check($vote_round) {
           else
             $status = "<span style='color: red; font-weight:bold;'><i class='fa fa-minus-circle'></i></span>";
           
+          $insert_time = $lineup->getInsertTime();
+          
+          if ($insert_time > $round->date)
+            $insert_time_out = "<span style='color: red; font-weight:bold;'>" 
+                                . date("d/m/Y H:i:s", $lineup->getInsertTime())
+                                . "</span>";
+          else
+            $insert_time_out = date("d/m/Y H:i:s", $lineup->getInsertTime());
+          
           $rows[$t_id] = array(
             l($team->name, "formazioni/admin/" . $t_id), 
             $status, 
-            implode("-", $lineup->getModuleRegulars()) . " / " . implode("-", $lineup->getModuleReserves()), 
-            date("d/m/Y H:i:s", $lineup->getInsertTime()));
+            implode("-", $lineup->getModuleRegulars()) . " / " . implode("-", $lineup->getModuleReserves()),
+            $insert_time_out
+            );
         }
         
         else
@@ -267,7 +281,6 @@ function fantacalcio_results_lineup_check($vote_round) {
     }
   }
   
-  import_lineups($vote_round);
   
   return $out;
 }
@@ -503,7 +516,7 @@ function import_lineups($vote_round) {
         // importo formazione (giornata precedente / default)
         Lineup::import($team, $competition, $round->competitions[$competition->id]->competition_round);
       }
-      // echo $i."%";
+
     }
   }
 }
@@ -2196,33 +2209,37 @@ function fantacalcio_close_round($vote_round) {
   $main_c_id = variable_get("fantacalcio_main_competition", 1);
   $main_competition = Competition::getDefault();//get_competition_name(variable_get("fantacalcio_main_competition", 1));
   $body = "Risultati calcolati per: " . substr($body, 0, -2);
-  $body .= "<br/>" . base_path() . "calendario/" . $main_competition->sanitized_name ;
+//   $body .= "<br/>" . base_path() . "calendario/" . $main_competition->sanitized_name ;
   
   $title = "Risultati " . $vote_round . "ª Giornata";
 
   $node = new stdClass(); // We create a new node object
   $node->type = "news"; // Or any other content type you want
+  
+  node_object_prepare($node);
+  
   $node->title = $title;
   $node->language = LANGUAGE_NONE; // Or any language code if Locale module is enabled. More on this below *
-  $node->path = array('alias' => 'news/risultati-' . $vote_round); // Setting a node path
-  node_object_prepare($node); // Set some default values.
-  $node->uid = $user->uid; // Or any id you wish
-  
-  $node->title = $title;
-  
-  $field_langcode = field_language('node', $node, 'body');
-  $node->body[$field_langcode][0]['value'] = "ddadasdsad".$body;
-  $node->body[$field_langcode][0]['summary'] = "ddadasdsad".text_summary($body);
-  $node->body[$field_langcode][0]['format'] = 'filtered_html';
-  
-  $node->revision = 0;
+//   $node->path = array('alias' => 'news/risultati-' . $vote_round); // Setting a node path
+  $node->uid = 1;//$user->uid; // Or any id you wish
+      
+  $node->body[$node->language][0]['value'] = $body;
+  $node->body[$node->language][0]['summary'] = $body;
   
   $node->status = 1;   // (1 or 0): published or unpublished
-  $node->promote = 0;  // (1 or 0): promoted to front page or not
+  $node->promote = 1;  // (1 or 0): promoted to front page or not
   $node->sticky = 0;  // (1 or 0): sticky at top of lists or not
   $node->comment = 0;  // 2 = comments open, 1 = comments closed, 0 = comments hidden
 
   $node = node_submit($node); // Prepare node for saving
+  node_save($node);
+  
+  $nid = $node->nid;
+  $node = node_load($nid);
+  
+  // Make this change a new revision
+  $node->revision = 1;
+  
   node_save($node);
   
   // rimuovi "risultati provvisori"

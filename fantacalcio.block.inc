@@ -47,10 +47,19 @@ function fantacalcio_block_user_summary() {
         
         $lineup = Lineup::get($competition_id, $t_id, $competition_round->competition_round);
         
-        if ($lineup != null)
-          $rows[$t_id][] = "<i>" . t("Formazione inserita") . "</i>";
-        else 
-          $rows[$t_id][] = "<i>" . l(t("Inserisci formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
+        if ($lineup != null) {
+           if (time() > $date)
+             $rows[$t_id][] = "<i>" . t("Formazione inserita"). "</i>";
+          else
+          $rows[$t_id][] = "<i>" . l(t("Modifica formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
+        }
+        else {
+          if (time() > $date)
+             $rows[$t_id][] = "<i>" . t("Formazione non inserita"). "</i>";
+          else
+            $rows[$t_id][] = "<i>" . l(t("Inserisci formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
+        }
+$rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $match->id, array("html" => true) ) ;
       }
       
     }

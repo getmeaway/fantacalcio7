@@ -25,7 +25,7 @@
 				<?php print render($lineup_form_clean); ?>
 				</div>
 				<button type="button" class="center-block btn btn-sm btn-warning"
-					data-toggle="modal" data-target="#lineup-reset-modal">
+					data-toggle="modal" data-target="#lineup-delete-modal">
 				  <?php print t("Cancella");?>
 				</button>
 			</div>
@@ -86,10 +86,14 @@
 			</div>
 			<div class="row">
 			    <div class="col-xs-6">
-      		    <?php 
-      		      if (count($confirm) > 0)
-      		        print render($lineup_form_confirm); 
-      		    ?>
+ <?php if (count($confirm) > 0 ) : ?>
+                        <div class="col-xs-6">
+                                <button type="button" class="center-block btn btn-sm btn-primary"
+                                        data-toggle="modal" data-target="#lineup-confirm-modal">
+                                  <?php print t("Conferma");?>
+                                </button>
+                        </div>
+                        <?php endif;?>
       		    </div>
       		    <div class="col-xs-6">
         		    <button id="step-1-back" type="button"

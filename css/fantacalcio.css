@@ -715,3 +715,7 @@ td i.squad-player-role-3 {
 .nav-pills.active {
 	
 }
+
+.not_played {
+	opacity: 0.35;
+}

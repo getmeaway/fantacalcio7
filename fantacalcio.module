@@ -586,7 +586,7 @@ function fantacalcio_menu() {
   
   $items['statistiche/topflop/%'] = array(
     'title' => 'Top / Flop', 
-    'page callback' => 'statistiche_topflop_round', 
+    'page callback' => 'statistiche_topflop', 
     'page arguments' => array(2), 
     'access arguments' => array('access content fantacalcio'), 
     'type' => MENU_NORMAL_ITEM, 
@@ -603,7 +603,7 @@ function fantacalcio_menu() {
   
   $items['statistiche/topflop-all/%'] = array(
     'title' => 'Top / Flop', 
-    'page callback' => 'statistiche_topflop_all_round', 
+    'page callback' => 'statistiche_topflop_all', 
     'page arguments' => array(2), 
     'access arguments' => array('access content fantacalcio'), 
     'type' => MENU_NORMAL_ITEM, 
@@ -612,7 +612,7 @@ function fantacalcio_menu() {
   
   $items['statistiche/topflop/%/%'] = array(
     'title' => 'Top / Flop', 
-    'page callback' => 'statistiche_topflop_round_team', 
+    'page callback' => 'statistiche_topflop', 
     'page arguments' => array(2, 3), 
     'access arguments' => array('access content fantacalcio'), 
     'type' => MENU_NORMAL_ITEM, 
@@ -1216,3 +1216,13 @@ function fantacalcio_get_status_classes($status, $status_position) {
       break;
   }
 }
+
+function fantacalcio_show_cards($yellow, $red) {
+  if ($yellow == 1)
+    return "<i class='fa fa-lg fa-square' style='color:#EE3; transform: scale(0.75, 1);'></i>";
+  elseif ($red == 1)
+  return "<i class='fa fa-lg fa-square' style='color:#D33; transform: scale(0.75, 1);'></i>";
+  else
+    return "";
+}
+

@@ -1231,7 +1231,16 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
 //       $sql = "INSERT INTO {fanta_lineups_inserts} (t_id, c_id, round, status, timestamp) VALUES ('%d', '%d', '%d', 0, '%d')";
 //       $result = db_query($sql, $t_id, $c_id, $round, time());
       
-//       // inserimento lineup giornata precedente
+      $query = db_insert("fanta_lineups_inserts");
+      $query->fields(array(
+          "t_id" => $t_id,
+          "c_id" => $c_id,
+          "round" => $round,
+          "timestamp" => time(),
+          "status" => 0));
+      $query->execute();
+      
+      // inserimento lineup giornata precedente
 //       $sql = "SELECT * FROM {fanta_lineups} WHERE c_id = '%d' AND t_id='%d' AND round = '%d'";
 //       $result = db_query($sql, $c_id, $t_id, $round - 1);
 //       while ($row = db_fetch_array($result)) {
@@ -1240,10 +1249,30 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
 //         $sqla = "INSERT INTO {fanta_lineups} (pl_id, c_id, t_id, round, position, uid, timestamp) VALUES " . "(" . $pl_id . ", " . $c_id . ", " . $t_id . ", " . $round . ", " . $position . "," . $user->uid . "," . time() . ")";
 //         $resulta = db_query($sqla);
 //       }
-//       drupal_set_message("Userai la formazione della giornata precedente");
-//       $teams = get_teams();
-//       watchdog('fantacalcio', '@team: formazione inserita in ritardo', array(
-//         '@team' => $teams[$t_id]->name), WATCHDOG_NOTICE);
+      
+      $confirm_lineup = Lineup::getLastForTeam($c_id, $t_id, $round);
+
+      //inserisco la formazione
+      foreach ($confirm_lineup->positions as $position => $positions_player) {
+        foreach ($positions_player as $pl_id => $player) {
+          // insert
+          $query = db_insert("fanta_lineups");
+          $query->fields(array(
+              "t_id" => $t_id,
+              "pl_id" => $pl_id,
+              "c_id" => $c_id,
+              "round" => $round,
+              "position" => $position,
+              "timestamp" => time(),
+              "uid" => $user->uid));
+          $query->execute();
+        }
+      }
+
+      drupal_set_message("Userai la formazione della giornata precedente");
+      
+      watchdog('fantacalcio', '@team: formazione inserita in ritardo', array(
+        '@team' => Team::get($t_id)->name), WATCHDOG_NOTICE);
     }
   }
   elseif ($type == 'confirm') {

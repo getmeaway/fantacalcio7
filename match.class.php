@@ -215,6 +215,14 @@ class Match {
       $match->goals_2 = $row->goals_2;
       $match->tot_1 = $row->tot_1;
       $match->tot_2 = $row->tot_2;
+      $match->mod_1_role_0 = $row->mod_1_role_0;
+      $match->mod_1_role_1 = $row->mod_1_role_1;
+      $match->mod_1_role_2 = $row->mod_1_role_2;
+      $match->mod_1_role_3 = $row->mod_1_role_3;
+      $match->mod_2_role_0 = $row->mod_2_role_0;
+      $match->mod_2_role_1 = $row->mod_2_role_1;
+      $match->mod_2_role_2 = $row->mod_2_role_2;
+      $match->mod_2_role_3 = $row->mod_2_role_3;
       // $m_id = $row->m_id;
       // $matches[$m_id] = $row;
       // $c_id = $groups[$row->g_id];
