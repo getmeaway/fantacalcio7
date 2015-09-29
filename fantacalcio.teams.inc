@@ -478,6 +478,27 @@ function show_team_credits($t_id) {
     $spent += $row->status == 1 ? $row->cost : ceil($row->cost / 2);
   }
   
+  //scambi
+  $query = db_select("fanta_squad_changes", "s");
+  $query->condition("t1_id", $t_id);
+  $query->fields("s");
+  
+  $result = $query->execute();
+  
+  foreach ($result as $row) {
+    $spent += $row->money;
+  }
+
+  $query = db_select("fanta_squad_changes", "s");
+  $query->condition("t2_id", $t_id);
+  $query->fields("s");
+  
+  $result = $query->execute();
+  
+  foreach ($result as $row) {
+    $spent -= $row->money;
+  }
+  
   $credits_rows = array();
   $credits_rows[0] = array(t("Crediti"), $credits);
   $credits_rows[1] = array(t("Crediti spesi"), $spent);

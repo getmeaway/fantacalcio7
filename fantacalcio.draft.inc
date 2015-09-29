@@ -104,7 +104,7 @@ function group_summary($g_id) {
   $teams = Team::allByGroup($g_id);
   
   foreach ($teams as $t_id => $team) {
-    $spesa = 0;
+    $spent = 0;
     $n_giocatori = 0;
     $n_roles = array(0, 0, 0, 0);
     
@@ -118,10 +118,10 @@ function group_summary($g_id) {
     
     foreach ($result as $row) {
       if ($row->status == -1) {
-        $spesa += floor($row->cost / 2);
+        $spent += floor($row->cost / 2);
       }
       else
-        $spesa += $row->cost;
+        $spent += $row->cost;
       
       if ($row->status == 1) {
         $n_giocatori++;
@@ -129,8 +129,29 @@ function group_summary($g_id) {
       }
     }
     
+    //scambi
+  $query = db_select("fanta_squad_changes", "s");
+  $query->condition("t1_id", $t_id);
+  $query->fields("s");
+  
+  $result = $query->execute();
+  
+  foreach ($result as $row) {
+    $spent += $row->money;
+  }
+
+  $query = db_select("fanta_squad_changes", "s");
+  $query->condition("t2_id", $t_id);
+  $query->fields("s");
+  
+  $result = $query->execute();
+  
+  foreach ($result as $row) {
+    $spent -= $row->money;
+  }
+    
     $crediti = variable_get('fantacalcio_credits', 350);
-    $rimasti = $crediti - $spesa + get_swaps_money($t_id);
+    $rimasti = $crediti - $spent;// + get_swaps_money($t_id);
     
     $spesa_max = $rimasti - variable_get('fantacalcio_num_rosa', 25) + $n_giocatori + 1;
     
@@ -140,7 +161,7 @@ function group_summary($g_id) {
     $row_data[] = array(
       "data" => l($team->name, "mercato/team/" . $g_id . "/" . $t_id));
     $row_data[] = array("data" => $n_giocatori, "class" => array("num"));
-    $row_data[] = array("data" => $spesa, "class" => array("num"));
+    $row_data[] = array("data" => $spent, "class" => array("num"));
     $row_data[] = array("data" => $rimasti, "class" => array("num"));
     $row_data[] = array(
       "data" => (($n_giocatori == variable_get('fantacalcio_number_players', 25)) ? "-" : $spesa_max), 
@@ -240,7 +261,7 @@ function team_players_list($g_id, $t_id) {
 
 function team_summary($g_id, $t_id) {
     
-  $spesa = 0;
+  $spent = 0;
   $n_giocatori = 0;
   $n_roles = array(0, 0, 0, 0);
   
@@ -253,10 +274,10 @@ function team_summary($g_id, $t_id) {
   
   foreach($result as $row) {
     if ($row->status == -1) {
-      $spesa += floor($row->cost / 2);
+      $spent += floor($row->cost / 2);
     }
     else
-      $spesa += $row->cost;
+      $spent += $row->cost;
     
     if ($row->status == 1) {
       $n_giocatori++;
@@ -264,8 +285,29 @@ function team_summary($g_id, $t_id) {
     }
   }
   
+   //scambi
+  $query = db_select("fanta_squad_changes", "s");
+  $query->condition("t1_id", $t_id);
+  $query->fields("s");
+  
+  $result = $query->execute();
+  
+  foreach ($result as $row) {
+    $spent += $row->money;
+  }
+
+  $query = db_select("fanta_squad_changes", "s");
+  $query->condition("t2_id", $t_id);
+  $query->fields("s");
+  
+  $result = $query->execute();
+  
+  foreach ($result as $row) {
+    $spent -= $row->money;
+  }
+  
   $crediti = variable_get('fantacalcio_credits', 350);
-  $rimasti = $crediti - $spesa + get_swaps_money($t_id);
+  $rimasti = $crediti - $spent;// + get_swaps_money($t_id);
   
   $spesa_max = (variable_get('fantacalcio_num_rosa', 25) == $n_giocatori) ? "-" : ($rimasti - variable_get('fantacalcio_num_rosa', 25) + $n_giocatori + 1);
   
@@ -276,7 +318,7 @@ function team_summary($g_id, $t_id) {
     array("data" => $n_roles[0], "class" => "num"));
   $rows[1] = array(
     array("data" => t("Crediti spesi"), "class" => "-label"), 
-    array("data" => $spesa, "class" => "num"), 
+    array("data" => $spent, "class" => "num"), 
     array("data" => t("Difensori"), "class" => "-label"), 
     array("data" => $n_roles[1], "class" => "num"));
   $rows[2] = array(
@@ -339,20 +381,34 @@ function team_ex_players($g_id, $t_id) {
 }
 
 function swaps_summary($g_id) {
-  $teams = get_teams();
+  
+  $teams = Team::allByGroup($g_id);
   
   $header = array("Da", "A", "Importo", "");
   
   $sql = "SELECT * FROM {fanta_squad_changes} 
           WHERE t1_id IN (SELECT t_id FROM {fanta_teams_groups} WHERE g_id = '%d')
           AND t2_id IN (SELECT t_id FROM {fanta_teams_groups} WHERE g_id = '%d')";
-  $result = db_query($sql, $g_id, $g_id);
-  while ($row = db_fetch_object($result)) {
+//  $result = db_query($sql, $g_id, $g_id);
+  
+  $query = db_select("fanta_squad_changes", "s");
+  $query->condition("t1_id", array_keys($teams), "IN"); 
+  $query->condition("t2_id", array_keys($teams), "IN"); 
+  $query->fields("s");
+  
+  $result = $query->execute();
+  
+  $rows = array();
+  
+  foreach ($result as $row) {
+  
+	$team_money_transfer_delete_form = drupal_get_form("team_money_transfer_delete_form", $row->s_id);
+  
     $rows[] = array(
       $teams[$row->t1_id]->name, 
       $teams[$row->t2_id]->name, 
       $row->money, 
-      drupal_get_form("team_money_transfer_delete_form", $row->s_id));
+      drupal_render($team_money_transfer_delete_form));
   }
   
   return theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("class" => array("table", "table-responsive"))));
@@ -461,7 +517,8 @@ function fantamercato_show_group($g_id) {
   if (draft_is_enabled()) {
     drupal_set_title(filter_xss("Mercato - " . Group::get($g_id)->name . " - Riepilogo"));
     $buy_form = drupal_get_form('group_buy_player_form', $g_id);
-    return drupal_render($buy_form)
+    return fantamercato_links($g_id) 
+    . drupal_render($buy_form)
  . "<br>" . group_summary($g_id) . "<br>" . get_last_boughts($g_id, 5);
   }
   else
@@ -495,7 +552,9 @@ function fantamercato_view_group($g_id) {
 function fantamercato_swaps_group($g_id) {
   if (draft_is_enabled()) {
     drupal_set_title(filter_xss("Mercato - " . Group::get($g_id)->name . " - Scambi"));
-    return fantamercato_links($g_id) . drupal_get_form('players_swap_form', $g_id) . "<br>" . drupal_get_form('team_money_transfer_form', $g_id) . "<br>" . swaps_summary($g_id);
+    $players_swap_form = drupal_get_form('players_swap_form', $g_id);
+    $team_money_transfer_form = drupal_get_form('team_money_transfer_form', $g_id);
+    return fantamercato_links($g_id) . drupal_render($players_swap_form) . "<br>" . drupal_render($team_money_transfer_form) . "<br>" . swaps_summary($g_id);
   }
   else
     return t("Mercato disabilitato");

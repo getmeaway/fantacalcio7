@@ -232,7 +232,7 @@ function team_action_player_form_submit($form, &$form_state) {
 }
 
 function players_swap_form($form, &$form_state, $g_id) {
-  $form['swap'] = array('#type' => 'fieldset', '#title' => 'Scambia giocatori');
+  $form['swap'] = array('#type' => 'fieldset', '#title' => t('Scambia giocatori'));
   $form['swap']['player_1'] = array(
     '#type' => 'textfield', 
     '#autocomplete_path' => 'mercato/autocomplete/swaps/' . $g_id, 
@@ -255,23 +255,38 @@ function players_swap_form_submit($form, $form_state) {
   $sql = "UPDATE {fanta_squads} SET pl_id = '%d' WHERE pl_id = '%d' AND t_id = '%d' AND status = 1";
   $exploded_player_1 = explode(',', $form_state['values']['player_1']);
   $exploded_player_2 = explode(',', $form_state['values']['player_2']);
-  db_query($sql, $exploded_player_2[0], $exploded_player_1[0], $exploded_player_1[1]);
-  db_query($sql, $exploded_player_1[0], $exploded_player_2[0], $exploded_player_2[1]);
   
-  drupal_set_message('Scambio effettuato');
+  $pl1_id = $exploded_player_1[0];
+  $pl2_id = $exploded_player_2[0];
+  $t1_id = $exploded_player_1[1];
+  $t2_id = $exploded_player_2[1];
+  
+  db_update("fanta_squads")->fields(array("pl_id" => $pl2_id))->condition("t_id", $t1_id)->condition("pl_id", $pl1_id)->execute();
+  db_update("fanta_squads")->fields(array("pl_id" => $pl1_id))->condition("t_id", $t2_id)->condition("pl_id", $pl2_id)->execute();
+  
+  //db_query($sql, $exploded_player_2[0], $exploded_player_1[0], $exploded_player_1[1]);
+  //db_query($sql, $exploded_player_1[0], $exploded_player_2[0], $exploded_player_2[1]);
+  
+  drupal_set_message(t('Scambio effettuato'));
 }
 
-function team_money_transfer_form($form_state, $g_id) {
+function team_money_transfer_form($form, &$form_state, $g_id) {
+
+$teams = Team::allByGroup($g_id);
+  $teams_options = array();
+  foreach ($teams as $team)
+    $teams_options[$team->id] = $team->name;
+
   $form['transfer'] = array(
     '#type' => 'fieldset', 
-    '#title' => 'Trasferisci soldi');
+    '#title' => t('Trasferisci soldi'));
   $form['transfer']['t1_id'] = array(
     '#type' => 'select', 
-    '#options' => get_teams_group_options($g_id), 
+    '#options' => $teams_options, 
     '#title' => 'Da');
   $form['transfer']['t2_id'] = array(
     '#type' => 'select', 
-    '#options' => get_teams_group_options($g_id), 
+    '#options' => $teams_options, 
     '#title' => 'A');
   $form['transfer']['money'] = array(
     '#type' => 'textfield', 
@@ -289,36 +304,49 @@ function team_money_transfer_form($form_state, $g_id) {
 function team_money_transfer_form_submit($form, $form_state) {
   $sql = "INSERT INTO {fanta_squad_changes} (t1_id, t2_id, money, active) 
           VALUES ('%d', '%d', '%d', 1)";
-  $result = db_query($sql, $form_state['values']['t1_id'], $form_state['values']['t2_id'], $form_state['values']['money']);
+//  $result = db_query($sql, $form_state['values']['t1_id'], $form_state['values']['t2_id'], $form_state['values']['money']);
   
-  drupal_set_message('Trasferimento effettuato');
+  db_insert("fanta_squad_changes")->fields(array("t1_id" => $form_state['values']['t1_id'], "t2_id" => $form_state['values']['t2_id'], "money" => $form_state['values']['money'], "active" => 1))->execute();
+  
+  drupal_set_message(t('Trasferimento effettuato'));
 }
 
 function team_money_transfer_form_validate($form, $form_state) {
   // controllo spesa
+  
+  $spent = 0;
+  $num_players = 0;
+  
   $sql = "SELECT * 
           FROM {fanta_squads} r
           WHERE r.t_id = '%d'";
-  $result = db_query($sql, $form_state['values']['t1_id']);
-  while ($row = db_fetch_object($result)) {
+//  $result = db_query($sql, $form_state['values']['t1_id']);
+  
+  $query = db_select("fanta_squads", "s");
+  $query->condition("t_id", $form_state['values']['t1_id']);
+  $query->fields("s");
+  
+  $result = $query->execute();
+  
+  foreach ($result as $row) {
     if ($row->status == -1) {
-      $spesa += floor($row->cost / 2);
+      $spent += floor($row->cost / 2);
     }
     else
-      $spesa += $row->cost;
+      $spent += $row->cost;
     
     if ($row->status == 1) {
       $num_players++;
-      $num_roles[$row->role]++;
+      
     }
   }
   
-  $crediti = variable_get('fantacalcio_credits', 350);
-  $rimasti = $crediti - $spesa + get_swaps_money($t_id);
+  $credits = variable_get('fantacalcio_credits', 350);
+  $available = $credits - $spent + get_swaps_money($form_state['values']['t1_id']);
   
-  $spesa_max = $rimasti - variable_get('fantacalcio_num_rosa', 25) + $num_players + 1;
+  $max_offer = $available - variable_get('fantacalcio_num_rosa', 25) + $num_players + 1;
   
-  if ($form_state['values']['money'] > $rimasti)
+  if ($form_state['values']['money'] > $available)
     form_set_error("", "Crediti insufficienti. ");
 }
 
@@ -334,7 +362,9 @@ function team_money_transfer_delete_form($form, &$form_state, $s_id) {
 
 function team_money_transfer_delete_form_submit($form, $form_state) {
   $sql = "DELETE FROM {fanta_squad_changes} WHERE s_id = '%d'";
-  $result = db_query($sql, $form_state['values']['s_id']);
+//  $result = db_query($sql, $form_state['values']['s_id']);
+  
+  db_delete("fanta_squad_changes")->condition("s_id", $form_state['values']['s_id'])->execute();
   
   drupal_set_message('Trasferimento annullato');
 }

@@ -121,8 +121,11 @@ function fantamercato_autocomplete_players_swaps($g_id, $name) {
   $query->join("fanta_players_rounds", "r", "r.pl_id = p.pl_id");
   $query->join("fanta_real_teams", "rt", "rt.rt_id = r.rt_id");
   $query->join("fanta_squads", "s", "s.pl_id = p.pl_id");
+  $query->join("fanta_teams", "t", "s.t_id = t.t_id");
   $query->fields("p");
-  $query->addField("rt", "name", "team");
+  $query->fields("s", array("t_id"));
+  $query->addField("rt", "name", "real_team");
+  $query->addField("t", "name", "team");
   $query->condition("r.round", $round);
   $query->condition("p.name", db_like(addslashes($name)) . '%', 'LIKE');
   $query->condition("s.status", 1);
@@ -133,7 +136,7 @@ function fantamercato_autocomplete_players_swaps($g_id, $name) {
   $result = $query->execute(); //print $query;
   
   foreach ($result as $row) {
-    $id = $row->pl_id . ", " . htmlspecialchars(stripslashes($row->name)) . " (" . ucwords($row->team) . ") - " . $roles[$row->role];
+    $id = $row->pl_id . "," . $row->t_id . ", " . htmlspecialchars(stripslashes($row->name)) . " (" . ucwords($row->real_team) . ") - " . $roles[$row->role] . " - " . $row->team;
     $players[$id] = $id;
   }
   print drupal_json_output($players);
