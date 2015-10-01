@@ -10,6 +10,11 @@
 	width: 100%;
 	z-index: 10;
 }
+
+.lineup-group-container-mobile .player-name, .lineup-group-container-mobile .player-team {
+	font-size: 85%;
+}
+
 </style>
 
 <div id='div-formazione' class="">
@@ -72,70 +77,64 @@
 </div>
 
 <div class="row">
+	<div id='step-1'>
 	<div class="col-xs-12 visible-xs">
-		<div class="row" id="step-1">
-			<a data-toggle="modal" data-target="#lineup-info-modal"> <i
-				class="fa fa-2x fa-info-circle"></i>
-			</a>
-			<div id="check-lineup-nav">
-				<div class="navbar navbar-static">
+			<div class='row'>				
+				<div id="check-lineup-nav" class="navbar navbar-static">
 					<div class="navbar-collapse">
-      		        <?php print render($lineup_check); ?>
-      	            </div>
+		      			<?php print render($lineup_check); ?>
+      	        			</div>
 				</div>
 			</div>
 			<div class="row">
-			    <div class="col-xs-6">
- <?php if (count($confirm) > 0 ) : ?>
-                        <div class="col-xs-6">
+			 <?php if (count($confirm) > 0 ) : ?>
+                        	<div class="col-xs-6">
                                 <button type="button" class="center-block btn btn-sm btn-primary"
                                         data-toggle="modal" data-target="#lineup-confirm-modal">
                                   <?php print t("Conferma");?>
                                 </button>
-                        </div>
+                        	</div>
                         <?php endif;?>
-      		    </div>
-      		    <div class="col-xs-6">
-        		    <button id="step-1-back" type="button"
+      		    		<div class="col-xs-6">
+        		    	<button id="step-1-back" type="button"
 					class="center-block btn btn-sm btn-warning" data-toggle="modal"
 					data-target="#lineup-delete-modal">
-  	            <?php print t("Cancella");?>
-  	            </button>
-  	            </div>
+  	            		<?php print t("Cancella");?>
+  	            		</button>
+  	            		</div>
 			</div>
 			<div class="row">
-			    <div class="col-xs-6">&nbsp;</div>
+			    <div class="col-xs-12">&nbsp;</div>
 			</div>
-			<div class="col-xs-12">
-				<div class="lineup-group-container-mobile">
-    			<?php print render($squad_mobile);?>
-    		    </div>
-
-				<div class="row">
-					<div class="col-xs-12">&nbsp;</div>
+			<div class='row'>
+				<div class="col-xs-12">
+					<div class="lineup-group-container-mobile">
+    					<?php print render($squad_mobile);?>
+    					</div>
 				</div>
+			</div>
+			<div class="row">
+				<div class="col-xs-12">&nbsp;</div>
+			</div>
 
-				<div class="row">
-					<div class="col-xs-6">
-						<div class="center-block">
-
-							<button type="button" class="center-block btn btn-default"
+			<div class="row">
+				<div class="col-xs-6">
+					<div class="center-block">
+					<button type="button" class="center-block btn btn-default"
 								data-toggle="modal" data-target="#lineup-reset-modal">
-            				  <?php print t("Annulla");?>
+          				  <?php print t("Annulla");?>
             				</button>
-						</div>
 					</div>
-					<div class="col-xs-6">
-						<div class="center-block">
-							<button id="step-1-go" type="button"
+				</div>
+				<div class="col-xs-6">
+					<div class="center-block">
+					<button id="step-1-go" type="button"
 								class="center-block btn btn-success" disabled>
             				<?php print t("Avanti");?>
-            				</button>
-						</div>
+           				</button>
 					</div>
 				</div>
 			</div>
-		</div>
 		<!-- Ordina riserve -->
 		<div class="row hidden" id="step-2">
 			<div class="col-xs-12">
@@ -430,7 +429,7 @@ jQuery('#check-lineup-nav').affix({
 	        
 	        jQuery(item).find(".position-message").addClass("position-message-squad").html("Tribuna").fadeIn().delay(500).fadeOut(500, function() {
 	            jQuery(this).removeClass("position-message-squad")
-	            jQuery(this).parent().find(".player-position span").addClass("hidden")
+	            jQuery(this).parent().find(".player-position span").addClass("not-visible")
 	            //jQuery(this).parent().find("player-position i.position").html("T")
 	            //jQuery(this).parent().find("player-position i.position-class").removeClass("text-warning").addClass("text-success");
 	            jQuery(this).parent().removeClass("col-xs-offset-2").addClass("col-xs-offset-1")
@@ -445,7 +444,7 @@ jQuery('#check-lineup-nav').affix({
 	        
 	        jQuery(item).find(".position-message").addClass("position-message-regular").html("Titolare").fadeIn().delay(500).fadeOut(500, function() {
 	            jQuery(this).removeClass("position-message-regular")
-	            jQuery(this).parent().find(".player-position span").removeClass("hidden")
+	            jQuery(this).parent().find(".player-position span").removeClass("not-visible")
 	            jQuery(this).parent().find(".player-position i.position").removeClass("text-warning").addClass("text-success").html("T")
 	            jQuery(this).parent().find(".player-position i.position-class").removeClass("text-warning").addClass("text-success");
 	            jQuery(this).parent().removeClass("col-xs-offset-2").addClass("col-xs-offset-1")
@@ -472,7 +471,7 @@ jQuery('#check-lineup-nav').affix({
 	        
 	        jQuery(item).find(".position-message").addClass("position-message-squad").html("Tribuna").fadeIn().delay(500).fadeOut(500, function() {
 	            jQuery(this).removeClass("position-message-squad")
-	            jQuery(this).parent().find(".player-position span").addClass("hidden")
+	            jQuery(this).parent().find(".player-position span").addClass("not-visible")
 	            //jQuery(this).parent().find("player-position i.position").html("T")
 	            //jQuery(this).parent().find("player-position i.position-class").removeClass("text-warning").addClass("text-success");
 	            jQuery(this).parent().removeClass("col-xs-offset-0").addClass("col-xs-offset-1")
@@ -494,7 +493,7 @@ jQuery('#check-lineup-nav').affix({
 	        
 	        jQuery(item).find(".position-message").addClass("position-message-reserve").html("Riserva").fadeIn().delay(500).fadeOut(500, function() {
 	            jQuery(this).removeClass("position-message-reserve")
-	            jQuery(this).parent().find(".player-position span").removeClass("hidden")
+	            jQuery(this).parent().find(".player-position span").removeClass("not-visible")
 	            jQuery(this).parent().find(".player-position i.position").removeClass("text-success").addClass("text-warning").html("R")
 	            jQuery(this).parent().find(".player-position i.position-class").removeClass("text-success").addClass("text-warning");
 	            jQuery(this).parent().removeClass("col-xs-offset-0").addClass("col-xs-offset-1")

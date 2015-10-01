@@ -935,8 +935,8 @@ function fantacalcio_get_modifiers($vote_round) {
       $competition_round = $match->round;
       
       if (variable_get('fantacalcio_modifier_role_0', '0')) {
-        $mod_1_role_0 = fantacalcio_get_modifier_role_0($t1_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
-        $mod_2_role_0 = fantacalcio_get_modifier_role_0($t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+        $mod_1_role_0 = Result::getModifierRole_0($t1_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+        $mod_2_role_0 = Result::getModifierRole_0($t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
       }
       else {
         $mod_1_role_0 = 0;
@@ -944,8 +944,8 @@ function fantacalcio_get_modifiers($vote_round) {
       }
       
       if (variable_get('fantacalcio_modifier_role_1', '0')) {
-        $mod_1_role_1 = fantacalcio_get_modifier_role_1($t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
-        $mod_2_role_1 = fantacalcio_get_modifier_role_1($t1_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+        $mod_1_role_1 = Result::getModifierRole_1($t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+        $mod_2_role_1 = Result::getModifierRole_1($t1_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
       }
       else {
         $mod_1_role_1 = 0;
@@ -953,7 +953,7 @@ function fantacalcio_get_modifiers($vote_round) {
       }
       
       if (variable_get('fantacalcio_modifier_role_2', '0')) {
-        $mod_role_2 = fantacalcio_get_modifier_role_2($t1_id, $t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+        $mod_role_2 = Result::getModifierRole_2($t1_id, $t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
         $mod_1_role_2 = $mod_role_2[1];
         $mod_2_role_2 = $mod_role_2[2];
       }
@@ -963,8 +963,8 @@ function fantacalcio_get_modifiers($vote_round) {
       }
       
       if (variable_get('fantacalcio_modifier_role_3', '0')) {
-        $mod_1_role_3 = fantacalcio_get_modifier_role_3($t1_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
-        $mod_2_role_3 = fantacalcio_get_modifier_role_3($t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+        $mod_1_role_3 = Result::getModifierRole_3($t1_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+        $mod_2_role_3 = Result::getModifierRole_3($t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
       }
       else {
         $mod_1_role_3 = 0;
@@ -1055,270 +1055,7 @@ function fantacalcio_get_modifiers($vote_round) {
   return $out;
 }
 
-function fantacalcio_get_modifier_role_0($t_id, $c_id, $vote_round, $competition_round, $votes_provider) {
-  
-  // $sql = "SELECT * FROM {fanta_lineups} f, {fanta_players} p "
-  // . "WHERE f.pl_id = p.pl_id "
-  // . "AND p.role = 0 "
-  // . "AND f.c_id = '%d' " . "AND f.round = '%d' " . "AND f.t_id = '%d' " . "AND f.has_played = 1";
-  // $result = db_query($sql, $c_id, $competition_round, $t_id);
-  $query = db_select("fanta_lineups", "l");
-  $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
-  $query->condition("p.role", 0);
-  $query->condition("l.c_id", $c_id);
-  $query->condition("l.round", $competition_round);
-  $query->condition("l.t_id", $t_id);
-  $query->condition("l.has_played", 1);
-  
-  $query->fields("p");
-  
-  $result = $query->execute();
-  
-  foreach ($result as $row) {
-    $pl_id = $row->pl_id;
-  }
-  
-  if (isset($pl_id)) {
-    $sql = "SELECT * FROM {fanta_votes} " . "WHERE pl_id = '%d' " . "AND round = '%d' " . "AND provider = '%d'";
-    
-    $query = db_select("fanta_votes", "v");
-    $query->condition("pl_id", $pl_id);
-    $query->condition("round", $vote_round);
-    $query->condition("provider", $votes_provider);
-    
-    $query->fields("v");
-    
-    $result = $query->execute();
-    
-    foreach ($result as $row) {
-      if ($row->saved_penalties == 0 && $row->vote > 6)
-        return $row->vote - 6;
-      else
-        return 0;
-    }
-  }
-  else
-    return 0;
-}
 
-function fantacalcio_get_modifier_role_1($t_id, $c_id, $vote_round, $competition_round, $votes_provider) {
-  $pl_ids = array();
-  $role_0_lineup_number = 0;
-  $role_0_played_number = 0;
-  $sql = "SELECT * FROM {fanta_lineups} f, {fanta_players} p " . "WHERE f.pl_id = p.pl_id " . "AND p.role = 1 " . "AND f.c_id = '%d' " . "AND f.round = '%d'" . "AND f.t_id = '%d'";
-  
-  // $result = db_query($sql, $c_id, $competition_round, $t_id);
-  
-  $query = db_select("fanta_lineups", "l");
-  $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
-  $query->condition("p.role", 1);
-  $query->condition("l.c_id", $c_id);
-  $query->condition("l.round", $competition_round);
-  $query->condition("l.t_id", $t_id);
-  
-  $query->fields("p");
-  $query->fields("l");
-  
-  $result = $query->execute();
-  
-  foreach ($result as $row) {
-    
-    if ($row->has_played == 1) {
-      array_push($pl_ids, $row->pl_id);
-      $role_0_played_number++;
-    }
-    
-    if ($row->position == 1)
-      $role_0_lineup_number++;
-  }
-  
-  $elenco_dif_ids = implode(',', $pl_ids);
-  
-  $tot = 0;
-  $sql = "SELECT DISTINCT pl_id, vote FROM {fanta_votes} " . "WHERE pl_id IN ($elenco_dif_ids) " . "AND round = '%d' " . "AND provider = '%d'";
-  // $result = db_query($sql, $vote_round, $votes_provider);
-  
-  if (count($pl_ids) > 0) {
-  
-    $query = db_select("fanta_votes", "v");
-    
-    $query->fields("v");
-    
-    $query->condition("pl_id", $pl_ids, "IN");
-    $query->condition("round", $vote_round);
-    $query->condition("provider", $votes_provider);
-    
-    $result = $query->execute();
-    
-    foreach ($result as $row) {
-      $tot += $row->vote;
-    }
-    
-    $tot += 5 * ($role_0_lineup_number - $role_0_played_number);
-    $avg = ($tot > 0) ? round($tot / $role_0_lineup_number, 2) : 0;
-    
-    $modifier = 27 - $role_0_lineup_number - floor($avg * 4);
-    
-    // echo "$t_id : $tot_difesa : $avg_difesa : $role_0_lineup_number : $mod_difesa <br>";
-    
-    return $modifier;
-  }
-  else {
-    return 0;
-  }
-}
-
-function fantacalcio_get_modifier_role_2($t1_id, $t2_id, $c_id, $vote_round, $competition_round, $votes_provider) {
-  $role_2_t1_ids = array();
-  $role_2_t1_regulars = 0;
-  $role_2_t1_played = 0;
-  $role_2_t2_ids = array();
-  $role_2_t2_regulars = 0;
-  $role_2_t2_played = 0;
-  
-  // team 1
-  
-  $query = db_select("fanta_lineups", "l");
-  $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
-  $query->condition("p.role", 2);
-  $query->condition("l.c_id", $c_id);
-  $query->condition("l.round", $competition_round);
-  $query->condition("l.t_id", $t1_id);
-  
-  $query->fields("l");
-  $query->fields("p");
-  
-  $result = $query->execute();
-  foreach ($result as $row) {
-    if ($row->has_played == 1) {
-      array_push($role_2_t1_ids, $row->pl_id);
-      $role_2_t1_played++;
-    }
-    
-    if ($row->position == 1)
-      $role_2_t1_regulars++;
-  }
-  
-  // team 2
-  $query = db_select("fanta_lineups", "l");
-  $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
-  $query->condition("p.role", 2);
-  $query->condition("l.c_id", $c_id);
-  $query->condition("l.round", $competition_round);
-  $query->condition("l.t_id", $t2_id);
-  
-  $query->fields("l");
-  $query->fields("p");
-  
-  $result = $query->execute();
-  
-  foreach ($result as $row) {
-    if ($row->has_played == 1) {
-      array_push($role_2_t2_ids, $row->pl_id);
-      $role_2_t2_played++;
-    }
-    
-    if ($row->position == 1)
-      $role_2_t2_regulars++;
-  }
-  
-  $role_2_tot_1 = 0;
-  $role_2_tot_2 = 0;
-  
-  if (count($role_2_t1_ids) > 0 && count($role_2_t2_ids)) {
-    
-    // voti team 1
-    $query = db_select("fanta_votes", "v");
-    $query->condition("pl_id", $role_2_t1_ids, "IN");
-    $query->condition("round", $vote_round);
-    $query->condition("provider", $votes_provider);
-    
-    $query->fields("v", array("vote", "pl_id"));
-    
-    $result = $query->execute(); // ($sql, $vote_round, $votes_provider);
-    foreach ($result as $row) {
-      $role_2_tot_1 += $row->vote;
-    }
-    
-    // voti team 2
-    $query = db_select("fanta_votes", "v");
-    $query->condition("pl_id", $role_2_t2_ids, "IN");
-    $query->condition("round", $vote_round);
-    $query->condition("provider", $votes_provider);
-    
-    $query->fields("v", array("vote", "pl_id"));
-    
-    $result = $query->execute(); // ($sql, $vote_round, $votes_provider);
-    foreach ($result as $row) {
-      $role_2_tot_2 += $row->vote;
-    }
-    
-    $role_2_tot_1 += 5 * ($role_2_t1_regulars - $role_2_t1_played);
-    $role_2_tot_2 += 5 * ($role_2_t2_regulars - $role_2_t2_played);
-    
-    if ($role_2_t1_regulars > $role_2_t2_regulars)
-      $role_2_tot_2 += 5 * ($role_2_t1_regulars - $role_2_t2_regulars);
-    
-    if ($role_2_t2_regulars > $role_2_t1_regulars)
-      $role_2_tot_1 += 5 * ($role_2_t2_regulars - $role_2_t1_regulars);
-    
-    $scarto = $role_2_tot_1 - $role_2_tot_2;
-    
-    $scarto = floor(abs($scarto)) / 2;
-    
-    if ($role_2_tot_1 > $role_2_tot_2)
-      $mod_role_2 = array(1 => $scarto, 2 => 0 - $scarto);
-    
-    if ($role_2_tot_1 < $role_2_tot_2)
-      $mod_role_2 = array(1 => 0 - $scarto, 2 => $scarto);
-    
-    if ($role_2_tot_1 == $role_2_tot_2)
-      $mod_role_2 = array(1 => 0, 2 => 0);
-  }
-  else
-    $mod_role_2 = array(1 => 0, 2 => 0);
-  
-  return $mod_role_2;
-}
-
-function fantacalcio_get_modifier_role_3($t_id, $c_id, $vote_round, $competition_round, $votes_provider) {
-  $mod_role_3 = 0;
-  
-  $query = db_select("fanta_lineups", "l");
-  $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
-  $query->condition("p.role", 3);
-  $query->condition("l.c_id", $c_id);
-  $query->condition("l.round", $competition_round);
-  $query->condition("l.t_id", $t_id);
-  $query->condition("l.has_played", 1);
-  
-  $query->fields("p");
-  
-  $result = $query->execute();
-  
-  foreach ($result as $row) {
-    $pl_id = $row->pl_id;
-    
-    if ($pl_id) {
-      $sql = "SELECT * FROM {fanta_votes} " . "WHERE pl_id = '%d' " . "AND round = '%d' " . "AND provider = '%d'";
-      
-      $query2 = db_select("fanta_votes", "v");
-      $query2->condition("pl_id", $pl_id);
-      $query2->condition("round", $vote_round);
-      $query2->condition("provider", $votes_provider);
-      
-      $query2->fields("v");
-      
-      $result2 = $query2->execute();
-      foreach ($result2 as $row2) {
-        if ($row2->assists == 0 && $row2->goals_for == 0 && $row2->vote > 6)
-          $mod_role_3 += ($row2->vote - 6);
-      }
-    }
-  }
-  
-  return $mod_role_3;
-}
 
 /**
  * *********************
@@ -1397,7 +1134,7 @@ function fantacalcio_find_regulars($vote_round) {
     $result = $query->execute();
     
     foreach ($result as $row) {
-      fantacalcio_get_regulars($row->t_id, $pl_votes, $competition_round, $c_id);
+      Result::getRegulars($row->t_id, $pl_votes, $competition_round, $c_id);
     }
     
     // report
@@ -1471,83 +1208,7 @@ function fantacalcio_find_regulars($vote_round) {
   return $out;
 }
 
-function fantacalcio_get_regulars($t_id, $pl_votes, $competition_round, $c_id) {
-  $teams = array();
-  
-  $max_substitutions = variable_get("fantacalcio_max_substitutions", 0) == -1 ? PHP_INT_MAX : variable_get("fantacalcio_max_substitutions", 0);
-  
-  $substitutions = 0;
-  
-  // titolari senza voto da sostituire
-  $query = db_select("fanta_lineups", "l");
-  $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
-  $query->condition("has_played", 0);
-  $query->condition("position", 1);
-  $query->condition("round", $competition_round);
-  $query->condition("c_id", $c_id);
-  $query->condition("t_id", $t_id);
-  $query->fields("p");
-  $query->fields("l");
-  
-  $result = $query->execute();
-  
-  foreach ($result as $row) {
-    
-    if ($substitutions <= $max_substitutions) {
-      
-      $role = $row->role;
-      $position = $row->position + 1; // echo "=".$position."<br>";
-      
-      $search = true;
-      
-      while ($search && $substitutions <= $max_substitutions) {
-        $query_search = db_select("fanta_lineups", "l");
-        $query_search->join("fanta_players", "p", "p.pl_id = l.pl_id");
-        $query_search->condition("role", $role);
-        $query_search->condition("position", $position);
-        $query_search->condition("round", $competition_round);
-        $query_search->condition("c_id", $c_id);
-        $query_search->condition("t_id", $t_id);
-        $query_search->fields("p");
-        $query_search->fields("l");
-        
-        $result_search = $query_search->execute();
-        
-        if ($result_search->rowCount() > 0) {
-          
-          foreach ($result_search as $row_search) {
-            
-            $pl_id = $row_search->pl_id;
-            
-            // se con il voto entra la riserva
-            if (in_array($pl_id, $pl_votes) && $row_search->has_played == 0) {
-              $query_update = db_update("fanta_lineups");
-              $query_update->fields(array("has_played" => 1));
-              $query_update->condition("pl_id", $pl_id);
-              $query_update->condition("t_id", $t_id);
-              $query_update->condition("c_id", $c_id);
-              $query_update->condition("round", $competition_round);
-              
-              $query_update->execute();
-              
-              $substitutions++;
-              $search = false;
-            }
-            else {
-              $position++;
-            }
-          }
-        }
-        
-        // nessuna prima riserva ancora non entrata
-        else {
-          $position++;
-          $search = false;
-        }
-      }
-    }
-  }
-}
+
 
 /**
  * *********************
@@ -1625,8 +1286,8 @@ function fantacalcio_get_totals($vote_round) {
         $bonus_t1 = $match->bonus_t1;
         $bonus_t2 = $match->bonus_t2;
         
-        $tot_votes_1 = get_total($t1_id, $competition_round, $vote_round, $c_id, variable_get("fantacalcio_votes_provider", 1));
-        $tot_votes_2 = get_total($t2_id, $competition_round, $vote_round, $c_id, variable_get("fantacalcio_votes_provider", 1));
+        $tot_votes_1 = Result::getTotal($t1_id, $competition_round, $vote_round, $c_id, variable_get("fantacalcio_votes_provider", 1));
+        $tot_votes_2 = Result::getTotal($t2_id, $competition_round, $vote_round, $c_id, variable_get("fantacalcio_votes_provider", 1));
         $tot_1 = $tot_votes_1 + array_sum($mod_1) + $bonus_t1;
         $tot_2 = $tot_votes_2 + array_sum($mod_2) + $bonus_t2;
         
@@ -1776,29 +1437,6 @@ function fantacalcio_get_totals($vote_round) {
   }
   
   return $out;
-}
-
-function get_total($t_id, $competition_round, $vote_round, $c_id) {
-  $total = 0;
-  
-  $query = db_select("fanta_votes", "v");
-  $query->join("fanta_lineups", "l", "l.pl_id = v.pl_id");
-  $query->fields("l");
-  $query->fields("v");
-  $query->condition("l.round", $competition_round);
-  $query->condition("v.round", $vote_round);
-  $query->condition("l.t_id", $t_id);
-  $query->condition("l.c_id", $c_id);
-  $query->condition("l.has_played", 1);
-  $query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
-  
-  $result = $query->execute();
-  
-  foreach ($result as $row) {
-    $total += $row->total;
-  }
-  
-  return $total;
 }
 
 /**
@@ -2195,57 +1833,7 @@ function fantacalcio_close_round($vote_round) {
   drupal_set_title(t('Risultati: Giornata #@round', array(
     "@round" => $vote_round)));
   
-  global $user;
-  
-  $competitions = Competition::all();
-  
-  $round = Round::getByRound($vote_round);
-  
-  $body = "";
-  foreach ($round->competitions as $c_id => $competition_round) {
-    $body .= $competition_round->label . " " . $competitions[$c_id]->name . ", ";
-  }
-  
-  $main_c_id = variable_get("fantacalcio_main_competition", 1);
-  $main_competition = Competition::getDefault();//get_competition_name(variable_get("fantacalcio_main_competition", 1));
-  $body = "Risultati calcolati per: " . substr($body, 0, -2);
-//   $body .= "<br/>" . base_path() . "calendario/" . $main_competition->sanitized_name ;
-  
-  $title = "Risultati " . $vote_round . "ª Giornata";
-
-  $node = new stdClass(); // We create a new node object
-  $node->type = "news"; // Or any other content type you want
-  
-  node_object_prepare($node);
-  
-  $node->title = $title;
-  $node->language = LANGUAGE_NONE; // Or any language code if Locale module is enabled. More on this below *
-//   $node->path = array('alias' => 'news/risultati-' . $vote_round); // Setting a node path
-  $node->uid = 1;//$user->uid; // Or any id you wish
-      
-  $node->body[$node->language][0]['value'] = $body;
-  $node->body[$node->language][0]['summary'] = $body;
-  
-  $node->status = 1;   // (1 or 0): published or unpublished
-  $node->promote = 1;  // (1 or 0): promoted to front page or not
-  $node->sticky = 0;  // (1 or 0): sticky at top of lists or not
-  $node->comment = 0;  // 2 = comments open, 1 = comments closed, 0 = comments hidden
-
-  $node = node_submit($node); // Prepare node for saving
-  node_save($node);
-  
-  $nid = $node->nid;
-  $node = node_load($nid);
-  
-  // Make this change a new revision
-  $node->revision = 1;
-  
-  node_save($node);
-  
-  // rimuovi "risultati provvisori"
-  db_update("fanta_rounds")->fields(array("status" => 1))->condition("round", $vote_round)->execute();
-  
-  variable_set("fantacalcio_results_round", ($vote_round + 1));
+  Result::closeRound($vote_round);
   
   return "News creata";
 }

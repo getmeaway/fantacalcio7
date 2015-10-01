@@ -475,6 +475,7 @@ h3.home-block-title {
 
 ul.home-wall-block {
 	list-style-type: none;
+	padding-left: 0px;
 }
 
 li.home-wall-message {
@@ -487,7 +488,7 @@ li.odd {
 }
 
 div.home-wall-text{
-	float:left;
+	/*float:left;*/
 	display: block;
 }
 
@@ -495,6 +496,7 @@ div.home-wall-picture{
 	float:left;
 	width: 60px;
 	display: block;
+	min-height: 50px;
 }
 
 div.lineup-group-container {
@@ -680,27 +682,32 @@ td i.squad-player-role-3 {
 
 .player-name {
     width: 40%;    
+text-align: left;
 }
 
 .player-team {
-    width: 30%;    
+    width: 30%;  
+text-align:left;  
 }
 
 .player-status {
-    width: 10%;
+    width: 7%;
 }
 
 .player-position {
     width: 10%;
 }
 
+.not-visible {
+	visibility: hidden;
+}
+
 .lineup-group-container-mobile .row div.player-row {
 	padding-left: 0px;
 	padding-right: 0px;
 }
-
-.nav-pills li:nth-child(1), .nav-pills li:nth-child(4), .nav-pills li:nth-child(7), 
-.nav-pills li:nth-child(1).active, .nav-pills li:nth-child(4), .nav-pills li:nth-child(7), {
+/*
+.nav-pills li:nth-child(1), .nav-pills li:nth-child(4), .nav-pills li:nth-child(7) {
     background: #93c54b;
 }
 
@@ -710,11 +717,7 @@ td i.squad-player-role-3 {
 
 .nav-pills li:nth-child(3), .nav-pills li:nth-child(6), .nav-pills li:nth-child(9) {
     background: #29abe0;
-}
-
-.nav-pills.active {
-	
-}
+}*/
 
 .not_played {
 	opacity: 0.35;

@@ -2186,7 +2186,7 @@ function fantacalcio_admin_round($form, &$form_state, $round = "") {
         21 => "21", 
         22 => "22", 
         23 => "23"), 
-      '#default_value' => date('H', $round_data->date));
+      '#default_value' => date('G', $round_data->date));
     
     $form['minute'] = array(
       '#type' => 'select', 
@@ -2242,7 +2242,7 @@ function fantacalcio_admin_round($form, &$form_state, $round = "") {
         21 => "21", 
         22 => "22", 
         23 => "23"), 
-      '#default_value' => date('H', $round_data->end_date));
+      '#default_value' => date('G', $round_data->end_date));
     
     $form['end_minute'] = array(
       '#type' => 'select', 
@@ -2264,7 +2264,7 @@ function fantacalcio_admin_round($form, &$form_state, $round = "") {
     
     $form['status'] = array(
       '#type' => 'select', 
-      '#default_value' => $round_data->status, 
+      '#default_value' => $round_data->status_id, 
       '#options' => Round::getStatuses());
     
     // per ogni competizione

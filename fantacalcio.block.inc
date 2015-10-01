@@ -70,7 +70,8 @@ $rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $matc
     }
   }
   
-  $out = "<h4 class='pull-right'>" . date("d-m-Y H:i", $round->date) . "</h4>";
+  $out = "<h4 class='pull-right clearfix'>" . date("d-m-Y H:i", $round->date) . "</h4>";
+  $out .= "<div class='clearfix'></div>";
   $out .= $out_competitions;
   
   return $out;

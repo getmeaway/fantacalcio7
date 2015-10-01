@@ -1,24 +1,6 @@
 <?php
 
 // Includes
-
-/*
- * include "fantacalcio.common.inc";
- * include "fantacalcio.admin.inc";
- * include "fantacalcio.teams.inc";
- * include "fantacalcio.calendar.inc";
- * include "fantacalcio.standings.inc";
- * include "fantacalcio.lineups.inc";
- * include "fantacalcio.results.inc";
- * include 'fantacalcio.stats.general.inc';
- * include 'fantacalcio.stats.teams.inc';
- * include 'fantacalcio.stats.images.inc';
- * include 'fantacalcio.stats.topflop.inc';
- * include 'fantacalcio.stats.players.inc';
- * include "fantacalcio.home.inc";
- * include "fantacalcio.block.inc";
- * include "fantacalcio.curl.inc";
- */
 include "player.class.php";
 include "team.class.php";
 include "real_team.class.php";
@@ -27,6 +9,7 @@ include "group.class.php";
 include "lineup.class.php";
 include "match.class.php";
 include "round.class.php";
+include "result.class.php";
 include "user.class.php";
 include "fantacalcio.block.inc";
 include "fantacalcio.tooltip.inc";
@@ -1082,14 +1065,34 @@ function fantacalcio_block_view($delta = '') {
 // cron
 function fantacalcio_cron() {
   
+  $vote_round = Round::getNext();
+  $round = Round::getByRound($vote_round);
+
   //status giocatori
   Player::updateStatus();
   
   //giornate
-  Match::updateRoundDate();
-  
+  $matches = json_decode(file_get_contents(DATA_SOURCE_URL . "/matches/" . $round->round . ".json"));
+
+  if (isset($matches->data) && count($matches->data) > 0) {
+    $dates = array_map(function ($item){ return $item->date;}, $matches->data);
+    $start = min($dates);
+    $end = max($dates) + 5 * 3600; //5 ore dopo l'inizio dell'ultima partita
+    $round->updateDates($start, $end);
+
+    watchdog('fantacalcio', t('Date aggiornate per la giornata: %round'), array('%round' => $round->round), WATCHDOG_NOTICE);
+
+    $round = Round::getByRound($vote_round);
+
+  }
+
   //calcola risultati 
-  fantacalcio_cron_calculate_results();
+  if (time() > $round->end_date && $round->status != 1)
+    fantacalcio_cron_calculate_results($round);
+
+  //promemoria formazioni
+  if (time() > ($round->date - (6 * 3600)))
+    fantacalcio_create_lineups_reminder($round); 
 }
 
 // theme functions
@@ -1142,10 +1145,6 @@ function fantacalcio_theme($existing, $type, $theme, $path) {
     'lineup-insert' => array(
       'render element' => 'elements', 
       'template' => 'templates/page-lineup-insert'));
-}
-
-function _fantacalcio_home() {
-  return "";
 }
 
 function fantacalcio_check_value($value) {

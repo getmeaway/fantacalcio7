@@ -164,6 +164,7 @@ class Round
 		$query->fields("rc");
 		$query->fields("r");
 		$query->addField("s", "status", "status");
+		$query->addField("r", "status", "status_id");
 		$query->orderBy("r.round");
 		
 		$result = $query->execute();
@@ -174,7 +175,8 @@ class Round
 		  $round->date = $row->date;
 		  $round->end_date = $row->end_date;
 		  $round->status = $row->status;
-		  	
+		  $round->status_id = $row->status_id;	
+            
 		  $competition_round = (object) array();
 		  $competition_round->round= $row->round;
 		  $competition_round->competition_id = $row->c_id;
@@ -431,5 +433,9 @@ class Round
 		}
 		
 		return $matches;
+	}
+
+	function updateDates($start, $end) {
+		$query = db_update("fanta_rounds")->fields(array("date" => $start, "end_date" => $end))->condition("round", $this->round)->execute();
 	}
 }
