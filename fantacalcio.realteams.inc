@@ -93,7 +93,7 @@ function fantacalcio_main_league_calendar() {
   }
   ksort($rounds_list);
   
-  return theme("calendar", array(
+  return theme("main_calendar", array(
     "matches" => $matches,
   	"is_main_competition" => true,
     "rounds_list" => $rounds_list)); // , "last_round" => $last_round, "next_round" => $next_round)); //"ABC";//theme_table(array("header" => $header, "rows" => $rows, "attributes" => array("class" => "table table-responsive tablesorter tablesorter-blue classifica", "id" => "classifica_" . $g_id), "caption" => "", "sticky" => "", "empty" => "", "colgroups" => array()));

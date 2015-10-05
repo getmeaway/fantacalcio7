@@ -222,6 +222,8 @@ class RealTeam {
     while ($row = $result->fetchObject()) {
       $match = new Match();
       $match->id = $row->m_id;
+      $match->rt1_id = $row->rt1_id;
+      $match->rt2_id = $row->rt2_id;
       $match->home_team = $row->home_team;
       $match->away_team = $row->away_team;
       $match->date = $row->date;

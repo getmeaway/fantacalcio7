@@ -1136,6 +1136,9 @@ function fantacalcio_theme($existing, $type, $theme, $path) {
     'calendar' => array(
       'render element' => 'elements', 
       'template' => 'templates/page-calendar'), 
+    'main_calendar' => array(
+      'render element' => 'elements', 
+      'template' => 'templates/page-main-calendar'), 
     'group_tabs' => array(
       'render element' => 'elements', 
       'template' => 'templates/page-tabs'), 
