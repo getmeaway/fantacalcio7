@@ -176,7 +176,7 @@
 					<?php else: ?>
 					<td></td>
 					<?php endif; ?>
-					<?php if ($match->played || $match->round == $next_round->round): ?>
+					<?php if ($match->played || (isset($next_round) && $match->round == $next_round->round)): ?>
 					<td>
 					 <?php print l('<i class="fa fa-bar-chart"></i>', "scheda/partita/" . $match->id, array("html" => true)); ?>					 
 					</td>

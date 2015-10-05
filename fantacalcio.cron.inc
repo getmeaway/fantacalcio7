@@ -62,24 +62,24 @@ function fantacalcio_create_lineups_reminder($round) {
 }
 
 function fantacalcio_cron_calculate_results($round) {
- 
+
   // 1. importo formazioni
-  Result::importLineups($round->round);
+  Result::importLineups($round);
 
   // 2. ottengo voti
-  Result::insertVotes($round->round);
+  Result::insertVotes($round);
   
   // 3. trovo titolari
-  Result::findRegulars($round->round);
+  Result::findRegulars($round);
   
   // 4. calcolo modificatori
-  Result::getModifiers($round->round);
+  Result::getModifiers($round);
   
   // 5. calcolo totali
-  Result::getTotals($round->round);
+  Result::getTotals($round);
   
   // 6. chiudo giornata
-  Result::closeRound($round->round);
+  Result::closeRound($round);
 
   watchdog('fantacalcio', t('Risultati calcolati per la giornata: %round'), array('%round' => $round->round), WATCHDOG_NOTICE);
 }

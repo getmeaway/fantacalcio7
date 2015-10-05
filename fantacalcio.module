@@ -1088,10 +1088,10 @@ function fantacalcio_cron() {
 
   //calcola risultati 
   if (time() > $round->end_date && $round->status != 1)
-    fantacalcio_cron_calculate_results($round);
+    fantacalcio_cron_calculate_results($round->round);
 
   //promemoria formazioni
-  if (time() > ($round->date - (6 * 3600)))
+  if (time() > ($round->date - (6 * 3600)) && $round->reminder_sent == false)
     fantacalcio_create_lineups_reminder($round); 
 }
 

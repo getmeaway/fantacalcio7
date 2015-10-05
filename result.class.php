@@ -184,11 +184,11 @@ class Result {
   
     $teams = Team::all();
     
-    $round = Round::getByRound($vote_round); // print_r($round);die();
-    $votes = $round->getVotes(variable_get("fantacalcio_votes_provider", 1)); // get_votes($vote_round);
-    
+    $round = Round::getByRound($vote_round);
+    $votes = $round->getVotes(variable_get("fantacalcio_votes_provider", 1));
+   
     $pl_votes = array();
-    
+
     foreach ($votes as $vote)
       $pl_votes[] = $vote->pl_id;
       

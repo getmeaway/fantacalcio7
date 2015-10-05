@@ -209,8 +209,8 @@ function fantacalcio_results_lineup_check($vote_round) {
   $round = Round::getByRound($vote_round);
 
   //importo formazioni se il termine di invio è scaduto
-  if (time() > $round->date)
-    import_lineups($vote_round);
+  //if (time() > $round->date)
+  //  import_lineups($vote_round);
   
   $lineups = array();
   
@@ -483,7 +483,7 @@ function insert_formazione_admin($competition_name, $t_id) {
   return $out;
 }
 
-function import_lineups($vote_round) {
+function import_lineups_lineups($vote_round) {
   
   // elenco competizioni
   $round = Round::getByRound($vote_round);
@@ -1134,7 +1134,7 @@ function fantacalcio_find_regulars($vote_round) {
     $result = $query->execute();
     
     foreach ($result as $row) {
-      Result::getRegulars($row->t_id, $pl_votes, $competition_round, $c_id);
+      Result::getRegularsTeam($row->t_id, $pl_votes, $competition_round, $c_id);
     }
     
     // report

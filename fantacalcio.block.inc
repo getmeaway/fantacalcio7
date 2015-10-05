@@ -65,12 +65,12 @@ $rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $matc
     }
 
     if (count($rows) > 0) {
-      $out_competitions .= $competition->name . " - " . $competition_round->label;
+      $out_competitions .= "<strong>" . $competition->name . " - " . $competition_round->label . "</strong>";
       $out_competitions .= theme("table", array("rows" => $rows, "attributes" => array("class" => array("table", "table-responsive"))));
     }
   }
   
-  $out = "<h4 class='pull-right clearfix'>" . date("d-m-Y H:i", $round->date) . "</h4>";
+  $out = "<h4 class='pull-right clearfix'><strong>" . date("d-m-Y H:i", $round->date) . "</strong></h4>";
   $out .= "<div class='clearfix'></div>";
   $out .= $out_competitions;
   
@@ -206,10 +206,10 @@ function fantacalcio_block_last_wall_messages($n = 5) {
 
 function fantacalcio_block_wall_message_theme($status) {
 
-  if (strlen($status->message) < 100) 
+  if (strlen($status->message) < 80) 
     $status_text = $status->message;
   else {
-    $truncated = substr($status->message, 0, 100);
+    $truncated = substr($status->message, 0, 80);
     $last_space = strrpos($truncated, " ");
     $status_text = substr($truncated, 0, $last_space) . "...";
   }

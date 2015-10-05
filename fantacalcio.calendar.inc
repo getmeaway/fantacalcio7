@@ -51,8 +51,17 @@ function get_matches_table($competition) {
         }
       }
 
-      $last_round = Round::getLast($competition->id);
-      $next_round = Round::getNext($competition->id);
+      $_last_round = Round::getLastForCompetition($competition->id);
+      if ($_last_round != null)
+        $last_round = $_last_round->competitions[$competition->id]->competition_round;
+      else 
+        $last_round = null;
+      
+      $_next_round = Round::getNextForCompetition($competition->id);
+      if ($_next_round != null)
+        $next_round = $_next_round->competitions[$competition->id]->competition_round;
+      else 
+        $next_round = null;
       
       if ($last_round != null && $last_round > 0 && isset($matches[$last_round])) {
         $last_round_data = new stdClass();

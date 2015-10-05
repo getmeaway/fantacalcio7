@@ -11,10 +11,10 @@
 	z-index: 10;
 }
 
-.lineup-group-container-mobile .player-name, .lineup-group-container-mobile .player-team {
+.lineup-group-container-mobile .player-name,.lineup-group-container-mobile .player-team
+	{
 	font-size: 85%;
 }
-
 </style>
 
 <div id='div-formazione' class="">
@@ -78,8 +78,8 @@
 
 <div class="row">
 	<div id='step-1'>
-	<div class="col-xs-12 visible-xs">
-			<div class='row'>				
+		<div class="col-xs-12 visible-xs">
+			<div class='row'>
 				<div id="check-lineup-nav" class="navbar navbar-static">
 					<div class="navbar-collapse">
 		      			<?php print render($lineup_check); ?>
@@ -89,22 +89,22 @@
 			<div class="row">
 			 <?php if (count($confirm) > 0 ) : ?>
                         	<div class="col-xs-6">
-                                <button type="button" class="center-block btn btn-sm btn-primary"
-                                        data-toggle="modal" data-target="#lineup-confirm-modal">
+					<button type="button" class="center-block btn btn-sm btn-primary"
+						data-toggle="modal" data-target="#lineup-confirm-modal">
                                   <?php print t("Conferma");?>
                                 </button>
-                        	</div>
+				</div>
                         <?php endif;?>
       		    		<div class="col-xs-6">
-        		    	<button id="step-1-back" type="button"
-					class="center-block btn btn-sm btn-warning" data-toggle="modal"
-					data-target="#lineup-delete-modal">
+					<button id="step-1-back" type="button"
+						class="center-block btn btn-sm btn-warning" data-toggle="modal"
+						data-target="#lineup-delete-modal">
   	            		<?php print t("Cancella");?>
   	            		</button>
-  	            		</div>
+				</div>
 			</div>
 			<div class="row">
-			    <div class="col-xs-12">&nbsp;</div>
+				<div class="col-xs-12">&nbsp;</div>
 			</div>
 			<div class='row'>
 				<div class="col-xs-12">
@@ -120,70 +120,80 @@
 			<div class="row">
 				<div class="col-xs-6">
 					<div class="center-block">
-					<button type="button" class="center-block btn btn-default"
-								data-toggle="modal" data-target="#lineup-reset-modal">
+						<button type="button" class="center-block btn btn-default"
+							data-toggle="modal" data-target="#lineup-reset-modal">
           				  <?php print t("Annulla");?>
             				</button>
 					</div>
 				</div>
 				<div class="col-xs-6">
 					<div class="center-block">
-					<button id="step-1-go" type="button"
-								class="center-block btn btn-success" disabled>
+						<button id="step-1-go" type="button"
+							class="center-block btn btn-success" disabled>
             				<?php print t("Avanti");?>
            				</button>
 					</div>
 				</div>
 			</div>
-		<!-- Ordina riserve -->
-		<div class="row hidden" id="step-2">
-			<div class="col-xs-12">
-				<h4>Ordina Riserve</h4>
-				<div class="row">
-					<div class="col-xs-12" id="lineup-reserves-sort"></div>
-				</div>
-				<div class="row">
-					<div class="col-xs-6">
-						<div class="center-block">
-							<button id="step-2-back" type="button"
-								class="center-block btn btn-default">
+		</div>
+	</div>
+
+	<!-- Ordina riserve -->
+	<div id="step-2" class="hidden">
+		<div class="col-xs-12 visible-xs">
+			<div class="row" id="_step-2">
+				<div class="col-xs-12">
+					<h4>Ordina Riserve</h4>
+					<div class="row">
+						<div class="col-xs-12" id="lineup-reserves-sort"></div>
+					</div>
+					<div class="row">
+						<div class="col-xs-6">
+							<div class="center-block">
+								<button id="step-2-back" type="button"
+									class="center-block btn btn-default">
             				<?php print t("Indietro");?>
             				</button>
+							</div>
 						</div>
-					</div>
-					<div class="col-xs-6">
-						<div class="center-block">
-							<button id="step-2-go" type="button"
-								class="center-block btn btn-success">
+						<div class="col-xs-6">
+							<div class="center-block">
+								<button id="step-2-go" type="button"
+									class="center-block btn btn-success">
             				<?php print t("Avanti");?>
             				</button>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-		<!-- Conferma -->
-		<div class="row hidden" id="step-3">
-			<div class="col-xs-12">
-				<h4>Anteprima</h4>
-				<div class="row">
-					<div class="col-xs-12" id="lineup-preview"></div>
-				</div>
-				<div class="row">
-					<div class="col-xs-6">
-						<div class="center-block">
-							<button id="step-3-back" type="button"
-								class="center-block btn btn-default">
+	</div>
+	<!-- Conferma -->
+	<div id="step-3" class="hidden">
+		<div class="col-xs-12 visible-xs">
+			<div class="row" id="-step-3">
+				<div class="col-xs-12">
+					<h4>Anteprima</h4>
+					<div class="row">
+						<div class="col-xs-12" id="lineup-preview"></div>
+					</div>
+					<div class="row">
+						<div class="col-xs-6">
+							<div class="center-block">
+								<button id="step-3-back" type="button"
+									class="center-block btn btn-default">
             				<?php print t("Indietro");?>
             				</button>
+							</div>
 						</div>
-					</div>
-					<div class="col-xs-6">
-						<div class="center-block">
-							<button id="step-3-go" type="button"
-								class="center-block btn btn-success">
+						<div class="col-xs-6">
+							<div class="center-block">
+								<button id="step-3-go" type="button"
+									class="center-block btn btn-success">
             				<?php print t("Conferma");?>
             				</button>
+							</div>
 						</div>
 					</div>
 				</div>
