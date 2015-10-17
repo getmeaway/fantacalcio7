@@ -232,6 +232,7 @@ class Team {
 		$query->join("fanta_players", "p", "s.pl_id = p.pl_id");
 		$query->join("fanta_players_rounds", "r", "s.pl_id = r.pl_id");
 		$query->leftJoin("fanta_real_teams", "rt", "rt.rt_id = r.rt_id");
+		$query->condition("s.status", 1);
 		$query->condition("s.t_id", $this->id);
 		$query->condition("r.round", $round);
 		$query->fields("s");

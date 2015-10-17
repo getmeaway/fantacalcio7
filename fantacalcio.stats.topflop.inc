@@ -136,7 +136,9 @@ function topflop_round_team($t_id, $round) {
   //TOP
   $out .= "<p><strong>TOP</strong></p>";
   $out .= "<p><strong>" . substr($top['module'], 2) . "</strong></p>";
+  $out .= "<div class='overflow-x'>";
   $out .= theme("table", array("header" => $header, "rows" => $top['line_up'], "attributes" => array("class" => array("table", "table-responsive"))));
+  $out .= "</div>";
   
   //TOP - differenza col totale
   $rows_summary = array();
@@ -148,8 +150,10 @@ function topflop_round_team($t_id, $round) {
   //FLOP
   $out .= "<p><strong>FLOP</strong></p>";
   $out .= "<p><strong>" . substr($flop['module'], 2) . "</strong></p>";
+  $out .= "<div class='overflow-x'>";
   $out .= theme("table", array("header" => $header, "rows" => $flop['line_up']));
-  
+  $out .= "</div>";
+
   //FLOP - differenza col totale
   $rows_summary = array();
   $rows_summary[] = array("Totale Partita", $tot_match);
@@ -178,6 +182,7 @@ function top_round_team_lineup($round, $t_id, $c_id) {
       	$query->join("fanta_players", "p", "p.pl_id = v.pl_id");
       	$query->join("fanta_squads", "s", "s.pl_id = p.pl_id");
       	$query->condition("v.round", $round);
+      	$query->condition("v.has_vote", 1);
       	$query->condition("p.role", $role);
       	$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
       	$query->condition("s.t_id", $t_id);
@@ -240,6 +245,7 @@ function top_round_all_lineup($round, $c_id) {
         $query = db_select("fanta_votes", "v");
       	$query->join("fanta_players", "p", "p.pl_id = v.pl_id");
       	$query->condition("v.round", $round);
+      	$query->condition("v.has_vote", 1);
       	$query->condition("p.role", $role);
       	$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
       	$query->fields("v");
@@ -299,6 +305,7 @@ function flop_round_team_lineup($round, $t_id, $c_id) {
       	$query->join("fanta_players", "p", "p.pl_id = v.pl_id");
       	$query->join("fanta_squads", "s", "s.pl_id = p.pl_id");
       	$query->condition("v.round", $round);
+      	$query->condition("v.has_vote", 1);
       	$query->condition("p.role", $role);
       	$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
       	$query->condition("s.t_id", $t_id);
@@ -367,6 +374,7 @@ function flop_round_all_lineup($round, $c_id) {
         $query = db_select("fanta_votes", "v");
       	$query->join("fanta_players", "p", "p.pl_id = v.pl_id");
       	$query->condition("v.round", $round);
+      	$query->condition("v.has_vote", 1);
       	$query->condition("p.role", $role);
       	$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
       	$query->fields("v");
@@ -429,7 +437,9 @@ function topflop_all_round($round) {
   //TOP
   $out .= "<p><strong>TOP</strong></p>";
   $out .= "<p><strong>" . substr($top['module'], 2) . "</strong></p>";
+  $out .= "<div class='overflow-x'>";
   $out .= theme("table", array("header" => $header, "rows" => $top['line_up']));
+  $out .= "</div>";
   
   //TOP - differenza col totale
   $rows_summary = array();
@@ -439,8 +449,10 @@ function topflop_all_round($round) {
   //FLOP
   $out .= "<p><strong>FLOP</strong></p>";
   $out .= "<p><strong>" . substr($flop['module'], 2) . "</strong></p>";
+  $out .= "<div class='overflow-x'>";
   $out .= theme("table", array("header" => $header, "rows" => $flop['line_up']));
-  
+  $out .= "</div>";
+
   //FLOP - differenza col totale
   $rows_summary = array();
   $rows_summary[] = array("Totale Flop", array("data" => $flop['total'], "class" => "bold"));

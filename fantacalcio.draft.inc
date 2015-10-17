@@ -230,7 +230,7 @@ function team_players_list($g_id, $t_id) {
         $data = array();
         $data[] = array(
           "data" => fantacalcio_show_role($player->role), 
-          "class" => "role");
+          );
         $data[] = array("data" => $player->name);
         $data[] = array(
           "data" => ucwords($player->team));
@@ -239,7 +239,7 @@ function team_players_list($g_id, $t_id) {
         
         $rows[$i . "_" . $pl_id] = array(
           "data" => $data, 
-          "class" => array("role_" . $i));
+          );
       }
     }
     else 
@@ -362,17 +362,16 @@ function team_ex_players($g_id, $t_id) {
   
   if ($team_ex_players) {
     foreach ($team_ex_players as $pl_id => $player) {
-      $data = array();
-      $data[] = array("data" => fantacalcio_show_role($player->role), "class" => "role");
-      $data[] = array("data" => $player->name);
-      $data[] = array("data" => ucwords($real_teams[$player->rt_id]->long_name));
-      $data[] = array("data" => $player->cost, "class" => "num");
-      $data[] = drupal_get_form('team_action_player_form', $t_id, $pl_id, 'restore');
-      $data[] = l("<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>", "scheda/giocatore/" . $pl_id, array(
-        "html" => "true", 
-        "attributes" => array("class" => array("thickbox"), "rel" => "lightframe")));
+      $restore_form = drupal_get_form('team_action_player_form', $t_id, $pl_id, 'restore');
       
-      $rows[] = array("data" => $data, "class" => "role_" . $player->role);
+      $data = array();
+      $data[] = array("data" => fantacalcio_show_role($player->role));
+      $data[] = array("data" => $player->name);
+      $data[] = array("data" => ucwords($player->team));
+      $data[] = array("data" => $player->cost, "class" => array("num"));
+      $data[] = array("data" => $restore_form); 
+            
+      $rows[] = array("data" => $data);
     }
     return "<h3>Ex</h3>" . theme("table", array("header" => array(), "rows" => $rows, "attributes" => array("class" => array("table", "table-responsive"))));
   }

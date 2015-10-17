@@ -1652,7 +1652,7 @@ function fantacalcio_admin_matches($g_id = "", $round = "", $add = FALSE) {
     }
     else {
       if (rounds_count($g_id))
-        return drupal_get_form('fantacalcio_choose_round', $g_id) . fantacalcio_get_back("league/partite", $g_id);
+        return drupal_get_form('fantacalcio_choose_round', $g_id) . fantacalcio_get_back("admin/fantacalcio/rounds", $g_id);
       else {
         drupal_set_message("Devi prima creare una giornata per il girone");
         drupal_goto("admin/fantacalcio/rounds/add");
@@ -1683,7 +1683,7 @@ function fantacalcio_choose_group($form_state) {
 
 function fantacalcio_choose_group_submit($form, &$form_state) {
   if (Group::exists($form_state['values']['group']))
-    drupal_goto("admin/fantacalcio/matches/" . $form_state['values']['group']);
+    drupal_goto("admin/fantacalcio/matches/" . $form_state['values']['group'] . "/calendar");
 }
 
 function fantacalcio_choose_round($form_state, $g_id) {
@@ -2264,7 +2264,7 @@ function fantacalcio_admin_round($form, &$form_state, $round = "") {
     
     $form['status'] = array(
       '#type' => 'select', 
-      '#default_value' => $round_data->status_id, 
+      '#default_value' => isset($round_data->status_id) ? $round_data->status_id : 0, 
       '#options' => Round::getStatuses());
     
     // per ogni competizione
@@ -2373,8 +2373,6 @@ function fantacalcio_admin_round_submit($form, &$form_state) {
   }
   elseif ($form_state["values"]["action"] == "create") {
     // replace round
-    $query = db_delete("fanta_rounds");
-    $query->condition("round", $form_state["values"]["round"]);
     
     $query = db_insert("fanta_rounds");
     $query->fields(array(
@@ -2382,7 +2380,6 @@ function fantacalcio_admin_round_submit($form, &$form_state) {
       "date" => $ts_start, 
       "end_date" => $ts_end, 
       "status" => $form_state["values"]["status"]));
-    $query->condition("round", $form_state["values"]["round"]);
     $result = $query->execute();
     
     $message = t("Giornata creata");
@@ -2727,6 +2724,7 @@ function insert_players($players, $round) {
     
     $result = $query->execute();
     
+    $last_players = array();
     foreach($result as $row) {
       db_insert("fanta_players_rounds")->fields(array(
       "pl_id" => $row->pl_id,
@@ -2735,18 +2733,19 @@ function insert_players($players, $round) {
       "not_rounded_quotation" => 0,
       "round" => $round,
       "active" => 0))->execute();
+      
+      $last_players[] = $row->pl_id;
     }
     
     // aggiorno i giocatori già presenti
     if (count($tmp_players) > 0) {
       foreach ($tmp_players as $player) {
         db_update("fanta_players_rounds")->fields(array(
-          "pl_id" => $player->pl_id, 
+//          "pl_id" => $player->pl_id, 
           "rt_id" => $player->team, 
           "quotation" => $player->quotation, 
           "not_rounded_quotation" => $player->not_rounded_quotation, 
-          "round" => $round, 
-          "active" => 1))->condition("pl_id", $player->pl_id)->execute();
+          "active" => 1))->condition("pl_id", $player->pl_id)->condition("round", $round)->execute();
       }
     }
     
@@ -2771,7 +2770,7 @@ function insert_players($players, $round) {
     // disattivo i vecchi giocatori
     $old_players = array();
     foreach ($players_ids as $pl_id) {
-      if (!in_array($pl_id, array_keys($tmp_players))) {
+      if (!in_array($pl_id, array_keys($tmp_players)) && !in_array($pl_id, $last_players)) {
         db_insert("fanta_players_rounds")->fields(array(
           "pl_id" => $pl_id, 
           "rt_id" => NULL, 
@@ -2783,24 +2782,6 @@ function insert_players($players, $round) {
         $old_players[] = $pl_id;
       }
     }
-    
-    // // giocatori nuovi
-    // $query_line = "";
-    // $sql = "SELECT pl_id
-    // FROM {fanta_players_teams}
-    // WHERE pl_id NOT IN (SELECT pl_id FROM {fanta_players})";
-    // $result = db_query($sql);
-    // while ($row = db_fetch_object($result)) {
-    // $pl_id = $row->pl_id;
-    // if ($players[$pl_id])
-    // $query_line .= '(' . $pl_id . ', "' . $players[$pl_id]['name'] . '", ' . $players[$pl_id]['role'] . '), ';
-    // $new_players++;
-    // }
-    // if ($query_line) {
-    // $query_line = substr($query_line, 0, -2);
-    // $sql = "INSERT INTO {fanta_players} (pl_id, name, role) VALUES " . $query_line;
-    // $result = db_query($sql);
-    // }
     
     drupal_set_message(check_plain("Giocatori aggiornati: " . count($tmp_players)));
     drupal_set_message(check_plain("Giocatori disattivati: " . count($old_players)));

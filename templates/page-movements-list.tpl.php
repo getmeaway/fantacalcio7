@@ -26,7 +26,9 @@
 		</div>
 		<div class='row'>
 			<div class='col-md-12 col-lg-12'>
+				<div class='overflow-x'>			
 				<?php print render($movements); ?>
+				</div>
 			</div>
 		</div>
 	</div>

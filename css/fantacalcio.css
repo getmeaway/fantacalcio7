@@ -722,3 +722,8 @@ text-align:left;
 .not_played {
 	opacity: 0.35;
 }
+
+.overflow-x {
+	width: 100%;
+	overflow-x: scroll;
+}

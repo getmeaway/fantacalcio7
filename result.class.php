@@ -78,8 +78,8 @@ class Result {
             "win_goals" => $vote->win_goals,
             "draw_goals" => $vote->draw_goals,
             "regular" => $vote->regular,
-            "substituted" => $vote->substituted
-    
+            "substituted" => $vote->substituted,
+   	    "has_vote" => $vote->has_vote 
         ));
         // print $query->arguments();
         $query->execute();

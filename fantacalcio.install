@@ -8,51 +8,142 @@
 function fantacalcio_schema() {
   $schema = array();
 
-$schema['fanta_competitions'] = array(
-  'description' => 'TODO: please describe this table!',
+$schema['fanta_users'] = array(
+
   'fields' => array(
-    'c_id' => array(
-      'description' => 'TODO: please describe this field!',
+    'uid' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'allowed_teams' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'payed' => array(
+      'type' => 'numeric',
+      'not null' => TRUE,
+      'precision' => '10',
+      'scale' => '0',
+    ),
+  ),
+  'primary key' => array('uid'),
+);
+
+$schema['fanta_teams'] = array(
+
+  'fields' => array(
+    't_id' => array(
       'type' => 'serial',
       'not null' => TRUE,
     ),
     'name' => array(
-      'description' => 'TODO: please describe this field!',
+      'type' => 'varchar',
+      'length' => '64',
+      'not null' => TRUE,
+      'default' => '',
+    ),
+    'coach' => array(
+      'type' => 'varchar',
+      'length' => '64',
+      'not null' => TRUE,
+      'default' => '',
+    ),
+    'stadium' => array(
+      'type' => 'varchar',
+      'length' => '64',
+      'not null' => TRUE,
+      'default' => '',
+    ),
+    'shirt' => array(
       'type' => 'varchar',
       'length' => '64',
       'not null' => TRUE,
       'default' => '',
     ),
     'active' => array(
-      'description' => 'TODO: please describe this field!',
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'uid' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'last_year' => array(
+      'type' => 'varchar',
+      'length' => '255',
+      'not null' => FALSE,
+    ),
+    'honours' => array(
+      'type' => 'text',
+      'not null' => FALSE,
+    ),
+    'register_date' => array(
+      'type' => 'int',
+      'not null' => FALSE,
+    ),
+    'completed_date' => array(
+      'type' => 'int',
+      'not null' => FALSE,
+    ),
+  ),
+  'primary key' => array('t_id'),
+  'indexes' => array(
+    'uid' => array('uid'),
+  ),
+);
+
+$schema['fanta_competitions'] = array(
+
+  'fields' => array(
+    'c_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    'name' => array(
+      'type' => 'varchar',
+      'length' => '64',
+      'not null' => TRUE,
+      'default' => '',
+    ),
+    'active' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'type' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'is_default' => array(
       'type' => 'int',
       'size' => 'tiny',
       'not null' => TRUE,
       'default' => 0,
     ),
     'has_matches' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'size' => 'tiny',
       'not null' => TRUE,
       'default' => 0,
     ),
     'has_standings' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'size' => 'tiny',
       'not null' => TRUE,
       'default' => 0,
     ),
     'has_lineups' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'size' => 'tiny',
       'not null' => TRUE,
       'default' => 0,
     ),
-    'has_newsletter' => array(
-      'description' => 'TODO: please describe this field!',
+    'has_newsletters' => array(
       'type' => 'int',
       'size' => 'tiny',
       'not null' => TRUE,
@@ -62,69 +153,54 @@ $schema['fanta_competitions'] = array(
   'primary key' => array('c_id'),
   'indexes' => array(
     'active' => array('active'),
-    'lineups' => array('lineups'),
-    'matches' => array('matches'),
-    'newsletter' => array('newsletter'),
-    'standings' => array('standings'),
+    'is_default' => array('is_default'),
+    'lineups' => array('has_lineups'),
+    'matches' => array('has_matches'),
+    'newsletter' => array('has_newsletters'),
+    'standings' => array('has_standings'),
   ),
 );
 
-
 $schema['fanta_groups'] = array(
-  'description' => 'TODO: please describe this table!',
+
   'fields' => array(
     'g_id' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'serial',
       'not null' => TRUE,
     ),
     'c_id' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     'name' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'varchar',
       'length' => '64',
       'not null' => TRUE,
       'default' => '',
     ),
     'active' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
-    'standings' => array(
-      'description' => 'TODO: please describe this field!',
+    'standings_order' => array(
       'type' => 'int',
       'size' => 'tiny',
       'not null' => TRUE,
       'default' => 0,
     ),
-    'matches' => array(
-      'description' => 'TODO: please describe this field!',
+    'matches_order' => array(
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
-    'lineups' => array(
-      'description' => 'TODO: please describe this field!',
+    'lineups_order' => array(
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
-    'newsletter_standings' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'newsletter_matches' => array(
-      'description' => 'TODO: please describe this field!',
+    'newsletters_order' => array(
       'type' => 'int',
       'size' => 'tiny',
       'not null' => TRUE,
@@ -135,320 +211,769 @@ $schema['fanta_groups'] = array(
   'indexes' => array(
     'active' => array('active'),
     'c_id' => array('c_id'),
-    'lineups' => array('lineups'),
-    'matches' => array('matches'),
-    'newsletter_matches' => array('newsletter_matches'),
-    'newsletter_standings' => array('newsletter_standings'),
-    'standings' => array('standings'),
+    'lineups' => array('lineups_order'),
+    'matches' => array('matches_order'),
+    'newsletter_standings' => array('newsletters_order'),
+    'standings' => array('standings_order'),
   ),
 );
 
+$schema['fanta_rounds'] = array(
 
-$schema['fanta_lineups'] = array(
-  'description' => 'TODO: please describe this table!',
   'fields' => array(
-    'f_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    'pl_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    't_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'c_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
     'round' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
-    'position' => array(
-      'description' => 'TODO: please describe this field!',
+    'date' => array(
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
-    'has_played' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'penalty_position' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'timestamp' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'uid' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-  ),
-  'primary key' => array('f_id'),
-  'indexes' => array(
-    'c_id' => array('c_id'),
-    'has_played' => array('has_played'),
-    'pl_id' => array('pl_id'),
-    'position' => array('position'),
-    'round' => array('round'),
-    't_id' => array('t_id'),
-  ),
-);
-
-$schema['fanta_lineups_inserts'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    'i_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    't_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'c_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'round' => array(
-      'description' => 'TODO: please describe this field!',
+    'end_date' => array(
       'type' => 'int',
       'not null' => TRUE,
     ),
     'status' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
+      'size' => 'tiny',
       'not null' => TRUE,
+      'default' => 0,
     ),
-    'timestamp' => array(
-      'description' => 'TODO: please describe this field!',
+    'reminder_sent' => array(
       'type' => 'int',
       'not null' => TRUE,
+      'default' => 0,
     ),
   ),
-  'primary key' => array('i_id'),
+  'primary key' => array('round'),
   'indexes' => array(
-    'c_id' => array('c_id'),
-    'round' => array('round'),
     'status' => array('status'),
-    't_id' => array('t_id'),
   ),
 );
 
-$schema['fanta_matches'] = array(
-  'description' => 'TODO: please describe this table!',
+$schema['fanta_players'] = array(
+
   'fields' => array(
-    'm_id' => array(
-      'description' => 'TODO: please describe this field!',
+    'pl_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    'name' => array(
+      'type' => 'varchar',
+      'length' => '64',
+      'not null' => TRUE,
+      'default' => '',
+    ),
+    'role' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+  ),
+  'primary key' => array('pl_id'),
+  'indexes' => array(
+    'role' => array('role'),
+  ),
+);
+
+$schema['fanta_real_teams'] = array(
+
+  'fields' => array(
+    'rt_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    'name' => array(
+      'type' => 'varchar',
+      'length' => '64',
+      'not null' => TRUE,
+    ),
+    'active' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+  ),
+  'primary key' => array('rt_id'),
+);
+
+$schema['fanta_round_statuses'] = array(
+
+  'fields' => array(
+    's_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'status' => array(
+      'type' => 'varchar',
+      'length' => '32',
+      'not null' => TRUE,
+    ),
+    'result' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+    ),
+  ),
+  'primary key' => array('s_id'),
+);
+
+$schema['fanta_rounds_competitions'] = array(
+
+  'fields' => array(
+    'rc_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    'round' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'c_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'competition_round' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'round_label' => array(
+      'type' => 'varchar',
+      'length' => '40',
+      'not null' => TRUE,
+    ),
+    'next' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+    ),
+  ),
+  'primary key' => array('rc_id'),
+  'indexes' => array(
+    'competition_round' => array('competition_round'),
+    'c_id' => array('c_id'),
+    'next' => array('next'),
+    'round' => array('round'),
+  ),
+);
+
+$schema['fanta_teams_groups'] = array(
+
+  'fields' => array(
+    'tg_id' => array(
       'type' => 'serial',
       'not null' => TRUE,
     ),
     'g_id' => array(
-      'description' => 'TODO: please describe this field!',
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    't_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'active' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+  ),
+  'primary key' => array('tg_id'),
+  'indexes' => array(
+    'active' => array('active'),
+    'g_id' => array('g_id'),
+    't_id' => array('t_id'),
+  ),
+);
+
+$schema['fanta_teams_rounds'] = array(
+
+  'fields' => array(
+    'tr_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    't_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'c_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'round' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'points' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'mode' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'round_position' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'season_position' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+  ),
+  'primary key' => array('tr_id'),
+  'indexes' => array(
+    't_id' => array('t_id', 'round'),
+  ),
+);
+
+$schema['fanta_real_teams_matches'] = array(
+
+  'fields' => array(
+    'm_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    'round' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'rt1_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'rt2_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'goals_1' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'goals_2' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'datetime' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'forfeit' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+    ),
+    'winner_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'played' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+    ),
+  ),
+  'primary key' => array('m_id'),
+  'indexes' => array(
+    'played' => array('played'),
+    'round' => array('round'),
+    'rt1_id' => array('rt1_id', 'rt2_id'),
+    'rt2_id' => array('rt2_id'),
+  ),
+);
+
+$schema['fanta_players_rounds'] = array(
+
+  'fields' => array(
+    'pl_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'round' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'rt_id' => array(
+      'type' => 'int',
+      'not null' => FALSE,
+    ),
+    'quotation' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'not_rounded_quotation' => array(
+      'type' => 'float',
+      'not null' => TRUE,
+    ),
+    'active' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+    ),
+  ),
+  'primary key' => array('pl_id', 'round'),
+  'indexes' => array(
+    'active' => array('active'),
+    'pl_id' => array('pl_id'),
+    'round' => array('round'),
+    'rt_id' => array('rt_id'),
+  ),
+);
+
+$schema['fanta_players_status'] = array(
+
+  'fields' => array(
+    'pl_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'round' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'status' => array(
+      'type' => 'varchar',
+      'length' => '32',
+      'not null' => TRUE,
+    ),
+    'position' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'percent' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'updated' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+  ),
+  'primary key' => array('pl_id', 'round'),
+  'indexes' => array(
+    'pl_id' => array('pl_id'),
+    'round' => array('round'),
+  ),
+);
+
+$schema['fanta_squads'] = array(
+
+  'fields' => array(
+    's_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    't_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'pl_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'cost' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'status' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'timestamp' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+  ),
+  'primary key' => array('s_id'),
+  'indexes' => array(
+    'in_team' => array('status'),
+    'pl_id' => array('pl_id'),
+    't_id' => array('t_id'),
+  ),
+);
+
+$schema['fanta_squads_movements'] = array(
+
+  'fields' => array(
+    'm_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    'pl_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    't_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'status' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+    ),
+    'value' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'timestamp' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'temporary' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+  ),
+  'primary key' => array('m_id'),
+);
+
+$schema['fanta_squad_changes'] = array(
+  'description' => 'Tabella per lo scambio di giocatori.',
+  'fields' => array(
+    's_id' => array(
+      'type' => 'serial',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+    ),
+    't1_id' => array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    't2_id' => array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'money' => array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'active' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+  ),
+  'primary key' => array('s_id'),
+  'unique keys' => array(
+    's_id' => array('s_id')
+  ),
+);
+
+$schema['fanta_vote_providers'] = array(
+
+  'fields' => array(
+    'p_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    'name' => array(
+      'type' => 'varchar',
+      'length' => '64',
+      'not null' => TRUE,
+    ),
+    'active' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+    ),
+  ),
+  'primary key' => array('p_id'),
+);
+
+$schema['fanta_votes'] = array(
+
+  'fields' => array(
+    'v_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    'pl_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'round' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'provider' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'total' => array(
+      'type' => 'float',
+      'not null' => TRUE,
+      'default' => 0,
+      'precision' => '3',
+      'scale' => '1',
+    ),
+    'vote' => array(
+      'type' => 'float',
+      'not null' => TRUE,
+      'default' => 0,
+      'precision' => '3',
+      'scale' => '1',
+    ),
+    'goals_for' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'penalty_goals' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'goals_against' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'assists' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'yellow_cards' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'red_cards' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'saved_penalties' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'missed_penalties' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'own_goals' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'draw_goals' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'win_goals' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'regular' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'substituted' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'has_vote' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+  ),
+  'primary key' => array('v_id'),
+  'indexes' => array(
+    'played' => array('has_vote'),
+    'pl_id' => array('pl_id'),
+    'provider' => array('provider'),
+    'round' => array('round'),
+  ),
+);
+
+$schema['fanta_matches'] = array(
+
+  'fields' => array(
+    'm_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    'g_id' => array(
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     't1_id' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     't2_id' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     'pt_1' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
-    'mod_por_1' => array(
-      'description' => 'TODO: please describe this field!',
+    'mod_1_role_0' => array(
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
-    'mod_dif_1' => array(
-      'description' => 'TODO: please describe this field!',
+    'mod_1_role_1' => array(
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
-    'mod_centr_1' => array(
-      'description' => 'TODO: please describe this field!',
+    'mod_1_role_2' => array(
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
-    'mod_att_1' => array(
-      'description' => 'TODO: please describe this field!',
+    'mod_1_role_3' => array(
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
     'tot_1' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
     'goals_1' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     'pt_ot_1' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'float',
       'not null' => TRUE,
+      'default' => '0',
     ),
     'goals_ot_1' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     'penalties_1' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     'pt_2' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
-    'mod_por_2' => array(
-      'description' => 'TODO: please describe this field!',
+    'mod_2_role_0' => array(
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
-    'mod_dif_2' => array(
-      'description' => 'TODO: please describe this field!',
+    'mod_2_role_1' => array(
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
-    'mod_centr_2' => array(
-      'description' => 'TODO: please describe this field!',
+    'mod_2_role_2' => array(
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
-    'mod_att_2' => array(
-      'description' => 'TODO: please describe this field!',
+    'mod_2_role_3' => array(
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
     'tot_2' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'float',
       'not null' => TRUE,
       'default' => '0',
     ),
     'goals_2' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     'pt_ot_2' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'float',
       'not null' => TRUE,
+      'default' => '0',
     ),
     'goals_ot_2' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     'penalties_2' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     'round' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     'played' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'size' => 'tiny',
       'not null' => TRUE,
       'default' => 0,
     ),
     'winner_id' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
       'default' => 0,
     ),
     'bonus_t1' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
-      'not null' => TRUE,
+      'not null' => FALSE,
       'default' => 0,
     ),
     'bonus_t2' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
-      'not null' => TRUE,
+      'not null' => FALSE,
       'default' => 0,
     ),
     'match_label' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'char',
       'length' => '2',
       'not null' => FALSE,
     ),
     't1_label' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'varchar',
       'length' => '20',
       'not null' => TRUE,
       'default' => '',
     ),
     't2_label' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'varchar',
       'length' => '20',
       'not null' => TRUE,
@@ -466,75 +991,166 @@ $schema['fanta_matches'] = array(
   ),
 );
 
+$schema['fanta_lineups'] = array(
+
+  'fields' => array(
+    'l_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    'pl_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    't_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'c_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'round' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'position' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'has_played' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'penalty_position' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'timestamp' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'uid' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+  ),
+  'primary key' => array('l_id'),
+  'indexes' => array(
+    'c_id' => array('c_id'),
+    'has_played' => array('has_played'),
+    'pl_id' => array('pl_id'),
+    'position' => array('position'),
+    'round' => array('round'),
+    't_id' => array('t_id'),
+  ),
+);
+
+$schema['fanta_lineups_inserts'] = array(
+
+  'fields' => array(
+    'i_id' => array(
+      'type' => 'serial',
+      'not null' => TRUE,
+    ),
+    't_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'c_id' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'round' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'status' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+    'timestamp' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+    ),
+  ),
+  'primary key' => array('i_id'),
+  'indexes' => array(
+    'c_id' => array('c_id'),
+    'round' => array('round'),
+    'status' => array('status'),
+    't_id' => array('t_id'),
+  ),
+);
+
 $schema['fanta_payments'] = array(
-  'description' => 'TODO: please describe this table!',
+
   'fields' => array(
     't_id' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
     ),
     'initial_quota' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
+      'default' => 0,
     ),
     'initial_quota_fine' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'size' => 'tiny',
       'not null' => TRUE,
       'default' => 0,
     ),
     'payed' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
+      'default' => 0,
     ),
     'win_quota' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
+      'default' => 0,
     ),
     'lost_quota' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
+      'default' => 0,
     ),
   ),
   'primary key' => array('t_id'),
 );
 
 $schema['fanta_penalties'] = array(
-  'description' => 'TODO: please describe this table!',
+
   'fields' => array(
     'penalty_id' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'serial',
       'not null' => TRUE,
     ),
     'pl_id' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
     ),
     'c_id' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
     ),
     'round' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
     ),
     'order' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'not null' => TRUE,
     ),
     'goal' => array(
-      'description' => 'TODO: please describe this field!',
       'type' => 'int',
       'size' => 'tiny',
       'not null' => TRUE,
@@ -548,600 +1164,9 @@ $schema['fanta_penalties'] = array(
   ),
 );
 
-$schema['fanta_players'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    'pl_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'name' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '64',
-      'not null' => TRUE,
-      'default' => '',
-    ),
-    'role' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-  ),
-  'primary key' => array('pl_id'),
-  'indexes' => array(
-    'role' => array('role'),
-  ),
-);
-
-$schema['fanta_players_status'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    's_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    'pl_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'round' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'status' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '32',
-      'not null' => TRUE,
-    ),
-    'note' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '255',
-      'not null' => TRUE,
-    ),
-  ),
-  'primary key' => array('s_id'),
-  'indexes' => array(
-    'pl_id' => array('pl_id', 'round'),
-    'round' => array('round'),
-  ),
-);
-
-$schema['fanta_players_teams'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    'pt_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    'pl_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'round' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'rt_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'active' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-    ),
-  ),
-  'primary key' => array('pt_id'),
-  'indexes' => array(
-    'active' => array('active'),
-    'pl_id' => array('pl_id'),
-    'round' => array('round'),
-    'rt_id' => array('rt_id'),
-  ),
-);
-
-$schema['fanta_real_teams'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    'rt_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    'long_name' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '64',
-      'not null' => TRUE,
-    ),
-    'short_name' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '8',
-      'not null' => TRUE,
-    ),
-    'active' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-    ),
-  ),
-  'primary key' => array('rt_id'),
-);
-
-$schema['fanta_real_teams_matches'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    'm_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    'round' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'rt1_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'rt2_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'active' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-    ),
-  ),
-  'primary key' => array('m_id'),
-  'indexes' => array(
-    'round' => array('round'),
-    'rt1_id' => array('rt1_id', 'rt2_id'),
-    'rt2_id' => array('rt2_id'),
-  ),
-);
-
-$schema['fanta_round_statuses'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    's_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'status' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '32',
-      'not null' => TRUE,
-    ),
-    'result' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-    ),
-  ),
-  'primary key' => array('s_id'),
-);
-
-$schema['fanta_rounds'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    'round' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'date' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'end_date' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'status' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-  ),
-  'primary key' => array('round'),
-);
-
-$schema['fanta_rounds_competitions'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    'rc_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    'round' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'c_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'competition_round' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'round_label' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '40',
-      'not null' => TRUE,
-    ),
-    'next' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-    ),
-  ),
-  'primary key' => array('rc_id'),
-  'indexes' => array(
-    'competition_round' => array('competition_round'),
-    'c_id' => array('c_id'),
-    'next' => array('next'),
-    'round' => array('round'),
-  ),
-);
-
-$schema['fanta_squad_changes'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    's_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    't1_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    't2_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'money' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'active' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-  ),
-  'primary key' => array('s_id'),
-);
-
-$schema['fanta_squads'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    'r_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    't_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'pl_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'cost' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'in_team' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-  ),
-  'primary key' => array('r_id'),
-  'indexes' => array(
-    'in_team' => array('in_team'),
-    'pl_id' => array('pl_id'),
-    't_id' => array('t_id'),
-  ),
-);
-
-$schema['fanta_teams'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    't_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    'name' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '64',
-      'not null' => TRUE,
-      'default' => '',
-    ),
-    'coach' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '64',
-      'not null' => TRUE,
-      'default' => '',
-    ),
-    'stadium' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '64',
-      'not null' => TRUE,
-      'default' => '',
-    ),
-    'shirt' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '64',
-      'not null' => TRUE,
-      'default' => '',
-    ),
-    'active' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'uid' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'last_year' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '255',
-      'not null' => TRUE,
-    ),
-    'history' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'text',
-      'not null' => TRUE,
-    ),
-  ),
-  'primary key' => array('t_id'),
-);
-
-$schema['fanta_teams_groups'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    'tg_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    'g_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    't_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'active' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-  ),
-  'primary key' => array('tg_id'),
-  'indexes' => array(
-    'g_id' => array('g_id'),
-    't_id' => array('t_id'),
-  ),
-);
-
-$schema['fanta_vote_providers'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    'p_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    'name' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'varchar',
-      'length' => '64',
-      'not null' => TRUE,
-    ),
-    'active' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-    ),
-  ),
-  'primary key' => array('p_id'),
-);
-
-$schema['fanta_votes'] = array(
-  'description' => 'TODO: please describe this table!',
-  'fields' => array(
-    'v_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    'pl_id' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'round' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'provider' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'total' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'float',
-      'not null' => TRUE,
-      'default' => 0,
-      'precision' => '3',
-      'scale' => '1',
-    ),
-    'vote' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'float',
-      'not null' => TRUE,
-      'default' => 0,
-      'precision' => '3',
-      'scale' => '1',
-    ),
-    'goals_for' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'penalty_goals' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'goals_against' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'assists' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'yellow_cards' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'red_cards' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'saved_penalties' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'missed_penalties' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'own_goals' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'draw_goals' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-    'win_goals' => array(
-      'description' => 'TODO: please describe this field!',
-      'type' => 'int',
-      'not null' => TRUE,
-      'default' => 0,
-    ),
-  ),
-  'primary key' => array('v_id'),
-  'indexes' => array(
-    'pl_id' => array('pl_id'),
-    'provider' => array('provider'),
-    'round' => array('round'),
-  ),
-);
-
 
     
-  return array();//$schema;
+  return $schema;
 }
 
 #Installa il Plug In
@@ -1174,60 +1199,119 @@ function fantacalcio_install() {
 // 			'administer fantacalcio' => TRUE,
 // 	);
 // 	user_role_change_permissions($administrator_rid, $administrator_permissions);
-	
+*/	
   //variabili di sistema
-  
-  variable_set("fantacalcio_riserve_fisse", 0);
-  variable_set("fantacalcio_coppa_competition", "2");
-  variable_set("fantacalcio_credits", "350");
-  variable_set("fantacalcio_default_vote_1", "6");
-  variable_set("fantacalcio_default_vote_2", "5.5");
-  variable_set("fantacalcio_main_competition", "1");
-  variable_set("fantacalcio_modificatore_attacco", 0);
-  variable_set("fantacalcio_modificatore_centrocampo", 1);
-  variable_set("fantacalcio_modificatore_difesa", 1);
-  variable_set("fantacalcio_modificatore_portiere", 1);
-  variable_set("fantacalcio_moduli_riserve", "");
-  variable_set("fantacalcio_moduli_titolari", "");
-  variable_set("fantacalcio_newsletter_round", 1);
-  variable_set("fantacalcio_number_role_0", "3");
-  variable_set("fantacalcio_number_role_1", "8");
-  variable_set("fantacalcio_number_role_2", "8");
-  variable_set("fantacalcio_number_role_3", "6");
-  variable_set("fantacalcio_points_assist", "1");
-  variable_set("fantacalcio_points_goal", "3");
-  variable_set("fantacalcio_points_goal_in", "-1");
-  variable_set("fantacalcio_points_own_goal", "-2");
-  variable_set("fantacalcio_points_penalty", "3");
-  variable_set("fantacalcio_points_penalty_fault", "-3");
-  variable_set("fantacalcio_points_penalty_kept", "3");
-  variable_set("fantacalcio_points_red_card", "-1");
-  variable_set("fantacalcio_points_yellow_card", "-0.5");
-  variable_set("fantacalcio_riserve_fisse", 1);
-  variable_set("fantacalcio_scarto", 0);
-  variable_set("fantacalcio_scarto_punti", "0");
-  variable_set("fantacalcio_feed_url", "");
-  variable_set("fantacalcio_stats_img_width", 770);
-  variable_set("fantacalcio_stats_img_height", 450);
+  variable_set('fantacalcio_user_can_create_team', 0);
+variable_set('fantacalcio_show_teams_filter', 0);
+variable_set('fantacalcio_main_league', '');
+variable_set('fantacalcio_assign_default_role', 0);
+variable_set('fantacalcio_user_teams_limit', 0);
+variable_set('fantacalcio_team_change_name', 0);
+variable_set('fantacalcio_number_players', 0);
+variable_set('fantacalcio_number_role_0', 0);
+variable_set('fantacalcio_credits', 0);
+variable_set('fantacalcio_free_movements', 0);
+variable_set('fantacalcio_max_movements', 0);
+variable_set('fantacalcio_number_role_1', 0);
+variable_set('fantacalcio_number_role_2', 0);
+variable_set('fantacalcio_number_role_3', 0);
+variable_set('fantacalcio_admin_contact_url', '');
+variable_set('fantacalcio_regulars_modules', '');
+variable_set('fantacalcio_reserves_modules', '');
+variable_set('fantacalcio_modifier_role_0', 0);
+variable_set('fantacalcio_modifier_role_1', 0);
+variable_set('fantacalcio_modifier_role_2', 0);
+variable_set('fantacalcio_modifier_role_3', 0);
+variable_set('fantacalcio_max_substitutions', 0);
+variable_set('fantacalcio_default_vote_1', 0);
+variable_set('fantacalcio_default_vote_2', 0);
+variable_set('fantacalcio_gap_victory', 0);
+variable_set('fantacalcio_gap_victory_points', 0);
+variable_set('fantacalcio_points_goals_for', 0);
+variable_set('fantacalcio_points_goals_against', 0);
+variable_set('fantacalcio_points_penalty_goals', 0);
+variable_set('fantacalcio_points_missed_penalties', 0);
+variable_set('fantacalcio_points_saved_penalties', 0);
+variable_set('fantacalcio_points_yellow_cards', 0);
+variable_set('fantacalcio_points_red_cards', 0);
+variable_set('fantacalcio_points_own_goals', 0);
+variable_set('fantacalcio_points_assists', 0);
+variable_set('fantacalcio_points_draw_goals', 0);
+variable_set('fantacalcio_points_win_goals', 0);
+variable_set('fantacalcio_votes_provider', 0);
 
-  variable_set("fantacalcio_results_step", 1);
-  variable_set("fantacalcio_results_round", 1);
+db_insert("fanta_real_teams")->fields(array("rt_id" => 1, "name" => "Atalanta", "active" => 1))->execute(); 
+db_insert("fanta_real_teams")->fields(array("rt_id" => 2, "name" => "Bologna", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 3, "name" => "Carpi", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 4, "name" => "Chievo", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 5, "name" => "Empoli", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 6, "name" => "Fiorentina", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 7, "name" => "Frosinone", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 8, "name" => "Genoa", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 9, "name" => "Inter", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 10, "name" => "Juventus", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 11, "name" => "Lazio", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 12, "name" => "Milan", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 13, "name" => "Napoli", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 14, "name" => "Palermo", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 15, "name" => "Roma", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 16, "name" => "Sampdoria", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 17, "name" => "Sassuolo", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 18, "name" => "Torino", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 19, "name" => "Udinese", "active" => 1))->execute();
+db_insert("fanta_real_teams")->fields(array("rt_id" => 20, "name" => "Verona", "active" => 1))->execute(); 
 
-  variable_set("fantacalcio_voti_login_username", "");
-  variable_set("fantacalcio_voti_login_password", "");
-  variable_set("fantacalcio_voti_login_page", "http://www.fantagazzetta.com");
-  variable_set("fantacalcio_voti_secured_page", "http://www.fantagazzetta.com/voti-fantagazzetta-serie-A");
-  variable_set("fantacalcio_lista_portieri_page", "http://www.fantagazzetta.com/quotazioni-serie-a/portieri/costodesc");
-  variable_set("fantacalcio_lista_difensori_page", "http://www.fantagazzetta.com/quotazioni-serie-a/difensori/costodesc");
-  variable_set("fantacalcio_lista_centrocampisti_page", "http://www.fantagazzetta.com/quotazioni-serie-a/centrocampisti/costodesc");
-  variable_set("fantacalcio_lista_attaccanti_page", "http://www.fantagazzetta.com/quotazioni-serie-a/attaccanti/costodesc");
-  */
+db_insert("fanta_vote_providers")->fields(array("p_id" => 1, "name" => "Milano", "active" => 1))->execute();
+db_insert("fanta_vote_providers")->fields(array("p_id" => 2, "name" => "Roma", "active" => 1))->execute(); 
+db_insert("fanta_vote_providers")->fields(array("p_id" => 3, "name" => "Napoli", "active" => 1))->execute();  
+
+db_insert("fanta_round_statuses")->fields(array("s_id" => -1, "status" => "Risultati provvisori", "result" => 0))->execute();
+db_insert("fanta_round_statuses")->fields(array("s_id" => 0, "status" => "Non giocata", "result" => 0))->execute();
+db_insert("fanta_round_statuses")->fields(array("s_id" => 1, "status" => "Giocata", "result" => 0))->execute();
+db_insert("fanta_round_statuses")->fields(array("s_id" => 2, "status" => "Congelata", "result" => 0))->execute();
+db_insert("fanta_round_statuses")->fields(array("s_id" => 3, "status" => "Saltata", "result" => 0))->execute();
+
 }
 
 #Disinstalla il Plug In
 function fantacalcio_uninstall() {
-  //$sql = "DELETE FROM {variables} WHERE name LIKE = 'fantacalcio%'";
-  //$result = db_query($sql);
-  
-  //drupal_uninstall_schema('fantacalcio');
+
+variable_del('fantacalcio_user_can_create_team');
+variable_del('fantacalcio_show_teams_filter');
+variable_del('fantacalcio_main_league');
+variable_del('fantacalcio_assign_default_role');
+variable_del('fantacalcio_user_teams_limit');
+variable_del('fantacalcio_team_change_name');
+variable_del('fantacalcio_number_players');
+variable_del('fantacalcio_number_role_0');
+variable_del('fantacalcio_credits');
+variable_del('fantacalcio_free_movements');
+variable_del('fantacalcio_max_movements');
+variable_del('fantacalcio_number_role_1');
+variable_del('fantacalcio_number_role_2');
+variable_del('fantacalcio_number_role_3');
+variable_del('fantacalcio_admin_contact_url');
+variable_del('fantacalcio_regulars_modules');
+variable_del('fantacalcio_reserves_modules');
+variable_del('fantacalcio_modifier_role_0');
+variable_del('fantacalcio_modifier_role_1');
+variable_del('fantacalcio_modifier_role_2');
+variable_del('fantacalcio_modifier_role_3');
+variable_del('fantacalcio_max_substitutions');
+variable_del('fantacalcio_default_vote_1');
+variable_del('fantacalcio_default_vote_2');
+variable_del('fantacalcio_gap_victory');
+variable_del('fantacalcio_gap_victory_points');
+variable_del('fantacalcio_points_goals_for');
+variable_del('fantacalcio_points_goals_against');
+variable_del('fantacalcio_points_penalty_goals');
+variable_del('fantacalcio_points_missed_penalties');
+variable_del('fantacalcio_points_saved_penalties');
+variable_del('fantacalcio_points_yellow_cards');
+variable_del('fantacalcio_points_red_cards');
+variable_del('fantacalcio_points_own_goals');
+variable_del('fantacalcio_points_assists');
+variable_del('fantacalcio_points_draw_goals');
+variable_del('fantacalcio_points_win_goals');
+variable_del('fantacalcio_votes_provider');
 }

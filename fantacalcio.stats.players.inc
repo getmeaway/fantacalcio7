@@ -54,19 +54,146 @@ function player_details($pl_id = '') {
 
 function player_stats($pl_id) {
   global $roles;
+  
   // $teams_groups = Team::allByGroup();
   // ksort($teams_groups);
   // $groups = Group::all();
   $player = Player::get($pl_id);
   
-  $out = "<br><h2>" . $player->name . " (" . $roles[$player->role] . ")</h2><br>";
+  $player_rounds_stats = player_rounds_stats($pl_id);
+  
+  $out = "<div class='row'>";
+  $out .= "<div class='col-xs-12 col-sm-6'><h3>" . $player->name . " (" . $roles[$player->role] . ")</h3></div>";
+  $out .= "<div class='col-xs-12 col-sm-6'>&nbsp;</div>";
+  $out .= "<div class='col-xs-12 col-sm-6'>&nbsp;</div>";
+  
+  if (count($player_rounds_stats['rounds']) > 0) {
+
+	  $player_rounds_rows = array();
+  
+	  $player_rounds_rows[] = array_merge($player_rounds_stats['summary']['caps'], $player_rounds_stats['summary']['yellow_cards']);
+	  $player_rounds_rows[] = array_merge($player_rounds_stats['summary']['vote'], $player_rounds_stats['summary']['red_cards']);
+	  $player_rounds_rows[] = array_merge($player_rounds_stats['summary']['total'], $player_rounds_stats['summary']['saved_penalties']);
+	  $player_rounds_rows[] = array_merge($player_rounds_stats['summary']['goals_for'], $player_rounds_stats['summary']['missed_penalties']);
+	  $player_rounds_rows[] = array_merge($player_rounds_stats['summary']['goals_against'], $player_rounds_stats['summary']['own_goals']);
+	  $player_rounds_rows[] = array_merge($player_rounds_stats['summary']['assists'], array("", ""));
+
+	  $player_summary = theme("table", array("header" => array(), "rows" => $player_rounds_rows, "attributes" => array("class" => array("table", "table-responsive"))));
+	  $presences = player_get_presences($pl_id);
+	  	  
+	  $script = "jQuery(document).ready(function() {
+			var presences_ctx = jQuery('#presences-chart').get(0).getContext('2d');
+			var votes_ctx = jQuery('#votes-chart').get(0).getContext('2d');
+			var presences = [
+				{
+					value: " . $presences['regular'] . ",
+					color: '#46BFBD',
+					highlight: '#5AD3D1',
+					label: '" . t("Titolare") . "'
+				},
+				{
+					value: " . $presences['reserve'] . ",
+					color: '#FDB45C',
+					highlight: '#FFC870',
+					label: '" . t("Riserva") . "'
+				},
+				{
+                                        value: " . $presences['not_played'] . ",
+                                        color:'#F7464A',
+                                        highlight: '#FF5A5E',
+                                        label: '" . t("Non entrato") . "'
+                                }
+			];
+
+var votes = {
+    labels: [" . implode(", ", array_map(function ($item) {return $item['round'];}, $player_rounds_stats['rounds'])) . "],//rounds
+    datasets: [
+        {
+            label: 'Voto',
+            fillColor: 'rgba(220,220,220,0.2)',
+            strokeColor: 'rgba(220,220,220,1)',
+            pointColor: 'rgba(220,220,220,1)',
+            pointStrokeColor: '#fff',
+            pointHighlightFill: '#fff',
+            pointHighlightStroke: 'rgba(220,220,220,1)',
+            data: [" . implode(", ", array_map(function ($item) {return $item['vote'];}, $player_rounds_stats['chart'])) . "]
+        },
+        {
+            label: 'Fantavoto',
+            fillColor: 'rgba(151,187,205,0.2)',
+            strokeColor: 'rgba(151,187,205,1)',
+            pointColor: 'rgba(151,187,205,1)',
+            pointStrokeColor: '#fff',
+            pointHighlightFill: '#fff',
+            pointHighlightStroke: 'rgba(151,187,205,1)',
+            data: [" . implode(", ", array_map(function ($item) {return $item['total'];}, $player_rounds_stats['chart'])) . "]
+        }
+    ]
+};
+
+var presences_options = {legendTemplate : '<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<segments.length; i++){%><li><span style=\"background-color:<%=segments[i].fillColor%>\"></span><%if(segments[i].label){%><%=segments[i].label%><%}%></li><%}%></ul>'
+};
+var votes_options = {legendTemplate : '<ul class=\"<%=name.toLowerCase()%>-legend\"><% for (var i=0; i<datasets.length; i++){%><li><span style=\"background-color:<%=datasets[i].strokeColor%>\"></span><%if(datasets[i].label){%><%=datasets[i].label%><%}%></li><%}%></ul>'
+};
+
+			var presences_chart = new Chart(presences_ctx).Doughnut(presences, presences_options);
+			jQuery('#presences-chart-legend').html(presences_chart.generateLegend());
+			var votes_chart = new Chart(votes_ctx).Line(votes, votes_options);
+			jQuery('#votes-chart-legend').html(votes_chart.generateLegend());
+		})";
+
+	  drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/Chart.js", "file");
+	  drupal_add_js($script, "inline");
+	  drupal_add_css(".chart-legend ul {list-style-type: none;} .chart-legend li span{
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+}", "inline");
+  
+	  $out .= "<div class='col-xs-12 col-sm-6 pull-right'>" . $player_summary . "</div>";
+	  $out .= "<div class='col-xs-12 col-sm-6 pull-left'>";
+	  $out .= "<h4>" . t("Presenze e voti") . "</h4>";
+	 $out .= "<div class='row'>";
+	  $out .= "<div class='col-xs-12 col-sm-5'><canvas class='pull-left' id='presences-chart'></canvas><div id='presences-chart-legend' class='chart-legend pull-right'></div></div>";
+	  $out .= "<div class='col-xs-12 col-sm-7'><canvas class='pull-left' id='votes-chart'></canvas><div id='votes-chart-legend' class='chart-legend pull-right'></div></div>";
+	  $out .= "</div>";
+	  $out .= "</div>";
+  }
+  
+  $out .= "</div>";
   // $out .= "<h3>" . $roles[$player->role] . "</h3><br>";
   // $out .= "<h4>" . ucwords($player->team) . "</h4><br>";
   
   // $out .= "<div class=clear>" . get_player_fantateams($player->pl_id, $groups, $teams_groups) . "</div><br/>";
+  if (count($player_rounds_stats['rounds']) > 0) {
   
-  $out .= player_rounds_stats($pl_id);
+	  $header = array(
+		  t("Giornata"), 
+		  t("Squadra"), 
+		  t("Totale"), 
+		  t("Voto"), 
+		  t("Gol Fatti"), 
+		  t("Gol Subiti"), 
+		  t("Assist"), 
+		  t("Amm"), 
+		  t("Esp"), 
+		  t("Rig Parati"), 
+		  t("Rig Sbagliati"), 
+		  t("Autogol"));
   
+	  $out .= "<div class='row'>&nbsp;</div>";
+	  $out .= "<div class='row'>";
+	  $out .= "<div class='col-xs-12'>";
+	  $out .= "<h4>" . t("Dettagli giornate") . "</h4>";
+	  $out .= theme("table", array("header" => $header, "rows" => $player_rounds_stats['rounds'], "attributes" => array("class" => array("table", "table-responsive"))));
+	  $out .= "</div>";
+	  $out .= "</div>"; 
+  } 
+  else {
+  	$out .= t("Nessuna presenza");
+  }
+
   return $out;
 }
 
@@ -93,6 +220,7 @@ function choose_pl_id_form_submit($form, $form_state) {
 
 function player_rounds_stats($pl_id) {
   $votes = array();
+  $chart = array();
   $rounds = 0;
   $summary = array(
     "total" => 0, 
@@ -105,19 +233,22 @@ function player_rounds_stats($pl_id) {
     "own_goals" => 0, 
     "saved_penalties" => 0, 
     "missed_penalties" => 0);
-  
-  // $sql = "SELECT v.round AS round, UPPER(r.long_name) AS team, v.*
-  // FROM {fanta_votes} v
-  // INNER JOIN {fanta_players_teams} t
-  // ON v.pl_id = t.pl_id
-  // AND v.round = t.round
-  // INNER JOIN {fanta_real_teams} r
-  // ON t.rt_id = r.rt_id
-  // WHERE v.pl_id = '%d'
-  // AND v.provider = '%d'
-  // ORDER BY v.round";
-  // $result = db_query($sql, $pl_id, variable_get("fantacalcio_votes_provider", 1));
-  
+ 
+  $query = db_select("fanta_players_rounds", "pr");
+  $query->join("fanta_real_teams", "rt", "rt.rt_id = pr.rt_id");
+  $query->condition("pl_id", $pl_id);
+  $query->condition("pr.round", Round::getNext(), "!="); 
+  $query->fields("pr");
+  $query->addField("rt", "name", "team");
+
+  $result = $query->execute();
+
+  foreach ($result as $row) {
+    $votes[$row->round] = array('round' => $row->round, 'team' => $row->team, 'total' => array("data" => "-", "colspan" => 9));
+    $chart[$row->round] = array('round' => $row->round, 'total' => 0, 'vote' => 0);
+  }
+
+ 
   $query = db_select("fanta_votes", "v");
   $query->join("fanta_players_rounds", "r", "r.pl_id = v.pl_id AND r.round = v.round");
   $query->join("fanta_real_teams", "rt", "rt.rt_id = r.rt_id");
@@ -125,13 +256,17 @@ function player_rounds_stats($pl_id) {
   $query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
   $query->fields("v");
   $query->addField("rt", "name", "team");
-  
+  $query->orderBy("v.round");
+ 
   $result = $query->execute();
   
   foreach ($result as $row) {
     $votes[$row->round] = array();
+    $chart[$row->round] = array();
     $votes[$row->round]['round'] = $row->round;
     $votes[$row->round]['team'] = $row->team;
+    
+    if ($row->has_vote == 1) {
     $votes[$row->round]['total'] = $row->total;
     $votes[$row->round]['vote'] = $row->vote;
     $votes[$row->round]['goals_for'] = $row->goals_for + $row->penalty_goals;
@@ -149,8 +284,6 @@ function player_rounds_stats($pl_id) {
     unset($votes[$row->round]['win_goals']);
     unset($votes[$row->round]['draw_goals']);
 
-    $summary['round'] = t("Riepilogo");
-    $summary['team'] = "";
     $summary['total'] += $row->total;
     $summary['vote'] += $row->vote;
     $summary['goals_for'] += $row->goals_for;
@@ -161,36 +294,77 @@ function player_rounds_stats($pl_id) {
     $summary['saved_penalties'] += $row->saved_penalties;
     $summary['missed_penalties'] += $row->missed_penalties;
     $summary['own_goals'] += $row->own_goals;
-    
+
+    $chart[$row->round]['total'] = $row->total;
+    $chart[$row->round]['vote'] = $row->vote;
+
     $rounds++;
+    }
+    else {
+	$votes[$row->round]['total'] = array("data" => "-", "colspan" => 9);
+   	$chart[$row->round]['total'] = 0;
+	$chart[$row->round]['vote'] = 0;
+    }
+
+
   }
   
   if ($rounds != 0) {
     
-    $summary['vote'] = round($summary['vote'] / $rounds, 2);
-    $summary['total'] = round($summary['total'] / $rounds, 2);
+    $summary['caps'] = array(t("Presenze"), $rounds);
+    $summary['vote'] = array(t("Media Voto"), round($summary['vote'] / $rounds, 2));
+    $summary['total'] = array(t("Media FantaVoto"), round($summary['total'] / $rounds, 2));
+    $summary['goals_for'] = array(t("Goal fatti"), $summary['goals_for']);
+    $summary['goals_against'] = array(t("Goal subiti"), $summary['goals_against']);
+    $summary['assists'] = array(t("Assist"), $summary['assists']);
+    $summary['yellow_cards'] = array(t("Ammonizioni"), $summary['yellow_cards']);
+    $summary['red_cards'] = array(t("Espulsioni"), $summary['red_cards']);
+    $summary['saved_penalties'] = array(t("Rigori parati"), $summary['saved_penalties']);
+    $summary['missed_penalties'] = array(t("Rigori sbagliati"), $summary['missed_penalties']);
+    $summary['own_goals'] = array(t("Autogol"), $summary['own_goals']);
     
-    sort($votes);
-    $votes[$rounds] = array("data" => $summary, "class" => array("bold"));
+    ksort($votes);
+    ksort($chart);
+    //$votes[$rounds] = array("data" => $summary, "class" => array("bold"));
     
-    $header = array(
-      t("Giornata"), 
-      t("Squadra"), 
-      t("Totale"), 
-      t("Voto"), 
-      t("Gol Fatti"), 
-      t("Gol Subiti"), 
-      t("Assist"), 
-      t("Amm"), 
-      t("Esp"), 
-      t("Rig Parati"), 
-      t("Rig Sbagliati"), 
-      t("Autogol"));
-    
-    return theme("table", array("header" => $header, "rows" => $votes));
+//    return theme("table", array("header" => $header, "rows" => $votes));
+    return array("summary" => $summary, "rounds" => $votes, "chart" => $chart);
   }
   else
-    return t("Nessuna presenza");
+    return array("summary" => array(), "rounds" => array(), "chart" => array());
+}
+
+function player_get_presences($pl_id) {
+	
+	$presences = array('not_played' => 0, 'regular' => 0, 'reserve' => 0);
+	
+	$query = db_select('fanta_players_rounds', 'pr');
+	$query->condition("pl_id", $pl_id);
+	$query->condition("active", 1);
+	$query->condition("round", Round::getNext(), "!=");
+	$query->fields("pr");
+	
+	$result = $query->execute();
+
+	$all_rounds = $result->rowCount();
+
+	$query = db_select("fanta_votes", "v");
+	$query->condition("v.pl_id", $pl_id);
+	$query->condition("v.provider", variable_get('fantacalcio_votes_provider', 1));
+	$query->fields("v", array("regular"));
+	
+	$result = $query->execute();
+	
+	foreach ($result as $row) {
+		if ($row->regular == 1)
+			$presences['regular']++;
+		else if ($row->regular == 0)
+			$presences['reserve']++;
+	}
+
+	$presences['not_played'] = $all_rounds - $presences['regular'] - $presences['reserve'];
+	
+	return $presences;
 }
 
 /**

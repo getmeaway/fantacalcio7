@@ -31,12 +31,11 @@
 			  </ul>
 			</div>
 		</div>
-		<?php endif; ?>
 		
 		<div class="row">
 			<div class="cols-xs-12">&nbsp;</div>
 		</div>
-				
+		<?php endif; ?>				
 		<!-- elenco squadre-->
 		
 		<div class="panel-group" id='accordion_1'>

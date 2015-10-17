@@ -43,14 +43,18 @@
 	<!-- Tab panes -->
 	<div class="tab-content responsive">
 		<div role="tabpanel" class="tab-pane active" id="squad">
-		<?php print render($squad); ?>
-		<?php print render($credits); ?>
+			<div class='overflow-x'>
+			<?php print render($squad); ?>
+			</div>
+			<?php print render($credits); ?>
 		</div>
 		<div role="tabpanel" class="tab-pane" id="details">
 		<?php print render($details); ?>
 		</div>
 		<div role="tabpanel" class="tab-pane" id="rounds">
-		<?php print render($rounds); ?>
+			<div class='overflow-x'>
+			<?php print render($rounds); ?>
+			</div>
 		</div>
 		<div role="tabpanel" class="tab-pane" id="stats">
 		<?php print render($stats); ?>

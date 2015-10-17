@@ -12,6 +12,7 @@
  * *********************
  */
 function fantacalcio_results($round = '', $action = '') {
+
   $round = (is_numeric($round)) ? $round : Round::getLast() + 1;
   
   $out = '';
@@ -200,6 +201,7 @@ function results_choose_round_form_submit($form, &$form_state) {
  * *********************
  */
 function fantacalcio_results_lineup_check($vote_round) {
+
   drupal_set_title(t('Risultati: Giornata #@round', array(
     "@round" => $vote_round)));
   
@@ -213,23 +215,19 @@ function fantacalcio_results_lineup_check($vote_round) {
   //  import_lineups($vote_round);
   
   $lineups = array();
+
+  $lineups_import_form = drupal_get_form("import_lineups_form", $vote_round);
   
-  $out = "";
+  $out = drupal_render($lineups_import_form);
   
   foreach ($competitions as $c_id => $competition) {
-    
-    $competition->groups = Group::allByCompetition($competition->id);
-    
-    // squadre per competizione
-    $teams = array();
-    
-    foreach ($competition->groups as $group) {
-      $teams = array_merge($teams, Team::allByGroup($group->id));
-    }
+
+    // squadre impegnate nella giornata    
+    $teams = Team::getTeamsForRound($competition->id, $round->competitions[$competition->id]->competition_round);
     
     $rows = array();
     
-    if ($teams) {
+    if (count($teams) > 0) {
       
       $out .= "<h3>" . $competition->name . "</h3>";
       
@@ -481,6 +479,23 @@ function insert_formazione_admin($competition_name, $t_id) {
   $out .= "\n<div id='formazione'>" . make_formazione($t_id, $c_id, $round, TRUE) . "\n</div>";
   
   return $out;
+}
+
+function import_lineups_form($form, &$form_state, $round) {
+  $form['round'] = array(
+    '#type' => 'hidden', 
+    '#default_value' => $round, 
+    '#value' => $round); 
+  
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Importa formazioni'));
+
+  return $form;
+}
+
+function import_lineups_form_submit($form, &$form_state) {
+  $round = $form_state["values"]["round"];
+
+  import_lineups_lineups($round);
 }
 
 function import_lineups_lineups($vote_round) {
@@ -819,8 +834,8 @@ function insert_votes($votes, $round, $provider) {
         "win_goals" => $vote->win_goals, 
         "draw_goals" => $vote->draw_goals,
         "regular" => $vote->regular,
-        "substituted" => $vote->substituted
-          
+        "substituted" => $vote->substituted,
+        "has_vote" => $vote->has_vote
       ));
       // print $query->arguments();
       $query->execute();
@@ -1073,6 +1088,7 @@ function fantacalcio_get_modifiers($vote_round) {
  * *********************
  */
 function fantacalcio_find_regulars($vote_round) {
+
   drupal_set_title(t('Risultati: Giornata #@round', array(
     "@round" => $vote_round)));
   

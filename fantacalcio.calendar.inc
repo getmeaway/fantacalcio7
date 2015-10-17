@@ -386,9 +386,9 @@ function show_match_details($m_id) {
   $out .= "<h4>" . Team::get($match->t1_id)->name . " - " . Team::get($match->t2_id)->name . "</h4><hr>";
   $out .= "</div>";
   
-  $out .= "<div class='team-details first-team'>" . show_team_details($match->t1_id, $match->round, $match->c_id, $match->id, $match->played) . "</div>";
+  $out .= "<div class='team-details col-xs-12 col-sm-6'>" . show_team_details($match->t1_id, $match->round, $match->c_id, $match->id, $match->played) . "</div>";
   
-  $out .= "<div class='team-details'>" . show_team_details($match->t2_id, $match->round, $match->c_id, $match->id, $match->played) . "</div>";
+  $out .= "<div class='team-details col-xs-12 col-sm-6'>" . show_team_details($match->t2_id, $match->round, $match->c_id, $match->id, $match->played) . "</div>";
   
   if ($round->next && $match->isDraw()) {
     $out .= "<div class='clear'></div>";
@@ -833,7 +833,7 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id) {
       "class" => $row_classes);
   }
   
-  $out .= "<div class='team-details-lineup'>" . theme("table", array(
+  $out .= "<div class='team-details-lineup overflow-x'>" . theme("table", array(
     "header" => $header, 
     "rows" => $rows, 
     "attributes" => array("style" => "font-size: 90%"))) . "</div>";

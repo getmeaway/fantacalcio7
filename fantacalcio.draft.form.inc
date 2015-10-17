@@ -390,7 +390,9 @@ function theme_team_buy_player($variables) {
   $row = array(
     drupal_render($form["player"]), 
     drupal_render($form["cost"]), 
-    drupal_render_children($form));
+    drupal_render_children($form)
+      
+  );
   
   return $row;
   
