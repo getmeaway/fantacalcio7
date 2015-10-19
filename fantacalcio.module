@@ -1087,7 +1087,7 @@ function fantacalcio_cron() {
   }
 
   //calcola risultati 
-  if (time() > $round->end_date && $round->status != 1)
+  if (time() > $round->end_date && $round->status_id != 1)
     fantacalcio_cron_calculate_results($round->round);
 
   //promemoria formazioni

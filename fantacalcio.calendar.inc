@@ -793,7 +793,7 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id) {
     $data[] = "<span class='team-details-name'>" . $reserve->name . "</span>";
     $data[] = "<span class='team-details-role'>" . substr(ucwords($reserve->team), 0, 3) . "</span>";
     
-    if (isset($votes[$pl_id])) {
+    if (isset($votes[$pl_id]) && $votes[$pl_id]->has_vote == 1) {
       $data[] = fantacalcio_show_cards($votes[$pl_id]->yellow_cards, $votes[$pl_id]->red_cards);
       $data[] = array(
         "data" => $votes[$pl_id]->total, 

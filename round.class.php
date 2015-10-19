@@ -294,7 +294,7 @@ class Round
 	  if ($result->rowCount() == 0)
 	    return 0;
 	
-	  return $result->fetchField();
+	  return self::getLast() + 1;//result->fetchField();
 	}
 		
 	static function getLastQuotation() {

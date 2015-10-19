@@ -101,7 +101,31 @@ class Result {
       ->execute();
     }
   }
-  
+ 
+  static function updatePlayers($round) {
+  $i = 0;
+
+  // cancello i giocatori della giornata per evitare doppioni
+  db_delete("fanta_players_rounds")->condition("round", $round)->execute();
+
+  $query = db_select("fanta_players_rounds", "pr");
+  $query->condition("round", $round - 1);
+  $query->fields("pr"); // "SELECT DISTINCT pl_id, rt_id as team, active FROM {fanta_players_teams} WHERE round = '%d'";
+  $result = $query->execute(); // ($sql, ($round - 1));
+
+  foreach ($result as $row) {
+    $i++;
+
+    db_insert("fanta_players_rounds")
+    ->fields(array("pl_id" => $row->pl_id, "round" => $round, "rt_id" => $row->rt_id, "quotation" => $row->quotation, "not_rounded_quotation" => $row->not_rounded_quotation, "active" => $row->active))
+    ->execute();
+  }
+
+  $message = "Giocatori aggiornati: " . $i . " (Giornata #" . $round . ")";
+  drupal_set_message(check_plain($message));
+}
+
+ 
   static function getRegularsTeam($t_id, $pl_votes, $competition_round, $c_id) {
     $teams = array();
   
@@ -189,9 +213,10 @@ class Result {
    
     $pl_votes = array();
 
-    foreach ($votes as $vote)
-      $pl_votes[] = $vote->pl_id;
-      
+    foreach ($votes as $vote) {
+      if ($vote->has_vote == 1)
+        $pl_votes[] = $vote->pl_id;
+    }  
     foreach ($round->competitions as $round_competition) {
   
       $c_id = $round_competition->competition_id;

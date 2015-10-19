@@ -69,13 +69,22 @@ class Lineup {
         "name" => $player->name, 
         "team" => $player->team, 
         "role" => $player->role, 
-        "status" => $player_status->status, 
-        "status_percent" => $player_status->percent, 
-        "status_position" => $player_status->position, 
-        "status_class" => fantacalcio_get_status_classes($player_status->status, $player_status->position), 
-        "updated" => $player_status->updated,
-        "match" => $player_status->match,
+        //"status" => $player_status->status, 
+        //"status_percent" => $player_status->percent, 
+        //"status_position" => $player_status->position, 
+        //"status_class" => fantacalcio_get_status_classes($player_status->status, $player_status->position), 
+        //"updated" => $player_status->updated,
+        //"match" => $player_status->match,
         "position" => 0);
+
+	if ($player_status != null) {
+		$lineup[$pl_id]["status"] = $player_status->status;
+		$lineup[$pl_id]["status_percent"] = $player_status->percent;
+		$lineup[$pl_id]["status_position"] = $player_status->position;
+		$lineup[$pl_id]["status_class"] = fantacalcio_get_status_classes($player_status->status, $player_status->position);
+		$lineup[$pl_id]["updated"] = $player_status->updated;
+		$lineup[$pl_id]["match"] = $player_status->match;
+	}
     }
         
     $query = db_select("fanta_lineups", "l");

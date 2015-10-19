@@ -77,8 +77,11 @@ function fantacalcio_cron_calculate_results($round) {
   
   // 5. calcolo totali
   Result::getTotals($round);
-  
-  // 6. chiudo giornata
+ 
+  // 6. aggiorno giocatori
+  Result::updatePlayers($round); 
+
+  // 7. chiudo giornata
   Result::closeRound($round);
 
   watchdog('fantacalcio', t('Risultati calcolati per la giornata: %round'), array('%round' => $round->round), WATCHDOG_NOTICE);

@@ -1103,9 +1103,11 @@ function fantacalcio_find_regulars($vote_round) {
   
   $pl_votes = array();
   
-  foreach ($votes as $vote)
-    $pl_votes[] = $vote->pl_id;
-    
+  foreach ($votes as $vote) {
+    if ($vote->has_vote == 1) 
+      $pl_votes[] = $vote->pl_id;
+  }
+  
     // print_r($pl_votes);die();
     
   // $pl_ids_list = implode(',', $pl_votes);
