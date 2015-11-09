@@ -2215,7 +2215,7 @@ function fantacalcio_admin_real_team_delete_submit($form, &$form_state) {
 function fantacalcio_admin_real_teams_list_import($form, &$form_state) {
   $form['#redirect'] = 'admin/fantacalcio/realteams';
   
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Importa'));
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Importa'), "#prefix" => t("Attenzione: tutte le squadre gi&agrave; inserite saranno cancellate<br/><br/>"));
   
   $form['clear'] = array(
     '#type' => 'submit', 
@@ -2633,7 +2633,7 @@ function fantacalcio_admin_round_delete_submit($form, &$form_state) {
 function fantacalcio_admin_rounds_list_import($form, &$form_state) {
   $form['#redirect'] = 'admin/fantacalcio/rounds';
   
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Importa'));
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Importa'), "#prefix" => t("Attenzione: tutte le giornate gi&agrave; inserite saranno cancellate<br/><br/>"));
   
   $form['clear'] = array(
     '#type' => 'submit', 
