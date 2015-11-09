@@ -23,6 +23,8 @@ $roles_long = array(t("Portiere"), t("Difensore"), t("Centrocampista"), t("Attac
 $roles = array(t("P"), t("D"), t("C"), t("A"));
 $GLOBALS["roles_long"] = $roles_long;
 $GLOBALS["roles"] = $roles;
+$GLOBALS["rounds_status"] = array("-1" => t("Risultati provvisori"), "0" => t("Non giocata"), "1" => t("Giocata"), 
+"2" => t("Congelata"), "3" => t("Saltata") );
 // Css file
 // drupal_add_css('sites/all/modules/fantacalcio/css/style.css', 'themes', 'all', TRUE);
 
@@ -793,7 +795,7 @@ function fantacalcio_menu() {
     'file path' => drupal_get_path('module', 'fantacalcio'));
   
   $items['admin/fantacalcio/teams'] = array(
-    'title' => t('Squadre'), 
+    'title' => t('Fantasquadre'), 
     'page callback' => 'fantacalcio_admin_teams_list', 
     'access arguments' => array('administer fantacalcio'), 
     'type' => MENU_LOCAL_TASK, 
@@ -801,7 +803,7 @@ function fantacalcio_menu() {
     'file path' => drupal_get_path('module', 'fantacalcio'));
   
   $items['admin/fantacalcio/teams/%'] = array(
-    'title' => t('Squadre'), 
+    'title' => t('Fantasquadre'), 
     'page callback' => 'drupal_get_form', 
     'page arguments' => array('fantacalcio_admin_team', 3), 
     'access arguments' => array('administer fantacalcio'), 
@@ -811,7 +813,7 @@ function fantacalcio_menu() {
     'file path' => drupal_get_path('module', 'fantacalcio'));
   
   $items['admin/fantacalcio/teams/%/delete'] = array(
-    'title' => t('Squadre'), 
+    'title' => t('Fantasquadre'), 
     'page callback' => 'drupal_get_form', 
     'page arguments' => array('fantacalcio_admin_team_delete', 3), 
     'access arguments' => array('administer fantacalcio'), 
@@ -885,6 +887,41 @@ function fantacalcio_menu() {
     // 'type' => MENU_NORMAL_ITEM,
     'file' => 'fantacalcio.admin.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
+
+
+  $items['admin/fantacalcio/realteams'] = array(
+    'title' => t('Squadre'), 
+    'page callback' => 'fantacalcio_admin_real_teams_list', 
+    'access arguments' => array('administer fantacalcio'), 
+    'type' => MENU_LOCAL_TASK, 
+    'file' => 'fantacalcio.admin.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['admin/fantacalcio/realteams/%'] = array(
+    'title' => t('Squadre'), 
+    'page callback' => 'drupal_get_form', 
+    'page arguments' => array('fantacalcio_admin_real_team', 3), 
+    'access arguments' => array('administer fantacalcio'), 
+    'file' => 'fantacalcio.admin.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+  
+  $items['admin/fantacalcio/realteams/%/delete'] = array(
+    'title' => t('Squadre'), 
+    'page callback' => 'drupal_get_form', 
+    'page arguments' => array('fantacalcio_admin_real_team_delete', 3), 
+    'access arguments' => array('administer fantacalcio'), 
+    'file' => 'fantacalcio.admin.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+
+  $items['admin/fantacalcio/realteams/import'] = array(
+    'title' => t('Importa squadre'), 
+    'page callback' => 'drupal_get_form', 
+    'page arguments' => array('fantacalcio_admin_real_teams_list_import'), 
+    'access arguments' => array('administer fantacalcio'), 
+    'weight' => 1, 
+    'file' => 'fantacalcio.admin.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+
   
   $items['admin/fantacalcio/matches'] = array(
     'title' => 'Partite', 
@@ -971,6 +1008,15 @@ function fantacalcio_menu() {
     'access arguments' => array('administer fantacalcio'), 
     
     // 'type' => MENU_NORMAL_ITEM,
+    'file' => 'fantacalcio.admin.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+
+ $items['admin/fantacalcio/rounds/import'] = array(
+    'title' => t('Importa giornate'), 
+    'page callback' => 'drupal_get_form', 
+    'page arguments' => array('fantacalcio_admin_rounds_list_import'), 
+    'access arguments' => array('administer fantacalcio'), 
+    'weight' => 1, 
     'file' => 'fantacalcio.admin.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
   

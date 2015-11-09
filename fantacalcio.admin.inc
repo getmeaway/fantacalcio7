@@ -2077,6 +2077,177 @@ function theme_fantacalcio_add_matches($form) {
 /**
  * *********************
  */
+/* gestione real teams */
+/**
+ * *********************
+ */
+function fantacalcio_admin_real_teams_list() {
+  
+  $out = "";
+  
+  $out .= l("Aggiungi Squadra", "admin/fantacalcio/realteams/add", array(
+    "attributes" => array("class" => "btn btn-info"))) . "<br/><br/>";
+
+  $out .= l("Importa squadre", "admin/fantacalcio/realteams/import", array(
+    "attributes" => array("class" => "btn btn-warning"))) . "<br/><br/>";
+  
+  $real_teams = RealTeam::all();
+  if ($real_teams) {
+    $header = array(
+      t("Nome"));
+
+    foreach ($real_teams as $rt_id => $real_team) {
+      $rows[] = array(
+        l($real_team->name, "admin/fantacalcio/realteams/" . $rt_id));
+    }
+
+    $out .= theme("table", (array(
+      "header" => $header, 
+      "rows" => $rows, 
+      "attributes" => array("class" => array("table", "table-responsive")), 
+      "sticky" => "", 
+      "empty" => t("Nessuna squadra"))));
+  }
+  return $out;
+}
+
+function fantacalcio_admin_real_team($form, &$form_state, $rt_id = "") {
+  $action = "create";
+  $title = t("Crea squadra");
+  $real_team_data = (object) array(
+    "name" => "", 
+    "active" => "");
+
+  if (!empty($rt_id) && RealTeam::exists($rt_id)) {
+    $real_team_data = RealTeam::get($rt_id);
+    $action = "edit";
+    $title = "Modifica squadra";
+  }
+  else
+    $form['#redirect'] = 'admin/fantacalcio/realteams';
+  
+  $form['#prefix'] = '<h3>' . $title . '</h3>';
+  
+  $form['action'] = array('#type' => 'hidden', '#value' => $action);
+  
+  $form['rt_id'] = array('#type' => 'hidden', '#value' => $rt_id);
+  
+  $form['name'] = array(
+    '#type' => 'textfield', 
+    '#title' => t('Nome'), 
+    '#required' => TRUE, 
+    '#default_value' => $real_team_data->name);
+  
+  $form['submit'] = array(
+    '#type' => 'submit', 
+    '#value' => t('Invia'), 
+    '#attributes' => array("class" => array("btn-success")));
+  
+  $form['clear'] = array(
+    '#type' => 'submit', 
+    '#value' => 'Annulla', 
+    '#validate' => array('fantacalcio_admin_real_team_clear'), 
+    '#suffix' => l("Elimina", 'admin/fantacalcio/realteams/' . $rt_id . '/delete'));
+  
+  return $form;
+}
+
+function fantacalcio_admin__real_team_submit($form, &$form_state) {
+  if ($form_state["values"]["action"] == "edit") {
+      
+      // update team
+    db_update('fanta_real_teams')->fields(array(
+      'name' => $form_state["values"]["name"], 
+      'active' => $form_state["values"]["active"]))->condition('rt_id', $form_state["values"]["rt_id"])->execute();
+    
+    drupal_set_message(t("Squadra modificata"));
+  }
+  elseif ($form_state["values"]["action"] == "create") {
+          
+      // crea squadra
+    $rt_id = db_insert('fanta_real_teams')->fields(array(
+      'name' => $form_state["values"]["name"], 
+      'active' => $form_state["values"]["active"]))->execute();
+    
+    drupal_set_message(t("Squadra creata"));
+    
+    drupal_goto("admin/fantacalcio/realteams");
+  }
+}
+
+function fantacalcio_admin_real_team_clear($form, &$form_state) {
+  $form_state['rebuild'] = TRUE;
+  
+  drupal_goto("admin/fantacalcio/realteams");
+}
+
+function fantacalcio_admin_real_team_delete($form, &$form_state, $rt_id = "") {
+  $form['#redirect'] = 'admin/fantacalcio/realteams';
+  
+  $rt_name = RealTeam::get($rt_id)->name;
+  
+  $form['#prefix'] = 'Sicuro di volere eliminare la squadra <em>' . $rt_name . '</em>?';
+  
+  $form['action'] = array('#type' => 'hidden', '#value' => "delete");
+  
+  $form['rt_id'] = array('#type' => 'hidden', '#value' => $rt_id);
+  
+  $form['submit'] = array(
+    '#type' => 'submit', 
+    '#value' => t('Elimina'), 
+    '#suffix' => l("Annulla", 'admin/fantacalcio/realteams/' . $rt_id));
+  
+  return $form;
+}
+
+function fantacalcio_admin_real_team_delete_submit($form, &$form_state) {
+  if ($form_state["values"]["action"] == "delete") {
+    
+    // delete real_teams
+    db_delete('fanta_real_teams')->condition('rt_id', $form_state["values"]["rt_id"])->execute();
+    
+    drupal_set_message("Squadra eliminata");
+    
+    drupal_goto("admin/fantacalcio/realteams");
+  }
+}
+
+function fantacalcio_admin_real_teams_list_import($form, &$form_state) {
+  $form['#redirect'] = 'admin/fantacalcio/realteams';
+  
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Importa'));
+  
+  $form['clear'] = array(
+    '#type' => 'submit', 
+    '#value' => 'Annulla', 
+    '#validate' => array('fantacalcio_admin_real_teams_list_import_clear'));
+  
+  return $form;
+}
+
+function fantacalcio_admin_real_teams_list_import_clear($form, &$form_state) {
+  drupal_goto("admin/fantacalcio/realteams");
+}
+
+function fantacalcio_admin_real_teams_list_import_submit($form, &$form_state) {
+  $teams_url = DATA_SOURCE_URL . "/teams/teams.json?t=" . time();
+  
+  $teams = json_decode(file_get_contents($teams_url));
+    
+  db_delete("fanta_real_teams")->execute();
+
+  foreach($teams as $team) {
+    db_insert("fanta_real_teams")->fields(array("rt_id" => $team->id, "name" => $team->name, "active" => 1))->execute();
+  }
+
+  drupal_set_message("Squadre importate");
+
+  drupal_goto("admin/fantacalcio/realteams");
+}
+
+/**
+ * *********************
+ */
 /* gestione giornate */
 /**
  * *********************
@@ -2087,6 +2258,9 @@ function fantacalcio_admin_rounds_list() {
   $out .= l(t("Aggiungi giornata"), "admin/fantacalcio/rounds/add", array(
     "attributes" => array("class" => "btn btn-info"))) . "<br/><br/>";
   
+  $out .= l(t("Importa giornate"), "admin/fantacalcio/rounds/import", array(
+    "attributes" => array("class" => "btn btn-warning"))) . "<br/><br/>";
+
   $rounds = Round::all();
   $competitions = Competition::all();
   
@@ -2454,6 +2628,39 @@ function fantacalcio_admin_round_delete_submit($form, &$form_state) {
     
     drupal_set_message("Giornata eliminata");
   }
+}
+
+function fantacalcio_admin_rounds_list_import($form, &$form_state) {
+  $form['#redirect'] = 'admin/fantacalcio/rounds';
+  
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Importa'));
+  
+  $form['clear'] = array(
+    '#type' => 'submit', 
+    '#value' => 'Annulla', 
+    '#validate' => array('fantacalcio_admin_rounds_list_import_clear'));
+  
+  return $form;
+}
+
+function fantacalcio_admin_rounds_list_import_clear($form, &$form_state) {
+  drupal_goto("admin/fantacalcio/rounds");
+}
+
+function fantacalcio_admin_rounds_list_import_submit($form, &$form_state) {
+  $rounds_url = DATA_SOURCE_URL . "/rounds/rounds.json?t=" . time();
+  
+  $rounds = json_decode(file_get_contents($rounds_url));print_r($rounds);die();
+    
+  db_delete("fanta_rounds")->execute();
+
+  foreach($rounds as $number => $round) {
+    db_insert("fanta_rounds")->fields(array("round" => $number, "date" => $round->date, "end_date" => $round->date, "status" => 0, "reminder_sent" => 0))->execute();
+  }
+
+  drupal_set_message("Giornate importate");
+
+  drupal_goto("admin/fantacalcio/rounds");
 }
 
 /**

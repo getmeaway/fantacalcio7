@@ -15,10 +15,14 @@ class RealTeam {
     $query->fields("r");
     $result = $query->execute();
     foreach ($result as $row) {
-      $team = new RealTeam($row->t_id, $row->name);
+      $team = new RealTeam($row->rt_id, $row->name);
     }
     
     return $team;
+  }
+
+  static function exists($id) {
+    return self::get($id) != null;
   }
 
   static function all() {
