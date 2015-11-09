@@ -562,9 +562,10 @@ function show_match_overtime($match, $t_id) {
     "data" => array(t("Gol"), $goals_ot), 
     "style" => "font-weight:bold");
   
-  $out .= "<div style='width: 40%; margin:auto; margin-top: 10px;'>" 
+  $out .= "<div style='margin:auto; margin-top: 10px;'>" 
       . theme("table", array("rows" => $rows, "attributes" => array(
     "width" => "100%", 
+    "class" => array("table", "table-responsive"),
     "style" => "", 
     "align" => "char", 
     "char" => "."))) . "</div>";
@@ -704,15 +705,33 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id) {
   $header[] = array("data" => "", "class" => "team-details-header");
   $header[] = array("data" => "Tot", "class" => "team-details-header");
   $header[] = array("data" => "Voto", "class" => "team-details-header");
-  $header[] = array("data" => "Goal Fatti", "class" => "team-details-header");
-  $header[] = array("data" => "Goal Subiti", "class" => "team-details-header");
-  $header[] = array("data" => "Assist", "class" => "team-details-header");
-  $header[] = array(
+  
+  if (variable_get("fantacalcio_points_goals_for", 0) != 0)
+    $header[] = array("data" => "Goal Fatti", "class" => "team-details-header");
+  
+  if (variable_get("fantacalcio_points_goals_against", 0) != 0)
+    $header[] = array("data" => "Goal Subiti", "class" => "team-details-header");
+  
+  if (variable_get("fantacalcio_points_assists", 0) != 0)
+    $header[] = array("data" => "Assist", "class" => "team-details-header");
+  
+  if (variable_get("fantacalcio_points_missed_penalties", 0) != 0)
+    $header[] = array(
     "data" => "Rigori Sbagliati", 
     "class" => "team-details-header");
-  $header[] = array("data" => "Rigori Parati", "class" => "team-details-header");
-  $header[] = array("data" => "Auto goal", "class" => "team-details-header");
   
+  if (variable_get("fantacalcio_points_saved_penalties", 0) != 0)
+    $header[] = array("data" => "Rigori Parati", "class" => "team-details-header");
+  
+  if (variable_get("fantacalcio_points_own_goals", 0) != 0)
+    $header[] = array("data" => "Auto goal", "class" => "team-details-header");
+  
+  if (variable_get("fantacalcio_points_draw_goal", 0) != 0)
+    $header[] = array("data" => "Gol pareggio", "class" => "team-details-header");
+  
+  if (variable_get("fantacalcio_points_win_goal", 0) != 0)
+    $header[] = array("data" => "Gol vittoria", "class" => "team-details-header");
+
   $rows = array();
   
   foreach ($regulars as $regular) {
@@ -736,31 +755,52 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id) {
         "data" => $votes[$pl_id]->total, 
         "class" => array(get_details_class($votes[$pl_id]->total) . " team-details-tot"));
       $data[] = array("data" => $votes[$pl_id]->vote);
+
+      if (variable_get("fantacalcio_points_goals_for", 0) != 0)
       $data[] = array(
         "data" => ($votes[$pl_id]->goals_for + $votes[$pl_id]->penalty_goals > 0 ? ($votes[$pl_id]->goals_for + $votes[$pl_id]->penalty_goals) . (($votes[$pl_id]->penalty_goals > 0) ? "(" . $votes[$pl_id]->penalty_goals . ")" : "") : "-"), 
         "class" => array(get_details_class(($votes[$pl_id]->goals_for + $votes[$pl_id]->penalty_goals), "bonus")));
       
+      if (variable_get("fantacalcio_points_goals_against", 0) != 0)
       $data[] = array(
         "data" => ($votes[$pl_id]->goals_against > 0 ? $votes[$pl_id]->goals_against : "-"), 
         "class" => array(get_details_class($votes[$pl_id]->goals_against, "malus")));
-      $data[] = array(
+      
+      if (variable_get("fantacalcio_points_assists", 0) != 0)
+$data[] = array(
         "data" => ($votes[$pl_id]->assists > 0 ? $votes[$pl_id]->assists : "-"), 
         "class" => array(get_details_class($votes[$pl_id]->assists, "bonus")));
+
+      if (variable_get("fantacalcio_points_missed_penalties", 0) != 0)
       $data[] = array(
         "data" => ($votes[$pl_id]->missed_penalties > 0 ? $votes[$pl_id]->missed_penalties : "-"), 
         "class" => array(get_details_class($votes[$pl_id]->missed_penalties, "malus")));
+
+      if (variable_get("fantacalcio_points_saved_penalties", 0) != 0)
       $data[] = array(
         "data" => ($votes[$pl_id]->saved_penalties > 0 ? $votes[$pl_id]->saved_penalties : "-"), 
         "class" => array(get_details_class($votes[$pl_id]->saved_penalties, "bonus")));
-      $data[] = array(
+      
+      if (variable_get("fantacalcio_points_own_goals", 0) != 0)
+        $data[] = array(
         "data" => ($votes[$pl_id]->own_goals > 0 ? $votes[$pl_id]->own_goals : "-"), 
         "class" => array(get_details_class($votes[$pl_id]->own_goals, "malus")));
-      
+     
+if (variable_get("fantacalcio_points_draw_goal", 0) != 0)
+        $data[] = array(
+        "data" => ($votes[$pl_id]->draw_goal > 0 ? $votes[$pl_id]->draw_goal : "-"),
+        "class" => array(get_details_class($votes[$pl_id]->draw_goal, "bonus")));
+ 
+if (variable_get("fantacalcio_points_win_goal", 0) != 0)
+        $data[] = array(
+        "data" => ($votes[$pl_id]->win_goal > 0 ? $votes[$pl_id]->win_goal : "-"),
+        "class" => array(get_details_class($votes[$pl_id]->win_goal, "bonus")));
+
       $points += $votes[$pl_id]->total;
     }
     else {
       array_push($row_classes, "not_played");
-      $data[] = array("data" => "", "colspan" => 9);
+      $data[] = array("data" => "", "colspan" => (count($header) - 4));
     }
     
     $rows[$pl_id] = array(
@@ -865,12 +905,13 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id) {
     "style" => "font-weight:bold");
   $rows[] = array("data" => array("Gol", $goals), "style" => "font-weight:bold");
   
-  $out .= "<div style='width: 40%; margin:auto; margin-top: 10px;'>" . theme("table", array(
+  $out .= "<div style='margin:auto; margin-top: 10px;'>" . theme("table", array(
     "header" => array(), 
     "rows" => $rows, 
     "attributes" => array(
       "width" => "100%", 
-      "style" => "", 
+      "style" => "",
+      "class" => array("table", "table-responsive"), 
       "align" => "char", 
       "char" => "."))) . "</div>";
   

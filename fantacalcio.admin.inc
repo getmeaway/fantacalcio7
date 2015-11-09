@@ -338,7 +338,13 @@ function fantacalcio_admin_settings() {
     '#default_value' => variable_get('fantacalcio_votes_provider', ''), 
     '#options' => get_providers_for_select(), 
     '#description' => t('Redazione di riferimento per voti e lista giocatori'));
-  
+ 
+  $form["fantacalcio_data_load"]['fantacalcio_automatic_updtes'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Aggiornamenti automatici'),
+    '#default_value' => variable_get('fantacalcio_automatic_updtes', '0'),
+    '#description' => t('Selezionare se si desidera aggiornare i dati (voti, ista giocatori, data partite, status giocatori) in modo automatico.'));
+ 
   return system_settings_form($form);
 }
 
@@ -1652,7 +1658,7 @@ function fantacalcio_admin_matches($g_id = "", $round = "", $add = FALSE) {
     }
     else {
       if (rounds_count($g_id))
-        return drupal_get_form('fantacalcio_choose_round', $g_id) . fantacalcio_get_back("admin/fantacalcio/rounds", $g_id);
+        return drupal_get_form('fantacalcio_choose_round', $g_id) . fantacalcio_get_back("league/partite", $g_id);
       else {
         drupal_set_message("Devi prima creare una giornata per il girone");
         drupal_goto("admin/fantacalcio/rounds/add");
@@ -1683,7 +1689,7 @@ function fantacalcio_choose_group($form_state) {
 
 function fantacalcio_choose_group_submit($form, &$form_state) {
   if (Group::exists($form_state['values']['group']))
-    drupal_goto("admin/fantacalcio/matches/" . $form_state['values']['group'] . "/calendar");
+    drupal_goto("admin/fantacalcio/matches/" . $form_state['values']['group']);
 }
 
 function fantacalcio_choose_round($form_state, $g_id) {
@@ -2096,7 +2102,8 @@ function fantacalcio_admin_rounds_list() {
       
       $round_items = array();
       foreach ($round->competitions as $c_id => $competition_round) {
-        $round_items[] = $competitions[$c_id]->name . " - " . $competition_round->round . " (" . $competition_round->label . ") " . fantacalcio_check_value($competition_round->next);
+        $has_next = $competition_round->next ? " - " . t("Passaggio turno") : "";
+        $round_items[] = $competitions[$c_id]->name . " - " . $competition_round->round . " (" . $competition_round->label . ") " . $has_next;
       }
       
       $rows[] = array(
@@ -2264,7 +2271,7 @@ function fantacalcio_admin_round($form, &$form_state, $round = "") {
     
     $form['status'] = array(
       '#type' => 'select', 
-      '#default_value' => isset($round_data->status_id) ? $round_data->status_id : 0, 
+      '#default_value' => $round_data->status_id, 
       '#options' => Round::getStatuses());
     
     // per ogni competizione
@@ -2373,6 +2380,8 @@ function fantacalcio_admin_round_submit($form, &$form_state) {
   }
   elseif ($form_state["values"]["action"] == "create") {
     // replace round
+    $query = db_delete("fanta_rounds");
+    $query->condition("round", $form_state["values"]["round"]);
     
     $query = db_insert("fanta_rounds");
     $query->fields(array(
@@ -2380,6 +2389,7 @@ function fantacalcio_admin_round_submit($form, &$form_state) {
       "date" => $ts_start, 
       "end_date" => $ts_end, 
       "status" => $form_state["values"]["status"]));
+    $query->condition("round", $form_state["values"]["round"]);
     $result = $query->execute();
     
     $message = t("Giornata creata");

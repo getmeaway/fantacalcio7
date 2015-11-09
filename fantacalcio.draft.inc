@@ -517,7 +517,7 @@ function fantamercato_show_group($g_id) {
     drupal_set_title(filter_xss("Mercato - " . Group::get($g_id)->name . " - Riepilogo"));
     $buy_form = drupal_get_form('group_buy_player_form', $g_id);
     return fantamercato_links($g_id) 
-    . drupal_render($buy_form)
+    . "<div class='well'>" . drupal_render($buy_form) . "</div>"
  . "<br>" . group_summary($g_id) . "<br>" . get_last_boughts($g_id, 5);
   }
   else

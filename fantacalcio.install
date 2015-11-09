@@ -1239,6 +1239,7 @@ variable_set('fantacalcio_points_assists', 0);
 variable_set('fantacalcio_points_draw_goals', 0);
 variable_set('fantacalcio_points_win_goals', 0);
 variable_set('fantacalcio_votes_provider', 0);
+variable_set('fantacalcio_automatic_updates', 0);
 
 db_insert("fanta_real_teams")->fields(array("rt_id" => 1, "name" => "Atalanta", "active" => 1))->execute(); 
 db_insert("fanta_real_teams")->fields(array("rt_id" => 2, "name" => "Bologna", "active" => 1))->execute();
@@ -1314,4 +1315,5 @@ variable_del('fantacalcio_points_assists');
 variable_del('fantacalcio_points_draw_goals');
 variable_del('fantacalcio_points_win_goals');
 variable_del('fantacalcio_votes_provider');
+variable_del('fantacalcio_automatic_updates');
 }

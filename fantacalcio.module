@@ -1068,10 +1068,18 @@ function fantacalcio_cron() {
   $vote_round = Round::getNext();
   $round = Round::getByRound($vote_round);
 
+  if (variable_get("fantacalcio_automatic_updtes", 0)) {
+
   //status giocatori
   Player::updateStatus();
   
   //giornate
+  $rounds_dates = json_decode(file_get_contents(DATA_SOURCE_URL . "/rounds/rounds.json"));
+  foreach ($rounds_dates as $_round => $round_date) {
+    db_update("fanta_rounds")->fields(array("date" => $round_date->date, "end_date" => $round_date->date))->condition("round", $_round)->condition("status", "1", "!=")->execute();
+
+  }
+
   $matches = json_decode(file_get_contents(DATA_SOURCE_URL . "/matches/" . $round->round . ".json"));
 
   if (isset($matches->data) && count($matches->data) > 0) {
@@ -1089,6 +1097,8 @@ function fantacalcio_cron() {
   //calcola risultati 
   if (time() > $round->end_date && $round->status_id != 1)
     fantacalcio_cron_calculate_results($round->round);
+
+  }
 
   //promemoria formazioni
   if (time() > ($round->date - (6 * 3600)) && $round->reminder_sent == false)

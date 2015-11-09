@@ -20,33 +20,32 @@ function fantacalcio_block_user_summary() {
   
   $teams = Team::allByUser($user->uid);
   
-  //giornata
-  $vote_round = Round::getNext();
-  $round = Round::getByRound($vote_round);
-  
+  //prossima giornata
+  $next_round_number = Round::getNext();
+  $next_round = Round::getByRound($next_round_number);
+
   //orario giornata
-  $date = $round->date;
+  $date = $next_round->date;
 
   //per ogni competizione
-  $out_competitions = "";
-  foreach($round->competitions as $competition_id => $competition_round) {
-    
+  $out_next_competitions = "";
+  foreach($next_round->competitions as $competition_id => $competition_round) {
+
     $competition = Competition::get($competition_id);
-    
+
     //per ogni squadra dell'utente
     $rows = array();
     foreach($teams as $t_id => $team) {
 
       //partita utente?
       if ($team->hasMatch($competition_id, $competition_round->competition_round)) {
-        //partita 
+        //partita
         $match = Match::getByTeamAndRound($t_id, $competition_id, $competition_round->competition_round);
         //formazione inserita o no
-//         $rows[$t_id][] = l($match->home_team . " - " . $match->away_team, "scheda/partita/" . $match->id);
-        $rows[$t_id][] = $match->home_team . " - " . $match->away_team;
-        
+        $rows[$t_id][] = array("data" => $match->home_team . " - " . $match->away_team, "width" => "50%");
+
         $lineup = Lineup::get($competition_id, $t_id, $competition_round->competition_round);
-        
+
         if ($lineup != null) {
            if (time() > $date)
              $rows[$t_id][] = "<i>" . t("Formazione inserita"). "</i>";
@@ -61,88 +60,97 @@ function fantacalcio_block_user_summary() {
         }
 $rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $match->id, array("html" => true) ) ;
       }
-      
+
     }
 
     if (count($rows) > 0) {
-      $out_competitions .= "<strong>" . $competition->name . " - " . $competition_round->label . "</strong>";
-      $out_competitions .= theme("table", array("rows" => $rows, "attributes" => array("class" => array("table", "table-responsive"))));
+      $out_next_competitions .= "<em class='-pull-right'>" . $competition->name . " - " . $competition_round->label . "</em>";
+      $out_next_competitions .= theme("table", array("rows" => $rows, "attributes" => array("class" => array("table", "table-responsive"))));
     }
   }
-  
-  $out = "<h4 class='pull-right clearfix'><strong>" . date("d-m-Y H:i", $round->date) . "</strong></h4>";
+
+  $out_next = "<h4 class='bold'>" 
+	. ((time() > $next_round->date) ? t("Giornata in corso") : t("Prossima giornata") ."<span class='pull-right clearfix'>" . date("d-m-Y H:i", $next_round->date) . "</span>") . "</h4>";
+  $out_next .= "<div class='clearfix'></div>";
+  $out_next .= $out_next_competitions;
+ 
+  //ultima giornata
+  $last_round_number = Round::getLast();
+  $last_round = Round::getByRound($last_round_number);
+
+  //orario giornata
+  $date = $last_round->date;
+
+  //per ogni competizione
+  $out_last_competitions = "";
+  foreach($last_round->competitions as $competition_id => $competition_round) {
+
+    $competition = Competition::get($competition_id);
+
+    //per ogni squadra dell'utente
+    $rows = array();
+    foreach($teams as $t_id => $team) {
+
+      //partita utente?
+      if ($team->hasMatch($competition_id, $competition_round->competition_round)) {
+        //partita
+        $match = Match::getByTeamAndRound($t_id, $competition_id, $competition_round->competition_round);
+        $rows[$t_id][] = array("data" => $match->home_team . " - " . $match->away_team, "width" => "50%");
+		$rows[$t_id][] = $match->goals_1 . "-" . $match->goals_2;
+		$rows[$t_id][] = $match->tot_1 . "-" . $match->tot_2;
+		$rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $match->id, array("html" => true) ) ;
+      }
+
+    }
+
+    if (count($rows) > 0) {
+      $out_last_competitions .= "<em class='-pull-right'>" . $competition->name . " - " . $competition_round->label . "</em>";
+      $out_last_competitions .= theme("table", array("rows" => $rows, "attributes" => array("class" => array("table", "table-responsive"))));
+    }
+  }
+
+  $out_last = "<h4 class='bold'>" . t("Ultima giornata") . "</h4>";
+  $out_last .= "<div class='clearfix'></div>";
+  $out_last .= $out_last_competitions;
+
+  $team = Team::get($t_id);
+
+    $default_competition = Competition::getDefault();
+
+    $rows = array();
+
+    $position = $team->statPosition($default_competition);
+
+    $rows[] = array(t("Posizione attuale"), $position . "&deg;");
+    $rows[] = array(
+      t("Punteggio attuale"),
+      $team->statPoints($default_competition) . " pt");
+
+    if ($position == 1)
+      $rows[] = array(
+        t("Distacco dal secondo"),
+        $team->statGap($default_competition) . " pt");
+    else
+      $rows[] = array(
+        t("Distacco dal primo"),
+        $team->statGap($default_competition) . " pt");
+
+  if (abs(time() - $next_round->date) > (abs(time() - $last_round->end_date)))
+    $out = $out_last . "<div class='clearfix'>&nbsp;</div>" .$out_next;
+  else 
+    $out = $out_next . "<div class='clearfix'>&nbsp;</div>" .$out_last;
+
+  $out .= "<div class='clearfix'>&nbsp;</div>";
+  $out .= "<h4 class='bold'>" . t("Situazione") . "</h4>";
   $out .= "<div class='clearfix'></div>";
-  $out .= $out_competitions;
-  
+  $out .= theme("table", array("rows" => $rows, "attributes" => array("class" => array("table", "table-responsive"))));
+ 
   return $out;
 }
 
 function fantacalcio_block_competition_summary() {
   return "competition summary";
 }
-
-
-function fantacalcio_block_riepilogo() {
-
-  $out = ''; $out_li = '';
-
-  $out_li .= fantacalcio_avviso_formazioni();
-  $out_li .= fantacalcio_avviso_sondaggi();
-  if (module_exists('fantasfide')) $out_li .= fantacalcio_avviso_sfide();
-  if (module_exists('privatemsg')) $out_li .= fantacalcio_avviso_messaggi();
-  if (module_exists('facebook_status')) $out_li .= fantacalcio_avviso_bacheca();
-  if (module_exists('bets')) $out_li .= fantacalcio_avviso_scommesse();
-
-  if (!empty($out_li))
-    $out .= "\n<div>
-        <ul>"
-      . $out_li
-      . "\n</ul>
-        </div>";
-
-  return $out;
-}
-
-function check_formazione_inserita() {
-
-  global $user;
-
-  $this_round = get_last_votes() + 1;
-  $t_id = get_team_id_by_user($user->uid);
-  
-  $date = db_result(db_query("SELECT date FROM {fanta_rounds} WHERE round = '%d'", $this_round));
-
-  $rounds = array();
-  $sql = "SELECT * FROM {fanta_rounds_competitions} WHERE round = '%d'";
-  $result = db_query($sql, $this_round);
-  while ($row = db_fetch_array($result)) {
-    $rounds[$row['c_id']] = $row['competition_round'];
-  }
-
-  $errors = 0;
-  foreach ($rounds as $c_id => $round) {
-    $sql = "SELECT * FROM {fanta_matches} " .
-        "WHERE g_id IN (SELECT g_id FROM {fanta_groups} WHERE c_id = '%d' ) " .
-        "AND round = '%d' " .
-        "AND (t1_id = '%d' OR t2_id = '%d')";
-    $result = db_query($sql, $c_id, $round, $t_id, $t_id);
-    while ($row = db_fetch_array($result)) {
-      if ( ($date - time() ) < 86400 && ($date - time() ) > 0 ) {
-        $sqla = "SELECT * FROM {fanta_lineups_inserts} 
-              WHERE t_id = '%d' 
-              AND c_id = '%d' 
-              AND round = '%d'";
-        $resulta = db_query($sqla, $t_id, $c_id, $round);
-
-        if (db_affected_rows($resulta) == 0) $errors++;
-      }
-    }
-  }
-
-  return array("errors" => $errors, "date" => $date);
-
-}
-
 
 function fantacalcio_block_countdown() {
 

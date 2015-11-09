@@ -656,19 +656,19 @@ function show_team_stats($t_id) {
     
     $position = $team->statPosition($default_competition);
     
-    $rows[] = array(t("Posizione attuale"), $position);
+    $rows[] = array(t("Posizione attuale"), $position . "&deg;");
     $rows[] = array(
       t("Punteggio attuale"), 
-      $team->statPoints($default_competition));
+      $team->statPoints($default_competition) . " pt");
     
     if ($position == 1)
       $rows[] = array(
         t("Distacco dal secondo"), 
-        $team->statGap($default_competition));
+        $team->statGap($default_competition) . " pt");
     else
       $rows[] = array(
         t("Distacco dal primo"), 
-        $team->statGap($default_competition));
+        $team->statGap($default_competition) . " pt");
     
     $rows[] = array(
       t("Miglior punteggio"), 

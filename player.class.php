@@ -285,7 +285,9 @@ class Player {
         
     $result = $query->execute();
     $rt_id = $result->fetchField();
-    
+   
+    $status->match = "";
+ 
     $query = db_select("fanta_real_teams_matches", "m");
     	$query->join("fanta_real_teams", "t1", "m.rt1_id = t1.rt_id");
         $query->join("fanta_real_teams", "t2", "m.rt2_id = t2.rt_id");

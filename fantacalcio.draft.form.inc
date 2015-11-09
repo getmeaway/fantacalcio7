@@ -6,7 +6,7 @@
  *
  */
 function group_buy_player_form($form, &$form_state, $g_id) {
-  $form['#theme'] = "group_buy_player";
+  //$form['#theme'] = "group_buy_player";
   
   $teams = Team::allByGroup($g_id);
   $teams_options = array();
@@ -23,7 +23,8 @@ function group_buy_player_form($form, &$form_state, $g_id) {
   ;
   $form['cost'] = array(
     '#type' => 'textfield', 
-    '#size' => 5, 
+    '#size' => 5,
+    "#autocomplete" => "off",
     "#default_value" => 1)
   // "#title" => t("Costo")
   
@@ -388,9 +389,9 @@ function theme_team_buy_player($variables) {
   $form = $variables["form"];
   
   $row = array(
-    drupal_render($form["player"]), 
-    drupal_render($form["cost"]), 
-    drupal_render_children($form)
+//     drupal_render($form["player"]), 
+//     drupal_render($form["cost"]), 
+//     drupal_render_children($form)
       
   );
   

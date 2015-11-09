@@ -83,7 +83,7 @@ class Lineup {
 		$lineup[$pl_id]["status_position"] = $player_status->position;
 		$lineup[$pl_id]["status_class"] = fantacalcio_get_status_classes($player_status->status, $player_status->position);
 		$lineup[$pl_id]["updated"] = $player_status->updated;
-		$lineup[$pl_id]["match"] = $player_status->match;
+		$lineup[$pl_id]["match"] = isset($player_status->match) ? $player_status->match : "";
 	}
     }
         
@@ -109,6 +109,11 @@ class Lineup {
     
     foreach ($result as $row) {
       $pl_id = $row->pl_id;
+      
+      $player = Player::get($pl_id);
+
+      $player_status = $player->getStatus($round->round);
+
       $lineup[$pl_id] = array(
         "pl_id" => $pl_id, 
         "name" => $row->name, 
@@ -119,7 +124,7 @@ class Lineup {
         "status_position" => $row->status_position, 
         "status_class" => fantacalcio_get_status_classes($row->status, $row->status_position), 
         "updated" => $row->updated, 
-        "match" => $player_status->match,
+        "match" => isset($player_status->match) ? $player_status->match : "",
         "position" => $row->position);
     }
     

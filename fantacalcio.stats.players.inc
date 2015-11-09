@@ -151,8 +151,8 @@ var votes_options = {legendTemplate : '<ul class=\"<%=name.toLowerCase()%>-legen
     margin-right: 5px;
 }", "inline");
   
-	  $out .= "<div class='col-xs-12 col-sm-6 pull-right'>" . $player_summary . "</div>";
-	  $out .= "<div class='col-xs-12 col-sm-6 pull-left'>";
+	  $out .= "<div class='col-xs-12 col-sm-4 pull-right'>" . $player_summary . "</div>";
+	  $out .= "<div class='col-xs-12 col-sm-8 pull-left'>";
 	  $out .= "<h4>" . t("Presenze e voti") . "</h4>";
 	 $out .= "<div class='row'>";
 	  $out .= "<div class='col-xs-12 col-sm-5'><canvas class='pull-left' id='presences-chart'></canvas><div id='presences-chart-legend' class='chart-legend pull-right'></div></div>";
@@ -244,7 +244,7 @@ function player_rounds_stats($pl_id) {
   $result = $query->execute();
 
   foreach ($result as $row) {
-    $votes[$row->round] = array('round' => $row->round, 'team' => $row->team, 'total' => array("data" => "-", "colspan" => 9));
+    $votes[$row->round] = array('round' => $row->round, 'team' => $row->team, 'total' => array("data" => "-", "colspan" => 10));
     $chart[$row->round] = array('round' => $row->round, 'total' => 0, 'vote' => 0);
   }
 
@@ -648,18 +648,43 @@ function theme_fantastats_choose_stats_form($variables) {
 }
 
 function get_stats_types() {
-  return array(
+  $types = array(
     "total" => "Media FantaVoto", 
-    "vote" => "Media Voto", 
-    "goals_for" => "Goal fatti", 
-    "goals_against" => "Goal subiti", 
-    "assists" => "Assist", 
-    "yellow_card" => "Ammonizioni", 
-    "red_card" => "Espulsioni", 
-    "penalty_goals" => "Gol rigore", 
-    "saved_penalties" => "Rigore parato", 
-    "missed_penalties" => "Rigore sbagliato", 
-    "own_goals" => "Autogol");
+    "vote" => "Media Voto");
+
+  if (variable_get("fantacalcio_points_goals_for") != 0) 
+    $types["goals_for"] = t("Goal fatti");
+    
+if (variable_get("fantacalcio_points_goals_against") != 0)
+    $types["goals_against"] = t("Goal subiti"); 
+    
+if (variable_get("fantacalcio_points_assists") != 0)
+    $types["assists"] = t("Assist");
+    
+if (variable_get("fantacalcio_points_yellow_card") != 0)
+    $types["yellow_card"] = t("Ammonizioni"); 
+    
+if (variable_get("fantacalcio_points_red_card") != 0)
+    $types["red_card"] = t("Espulsioni");
+    
+if (variable_get("fantacalcio_points_penalty_goals") != 0)
+    $types["penalty_goals"] = t("Gol rigore"); 
+    
+if (variable_get("fantacalcio_points_saved_penalties") != 0)
+    $types["saved_penalties"] = t("Rigore parato"); 
+    
+if (variable_get("fantacalcio_points_missed_penalties") != 0)
+    $types["missed_penalties"] = t("Rigore sbagliato"); 
+    
+if (variable_get("fantacalcio_points_goals_for") != 0)
+    $types["own_goals"] = t("Autogol");
+
+if (variable_get("fantacalcio_points_draw_goal") != 0)
+    $types["draw_goal"] = t("Gol pareggio");
+
+if (variable_get("fantacalcio_points_win_goals") != 0)
+    $types["win_goal"] = t("Gol vittoria");
+  return $types;
 }
 
 function get_player_fantateams($pl_id) {

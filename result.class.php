@@ -106,18 +106,18 @@ class Result {
   $i = 0;
 
   // cancello i giocatori della giornata per evitare doppioni
-  db_delete("fanta_players_rounds")->condition("round", $round)->execute();
+  db_delete("fanta_players_rounds")->condition("round", $round + 1)->execute();
 
   $query = db_select("fanta_players_rounds", "pr");
-  $query->condition("round", $round - 1);
-  $query->fields("pr"); // "SELECT DISTINCT pl_id, rt_id as team, active FROM {fanta_players_teams} WHERE round = '%d'";
-  $result = $query->execute(); // ($sql, ($round - 1));
+  $query->condition("round", $round);
+  $query->fields("pr"); 
+  $result = $query->execute();
 
   foreach ($result as $row) {
     $i++;
 
     db_insert("fanta_players_rounds")
-    ->fields(array("pl_id" => $row->pl_id, "round" => $round, "rt_id" => $row->rt_id, "quotation" => $row->quotation, "not_rounded_quotation" => $row->not_rounded_quotation, "active" => $row->active))
+    ->fields(array("pl_id" => $row->pl_id, "round" => $round + 1, "rt_id" => $row->rt_id, "quotation" => $row->quotation, "not_rounded_quotation" => $row->not_rounded_quotation, "active" => $row->active))
     ->execute();
   }
 
@@ -518,7 +518,7 @@ class Result {
   
     $body = "";
     foreach ($round->competitions as $c_id => $competition_round) {
-      $body .= $competition_round->label . " " . $competitions[$c_id]->name . ", ";
+      $body .= l($competition_round->label . " " . $competitions[$c_id]->name , "calendario/" . $competitions[$c_id]->name) . ", ";
     }
   
     $main_c_id = variable_get("fantacalcio_main_competition", 1);
@@ -540,7 +540,8 @@ class Result {
   
     $node->body[$node->language][0]['value'] = $body;
     $node->body[$node->language][0]['summary'] = $body;
-  
+    $node->body[$node->language][0]['format']  = 'full_html'; 
+ 
     $node->status = 1;   // (1 or 0): published or unpublished
     $node->promote = 1;  // (1 or 0): promoted to front page or not
     $node->sticky = 0;  // (1 or 0): sticky at top of lists or not
