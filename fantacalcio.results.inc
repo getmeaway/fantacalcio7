@@ -579,6 +579,8 @@ function fantacalcio_upload_votes($vote_round) {
 
 function votes_upload_form($form, $form_state, $round) {
   
+  global $providers;
+
   // $form['#redirect'] = 'risultati/titolari';
   $last_round = 0;
   $all_real_teams = RealTeam::all();
@@ -624,8 +626,8 @@ function votes_upload_form($form, $form_state, $round) {
   
   $form['provider'] = array(
     '#type' => 'checkboxes', 
-    '#options' => array(1 => "Milano", 2 => "Roma", 3 => "Napoli"), 
-    "#default_value" => array(1, 2, 3), 
+    '#options' => $providers,
+    '#default_value' => array(variable_get('fantacalcio_votes_provider', 1)), 
     '#title' => t('Provider'));
   
   $form['round'] = array(

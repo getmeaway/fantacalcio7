@@ -376,6 +376,8 @@ function fantacalcio_calendario_round($c_name = '', $round) {
 
 function show_match_details($m_id) {
   $match = Match::get($m_id);
+
+  if ($match != null) { 
   $round = Round::getByCompetitionRound($match->round, $match->c_id);
   
 //   $empty_rows = get_details_empty_rows($match);
@@ -415,6 +417,9 @@ function show_match_details($m_id) {
   }
   
   return $out;
+  }
+  else 
+    return t("Nessuna partita con questo id");
 }
 
 function show_match_overtime($match, $t_id) {

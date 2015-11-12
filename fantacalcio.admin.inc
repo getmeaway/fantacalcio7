@@ -339,11 +339,26 @@ function fantacalcio_admin_settings() {
     '#options' => get_providers_for_select(), 
     '#description' => t('Redazione di riferimento per voti e lista giocatori'));
  
-  $form["fantacalcio_data_load"]['fantacalcio_automatic_updtes'] = array(
+  $form["fantacalcio_data_load"]['fantacalcio_automatic_updates'] = array(
     '#type' => 'checkbox',
     '#title' => t('Aggiornamenti automatici'),
-    '#default_value' => variable_get('fantacalcio_automatic_updtes', '0'),
-    '#description' => t('Selezionare se si desidera aggiornare i dati (voti, ista giocatori, data partite, status giocatori) in modo automatico.'));
+    '#default_value' => variable_get('fantacalcio_automatic_updates', '0'),
+    '#description' => t('Selezionare se si desidera aggiornare i dati (voti, lista giocatori, data partite, status giocatori) in modo automatico.'));
+
+  $form["fantacalcio_data_load"]['fantacalcio_lineups_reminder_hours'] = array(
+    '#type' => 'select',
+    '#title' => t("Ore di anticipo del promemoria di invio formazione"),
+    '#options' => array(0,1,2,3,4,5,6,7,8,9,10,11,12),
+    '#default_value' => variable_get('fantacalcio_lineups_reminder_hours', '0'),
+    '#description' => t("Quante ore prima dell'orario delle partite occorre inviare il promemoria agli utenti per l'invio delle formazioni (0 per non inviare)"));
+  
+  $form["fantacalcio_data_load"]['fantacalcio_round_advance_minutes'] = array(
+    '#type' => 'select',
+    '#title' => t("Minuti di anticipo sull'inizio della giornta per impedire l'invio delle formazioni"),
+    '#options' => array(0,5,10,15,20,25,30,35,40,45,50,55,60),
+    '#default_value' => variable_get('fantacalcio_round_advance_minutes', '0'),    
+    '#description' => t("Quanti minuti prima dell'inizio della giornata occorre ore impedire l'invio delle formazioni"));
+
  
   return system_settings_form($form);
 }
@@ -3137,16 +3152,12 @@ function get_teams_for_select($g_id) {
 }
 
 function get_providers_for_select() {
+  global $providers;
+
   $providers_options = array();
-  
-  $query = db_select("fanta_vote_providers", "p");
-  $query->condition("active", 1);
-  $query->fields("p");
-  
-  $result = $query->execute();
-  
-  foreach ($result as $row) {
-    $providers_options[$row->p_id] = $row->name;
+ 
+  foreach ($providers as $p_id => $provider) {
+    $providers_options[$p_id] = $provider;
   }
   
   return $providers_options;

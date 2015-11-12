@@ -67,7 +67,7 @@ class Round
 		$query = db_select("fanta_rounds_competitions", "rc");
 		$query->join("fanta_rounds", "r", "r.round = rc.round");
 		$query->fields("rc");
-		$query->fields("r", array("round", "date"));
+		$query->fields("r");
 		$query->orderBy("r.round");
 		
 		$result = $query->execute();

@@ -25,6 +25,8 @@ $GLOBALS["roles_long"] = $roles_long;
 $GLOBALS["roles"] = $roles;
 $GLOBALS["rounds_status"] = array("-1" => t("Risultati provvisori"), "0" => t("Non giocata"), "1" => t("Giocata"), 
 "2" => t("Congelata"), "3" => t("Saltata") );
+$GLOBALS["providers"] = array("1" => "Milano", "2" => "Roma", "3" => "Napoli", "4" => "Italia" );
+
 // Css file
 // drupal_add_css('sites/all/modules/fantacalcio/css/style.css', 'themes', 'all', TRUE);
 

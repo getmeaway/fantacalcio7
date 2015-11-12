@@ -300,27 +300,6 @@ $schema['fanta_real_teams'] = array(
   'primary key' => array('rt_id'),
 );
 
-$schema['fanta_round_statuses'] = array(
-
-  'fields' => array(
-    's_id' => array(
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
-    'status' => array(
-      'type' => 'varchar',
-      'length' => '32',
-      'not null' => TRUE,
-    ),
-    'result' => array(
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-    ),
-  ),
-  'primary key' => array('s_id'),
-);
-
 $schema['fanta_rounds_competitions'] = array(
 
   'fields' => array(
@@ -676,27 +655,6 @@ $schema['fanta_squad_changes'] = array(
   'unique keys' => array(
     's_id' => array('s_id')
   ),
-);
-
-$schema['fanta_vote_providers'] = array(
-
-  'fields' => array(
-    'p_id' => array(
-      'type' => 'serial',
-      'not null' => TRUE,
-    ),
-    'name' => array(
-      'type' => 'varchar',
-      'length' => '64',
-      'not null' => TRUE,
-    ),
-    'active' => array(
-      'type' => 'int',
-      'size' => 'tiny',
-      'not null' => TRUE,
-    ),
-  ),
-  'primary key' => array('p_id'),
 );
 
 $schema['fanta_votes'] = array(
@@ -1240,37 +1198,6 @@ variable_set('fantacalcio_points_draw_goals', 0);
 variable_set('fantacalcio_points_win_goals', 0);
 variable_set('fantacalcio_votes_provider', 0);
 variable_set('fantacalcio_automatic_updates', 0);
-
-db_insert("fanta_real_teams")->fields(array("rt_id" => 1, "name" => "Atalanta", "active" => 1))->execute(); 
-db_insert("fanta_real_teams")->fields(array("rt_id" => 2, "name" => "Bologna", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 3, "name" => "Carpi", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 4, "name" => "Chievo", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 5, "name" => "Empoli", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 6, "name" => "Fiorentina", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 7, "name" => "Frosinone", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 8, "name" => "Genoa", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 9, "name" => "Inter", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 10, "name" => "Juventus", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 11, "name" => "Lazio", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 12, "name" => "Milan", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 13, "name" => "Napoli", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 14, "name" => "Palermo", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 15, "name" => "Roma", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 16, "name" => "Sampdoria", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 17, "name" => "Sassuolo", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 18, "name" => "Torino", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 19, "name" => "Udinese", "active" => 1))->execute();
-db_insert("fanta_real_teams")->fields(array("rt_id" => 20, "name" => "Verona", "active" => 1))->execute(); 
-
-db_insert("fanta_vote_providers")->fields(array("p_id" => 1, "name" => "Milano", "active" => 1))->execute();
-db_insert("fanta_vote_providers")->fields(array("p_id" => 2, "name" => "Roma", "active" => 1))->execute(); 
-db_insert("fanta_vote_providers")->fields(array("p_id" => 3, "name" => "Napoli", "active" => 1))->execute();  
-
-db_insert("fanta_round_statuses")->fields(array("s_id" => -1, "status" => "Risultati provvisori", "result" => 0))->execute();
-db_insert("fanta_round_statuses")->fields(array("s_id" => 0, "status" => "Non giocata", "result" => 0))->execute();
-db_insert("fanta_round_statuses")->fields(array("s_id" => 1, "status" => "Giocata", "result" => 0))->execute();
-db_insert("fanta_round_statuses")->fields(array("s_id" => 2, "status" => "Congelata", "result" => 0))->execute();
-db_insert("fanta_round_statuses")->fields(array("s_id" => 3, "status" => "Saltata", "result" => 0))->execute();
 
 }
 
