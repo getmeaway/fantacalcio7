@@ -354,8 +354,8 @@ function fantacalcio_admin_settings() {
   
   $form["fantacalcio_data_load"]['fantacalcio_round_advance_minutes'] = array(
     '#type' => 'select',
-    '#title' => t("Minuti di anticipo sull'inizio della giornta per impedire l'invio delle formazioni"),
-    '#options' => array(0,5,10,15,20,25,30,35,40,45,50,55,60),
+    '#title' => t("Minuti di anticipo sull'inizio della giornata per impedire l'invio delle formazioni"),
+    '#options' => array(0 => 0,5 => 5,10 => 10,15 => 15,20 => 20,25 => 25,30 => 30,35 => 35,40 => 40,45 => 45,50 => 50,55 => 55,60 => 60),
     '#default_value' => variable_get('fantacalcio_round_advance_minutes', '0'),    
     '#description' => t("Quanti minuti prima dell'inizio della giornata occorre ore impedire l'invio delle formazioni"));
 

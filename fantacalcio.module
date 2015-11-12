@@ -1116,7 +1116,7 @@ function fantacalcio_cron() {
   $vote_round = Round::getNext();
   $round = Round::getByRound($vote_round);
 
-  if (variable_get("fantacalcio_automatic_updtes", 0)) {
+  if (variable_get("fantacalcio_automatic_updates", 0)) {
 
   //status giocatori
   Player::updateStatus();
@@ -1133,6 +1133,7 @@ function fantacalcio_cron() {
   if (isset($matches->data) && count($matches->data) > 0) {
     $dates = array_map(function ($item){ return $item->date;}, $matches->data);
     $start = min($dates);
+    $start -= variable_get('fantacalcio_round_advance_minutes', '0') * 60;
     $end = max($dates) + 5 * 3600; //5 ore dopo l'inizio dell'ultima partita
     $round->updateDates($start, $end);
 
@@ -1149,7 +1150,8 @@ function fantacalcio_cron() {
   }
 
   //promemoria formazioni
-  if (time() > ($round->date - (6 * 3600)) && $round->reminder_sent == false)
+  $reminder_hours = variable_get("fantacalcio_lineups_reminder_hours", 0);
+  if ($reminder_hours > 0 && time() > ($round->date - ($reminder_hours * 3600)) && $round->reminder_sent == false)
     fantacalcio_create_lineups_reminder($round); 
 }
 

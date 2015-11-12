@@ -1198,7 +1198,8 @@ variable_set('fantacalcio_points_draw_goals', 0);
 variable_set('fantacalcio_points_win_goals', 0);
 variable_set('fantacalcio_votes_provider', 0);
 variable_set('fantacalcio_automatic_updates', 0);
-
+variable_set('fantacalcio_round_advance_minutes', '0');
+variable_set('fantacalcio_lineups_reminder_hours', '0');
 }
 
 #Disinstalla il Plug In
@@ -1243,4 +1244,6 @@ variable_del('fantacalcio_points_draw_goals');
 variable_del('fantacalcio_points_win_goals');
 variable_del('fantacalcio_votes_provider');
 variable_del('fantacalcio_automatic_updates');
+variable_del('fantacalcio_round_advance_minutes');
+variable_del('fantacalcio_lineups_reminder_hours');
 }
