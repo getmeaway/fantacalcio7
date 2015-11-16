@@ -801,8 +801,7 @@ function fantacalcio_admin_groups_list() {
       t("Attivo"), 
       t("Calendario"), 
       t("Classfica"), 
-      t("Formazioni"), 
-      t("Newsletter"));
+      t("Formazioni"));
     foreach ($groups as $g_id => $group) {
       $rows[] = array(
         l($competitions[$group->competition_id]->name . " - " . $group->name, "admin/fantacalcio/groups/" . $g_id), 
@@ -811,8 +810,7 @@ function fantacalcio_admin_groups_list() {
         // "<img src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($group->active) . "'>",
         $group->matches_order, 
         $group->standings_order, 
-        $group->lineups_order, 
-        $group->newsletters_order);
+        $group->lineups_order);
     }
     $out .= theme("table", (array(
       "header" => $header, 
@@ -836,9 +834,7 @@ function fantacalcio_admin_group($form, &$form_state, $g_id = "") {
       "active" => "", 
       "matches" => "", 
       "standings" => "", 
-      "lineups" => "", 
-      "newsletter_standings" => "", 
-      "newsletter_matches" => "");
+      "lineups" => "");
     if (!empty($g_id) && Group::exists($g_id)) {
       $group = Group::get($g_id);
       $action = "edit";
@@ -898,32 +894,28 @@ function fantacalcio_admin_group($form, &$form_state, $g_id = "") {
       '#suffix' => ((count($teams_options) == 0) ? t("Nessuna squadra inserita") : ""));
     
     $form['matches_order'] = array(
-      '#type' => 'weight', 
-      '#title' => t('Calendario'), 
+      '#type' => 'select',
+      '#options' => array(0,1,2,3,4,5,6,7,8,9,10),
+      '#title' => t('Ordine Calendario'), 
       '#default_value' => (isset($group)) ? $group->matches_order : "", 
       '#description' => "0 per non mostrare il calendario, un numero positivo per mostrarlo <br>
                 (il numero inserito stabilisce l'ordine del girone rispetto agli altri nella visualizzazione del calendario)");
     
     $form['standings_order'] = array(
-      '#type' => 'weight', 
-      '#title' => t('Classifica'), 
+      '#type' => 'select',
+      '#options' => array(0,1,2,3,4,5,6,7,8,9,10),
+      '#title' => t('Ordine Classifica'), 
       '#default_value' => (isset($group)) ? $group->standings_order : "", 
       '#description' => "0 per non mostrare la classifica, un numero positivo per mostrarla <br>
                 (il numero inserito stabilisce l'ordine del girone rispetto agli altri nella visualizzazione della classifica)");
     
     $form['lineups_order'] = array(
-      '#type' => 'weight', 
-      '#title' => t('Formazioni'), 
+      '#type' => 'select',
+      '#options' => array(0,1,2,3,4,5,6,7,8,9,10),
+      '#title' => t('Ordine Formazioni'), 
       '#default_value' => (isset($group)) ? $group->lineups_order : "", 
       '#description' => "0 per non mostrare le formazioni, un numero positivo per mostrarle <br>
                 (il numero inserito stabilisce l'ordine del girone rispetto agli altri nella visualizzazione delle formazioni)");
-    
-    $form['newsletters_order'] = array(
-      '#type' => 'weight', 
-      '#title' => t('Newsletter'), 
-      '#default_value' => (isset($group)) ? $group->newsletters_order : "", 
-      '#description' => "0 per non mostrare la newsletter, un numero positivo per mostrarlo <br>
-                (il numero inserito stabilisce l'ordine del girone rispetto agli altri nella visualizzazione del calendario)");
     
     $form['submit'] = array(
       '#type' => 'submit', 
@@ -955,8 +947,7 @@ function fantacalcio_admin_group_submit($form, &$form_state) {
       "active" => $form_state["values"]["active"], 
       "matches_order" => $form_state["values"]["matches_order"], 
       "standings_order" => $form_state["values"]["standings_order"], 
-      "lineups_order" => $form_state["values"]["lineups_order"], 
-      "newsletters_order" => $form_state["values"]["newsletters_order"]));
+      "lineups_order" => $form_state["values"]["lineups_order"]));
     $query->condition("g_id", $form_state["values"]["g_id"]);
     $query->execute();
     
@@ -994,8 +985,7 @@ function fantacalcio_admin_group_submit($form, &$form_state) {
       "active" => $form_state["values"]["active"], 
       "matches_order" => $form_state["values"]["matches_order"], 
       "standings_order" => $form_state["values"]["standings_order"], 
-      "lineups_order" => $form_state["values"]["lineups_order"], 
-      "newsletters_order" => $form_state["values"]["newsletters_order"]));
+      "lineups_order" => $form_state["values"]["lineups_order"]));
     $query->execute();
     
     // squadre del girone
@@ -1365,22 +1355,17 @@ function fantacalcio_admin_competitions_list() {
       t("Default"), 
       t("Calendario"), 
       t("Classfica"), 
-      t("Formazioni"), 
-      t("Newsletter"));
+      t("Formazioni"));
     foreach ($competitions as $c_id => $competition) {
       $rows[] = array(
         l($competition->name, "admin/fantacalcio/competitions/" . $c_id), 
         $competition_types[$competition->type], 
-        fantacalcio_check_value($competition->active),  // "<i class=\"fa " . ( ? "fa-check-circle text-success" : "fa-minus-circle text-danger") . "\"></i>",
-        fantacalcio_check_value($competition->is_default),  // ? "fa-check-circle text-success" : "fa-minus-circle text-danger") . "\"></i>",
-        fantacalcio_check_value($competition->has_matches),  // ? "fa-check-circle text-success" : "fa-minus-circle text-danger") . "\"></i>",
-        fantacalcio_check_value($competition->has_standings),  // ? "fa-check-circle text-success" : "fa-minus-circle text-danger") . "\"></i>",
-        fantacalcio_check_value($competition->has_lineups),  // ? "fa-check-circle text-success" : "fa-minus-circle text-danger") . "\"></i>",
-        fantacalcio_check_value($competition->has_newsletters)); // ? "fa-check-circle text-success" : "fa-minus-circle text-danger") . "\"></i>",
-                                                                   // "<img src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($competition->has_matches) . "'>",
-                                                                   // "<img src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($competition->has_standings) . "'>",
-                                                                   // "<img src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($competition->has_lineups) . "'>",
-                                                                   // "<img src='" .base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . get_image_check($competition->has_newsletter) . "'>",
+        fantacalcio_check_value($competition->active),
+        fantacalcio_check_value($competition->is_default),
+        fantacalcio_check_value($competition->has_matches),
+        fantacalcio_check_value($competition->has_standings),
+        fantacalcio_check_value($competition->has_lineups));
+                                                            
     }
     $out .= theme("table", (array(
       "header" => $header, 
@@ -1402,7 +1387,6 @@ function fantacalcio_admin_competition($form, &$form_state, $c_id = "") {
     "has_matches" => "", 
     "has_standings" => "", 
     "has_lineups" => "", 
-    "has_newsletters" => "", 
     "is_default" => false);
   if (!empty($c_id) && Competition::exists($c_id)) {
     $competition_data = Competition::get($c_id);
@@ -1446,23 +1430,18 @@ function fantacalcio_admin_competition($form, &$form_state, $c_id = "") {
   
   $form['matches'] = array(
     '#type' => 'checkbox', 
-    '#title' => t('Calendario'), 
+    '#title' => t('Mostra Calendario'), 
     '#default_value' => $competition_data->has_matches);
   
   $form['standings'] = array(
     '#type' => 'checkbox', 
-    '#title' => t('Classifica'), 
+    '#title' => t('Mostra Classifica'), 
     '#default_value' => $competition_data->has_standings);
   
   $form['lineups'] = array(
     '#type' => 'checkbox', 
-    '#title' => t('Formazioni'), 
+    '#title' => t('Mostra Formazioni'), 
     '#default_value' => $competition_data->has_lineups);
-  
-  $form['newsletter'] = array(
-    '#type' => 'checkbox', 
-    '#title' => t('Newsletter'), 
-    '#default_value' => $competition_data->has_newsletters);
   
   $form['submit'] = array(
     '#type' => 'submit', 
@@ -1493,8 +1472,7 @@ function fantacalcio_admin_competition_submit($form, &$form_state) {
       'is_default' => $form_state["values"]["is_default"], 
       'has_matches' => $form_state["values"]["matches"], 
       'has_standings' => $form_state["values"]["standings"], 
-      'has_lineups' => $form_state["values"]["lineups"], 
-      'has_newsletters' => $form_state["values"]["newsletter"]))->condition('c_id', $form_state["values"]["c_id"], '=')->execute();
+      'has_lineups' => $form_state["values"]["lineups"]))->condition('c_id', $form_state["values"]["c_id"], '=')->execute();
     
     drupal_set_message("Competizione modificata");
   }
@@ -1512,8 +1490,7 @@ function fantacalcio_admin_competition_submit($form, &$form_state) {
       'is_default' => $form_state["values"]["is_default"], 
       'has_matches' => $form_state["values"]["matches"], 
       'has_standings' => $form_state["values"]["standings"], 
-      'has_lineups' => $form_state["values"]["lineups"], 
-      'has_newsletters' => $form_state["values"]["newsletter"]))->execute();
+      'has_lineups' => $form_state["values"]["lineups"]))->execute();
     
     drupal_set_message("Competizione creata");
     
@@ -2665,7 +2642,7 @@ function fantacalcio_admin_rounds_list_import_clear($form, &$form_state) {
 function fantacalcio_admin_rounds_list_import_submit($form, &$form_state) {
   $rounds_url = DATA_SOURCE_URL . "/rounds/rounds.json?t=" . time();
   
-  $rounds = json_decode(file_get_contents($rounds_url));print_r($rounds);die();
+  $rounds = json_decode(file_get_contents($rounds_url));
     
   db_delete("fanta_rounds")->execute();
 

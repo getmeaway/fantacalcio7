@@ -9,7 +9,6 @@ class Group
 	var $competition_name;
 	var $matches_order;
 	var $standings_order;
-	var $newsletters_order;
 	var $teams;
 
 	function __construct ($id, $name) {
@@ -32,7 +31,6 @@ class Group
 				$group->matches_order = $row->matches_order;
 				$group->standings_order = $row->standings_order;
 				$group->lineups_order = $row->lineups_order;
-				$group->newsletters_order = $row->newsletters_order;
 				$group->teams = Team::allByGroup($row->g_id);
 			}
 
@@ -60,7 +58,6 @@ class Group
 			$group->matches_order = $row->matches_order;
 			$group->standings_order = $row->standings_order;
 			$group->lineups_order = $row->lineups_order;
-			$group->newsletters_order = $row->newsletters_order;
 			$group->teams = Team::allByGroup($row->g_id);
 			$groups[$row->g_id] = $group;
 		}
@@ -80,7 +77,6 @@ class Group
 			$group->competition_id = $row->c_id;
 			$group->matches_order = $row->matches_order;
 			$group->standings_order = $row->standings_order;
-			$group->newsletters_order = $row->newsletters_order;
 			$group->teams = Team::allByGroup($row->g_id);
 			$groups[$row->g_id] = $group;
 		}

@@ -339,7 +339,7 @@
 
 	});
 
-	$(document).ready(function(){
+	/*$(document).ready(function(){
 
 		var q = $("#search-string").val()
 		
@@ -373,7 +373,7 @@
 				console.log("d")
 			}
 		}
-	});
+	});*/
 
 	$(".buy-player").click(function() {
 		var id = $(this).attr("id").substring(4);
