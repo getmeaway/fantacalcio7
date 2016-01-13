@@ -526,6 +526,7 @@ function show_team_details($t_id = "") {
   if (!empty($t_id) && $team != null) {
     $rows[] = array("<h4>" . t("Allenatore") . "</h4>", $team->coach);
     $rows[] = array("<h4>" . t("Stadio") . "</h4>", $team->stadium);
+    $rows[] = array("<h4>" . t("Trofei") . "</h4>", $team->history);
     // $rows [] = array(
     // "<h4>" . t("Trofei") . "</h4>",
     // theme_team_history($team->honours)
