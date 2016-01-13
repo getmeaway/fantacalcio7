@@ -871,10 +871,10 @@ function insert_default_votes($teams = array(), $round, $number_default, $provid
       $message = substr($message, 0, -1);
       drupal_set_message(check_plain($message));
       
-      $sql = "SELECT DISTINCT pl_id FROM {fanta_players_teams} WHERE rt_id in (" . $team_sql . ") AND round = '%d'";
-      $result = db_query($sql, ($round - 1));
-      while ($row = db_fetch_array($result)) {
-        $sqla .= "\n(" . $row["pl_id"] . ", " . $provider_id . ", " . $round . ", " . variable_get('fantacalcio_default_vote_' . $number_default, '6') . ", " . variable_get('fantacalcio_default_vote_' . $number_default, '6') . "),";
+      $sql = "SELECT DISTINCT pl_id FROM {fanta_players_rounds} WHERE rt_id in (" . $team_sql . ") AND round = " . ($round - 1);
+      $result = db_query($sql);
+      foreach ($result as $row) {
+        $sqla .= "\n(" . $row->pl_id . ", " . $provider_id . ", " . $round . ", " . variable_get('fantacalcio_default_vote_' . $number_default, '6') . ", " . variable_get('fantacalcio_default_vote_' . $number_default, '6') . "),";
       }
       $sqla = substr($sqla, 0, -1);
       

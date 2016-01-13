@@ -74,7 +74,7 @@ function fantacalcio_init() {
       foreach($result as $row) {
         if (!isset($groups[$row->c_id]))
           $groups[$row->c_id] = array();
-        
+       //$groups[$row->c_id] = array(); 
         array_push($groups[$row->c_id], $row->g_id);
       }
     }
@@ -343,10 +343,10 @@ function fantacalcio_menu() {
     'file' => 'fantacalcio.lineups.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
   
-  $items['formazioni/insert/%/penalties'] = array(
-    'title' => 'Inserisci Rigoristi', 
+  $items['formazioni/insert/%/%/penalties'] = array(
+    'title' => 'Ordina Rigoristi', 
     'page callback' => 'fantacalcio_insert_penalties', 
-    'page arguments' => array(2), 
+    'page arguments' => array(2, 3), 
     'access arguments' => array('administer team'), 
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.lineups.inc', 
@@ -1168,8 +1168,6 @@ function fantacalcio_theme($existing, $type, $theme, $path) {
     'fantacalcio_admin_round' => array('render element' => 'form'), 
     'team_buy_player' => array('render element' => 'form'),
     'group_buy_player' => array('render element' => 'form'),
-    'insert_penalties_form' => array(
-      'arguments' => array("form" => NULL)), 
     'fantacalcio_admin_matches_calendar' => array('render element' => 'form'), 
     'fantastats_choose_stats_form' => array('render element' => 'form'), 
     'team' => array(

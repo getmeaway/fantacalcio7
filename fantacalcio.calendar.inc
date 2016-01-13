@@ -33,8 +33,14 @@ function get_matches_table($competition) {
   
   $output = array();
   $index = 0;
-  
-  foreach ($competition->groups as $g_id => $group) {
+ 
+  $_groups = $competition->groups;
+ 
+  uasort ($_groups , function($a, $b){if ($a->matches_order >= $b->matches_order) return 1; else return -1;} );
+
+  $already_active = false;
+ 
+  foreach ($_groups as $g_id => $group) {
     
     if ($group->matches_order > 0) {
       
@@ -106,9 +112,10 @@ function get_matches_table($competition) {
         "next_round" => $next_round_data));
       
       if (isset($user->groups)) { 
-        if (in_array($g_id, $user->groups[$competition->id]))
+        if (in_array($g_id, $user->groups[$competition->id]) && !$already_active) {
           $group->active = true;
-        else 
+	  $already_active = true;
+        } else 
           $group->active = false;
       }
       else if ($index == 1)

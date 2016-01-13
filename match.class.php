@@ -84,8 +84,8 @@ class Match {
     
     $query = db_select("fanta_matches", "m");
     $query->condition("m.g_id", $g_id);
-    $query->join("fanta_teams", "t1", "t1.t_id = m.t1_id");
-    $query->join("fanta_teams", "t2", "t2.t_id = m.t2_id");
+    $query->leftJoin("fanta_teams", "t1", "t1.t_id = m.t1_id");
+    $query->leftJoin("fanta_teams", "t2", "t2.t_id = m.t2_id");
     $query->join("fanta_groups", "g", "g.g_id = m.g_id");
     $query->join("fanta_rounds_competitions", "rc", "rc.competition_round = m.round AND rc.c_id = g.c_id");
     $query->join("fanta_rounds", "r", "r.round = rc.round");
@@ -102,8 +102,8 @@ class Match {
       $match->id = $row->m_id;
       $match->t1_id = $row->t1_id;
       $match->t2_id = $row->t2_id;
-      $match->home_team = $row->home_team;
-      $match->away_team = $row->away_team;
+      $match->home_team = $row->home_team != null ? $row->home_team : $row->t1_label;
+      $match->away_team = $row->away_team != null ? $row->away_team : $row->t2_label;
       $match->date = $row->date;
       $match->round = $row->round;
       $match->round_label = $row->round_label;

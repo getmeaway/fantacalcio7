@@ -33,7 +33,8 @@ class Lineup {
         $player = new Player($row->pl_id, $row->name, $row->role);
         $player->team = $row->team;
         $player->position = $row->position;
-        $positions[$row->position][$pl_id] = $player;
+        $player->penalty_position = $row->penalty_position;
+	$positions[$row->position][$pl_id] = $player;
       }
       
       $lineup = new Lineup();

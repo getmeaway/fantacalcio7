@@ -34,6 +34,7 @@ function get_standing_table_sd($competition) {
   
   $output = array();
   $index = 0;
+  $already_active = false;
   
   foreach($competition->groups as $g_id => $group) {
   	
@@ -104,8 +105,10 @@ function get_standing_table_sd($competition) {
 		$group->output = theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("class" => "collapse-table table table-responsive standings", "id" => "classifica_" . $g_id), "sticky" => "", "empty" => ""));
 	  	
 		if (isset($user->groups)) {
-		  if (in_array($g_id, $user->groups[$competition->id]))
+		  if (in_array($g_id, $user->groups[$competition->id]) && !$already_active) {
 		    $group->active = true;
+		    $already_active = true;
+		  }
 		  else
 		    $group->active = false;
 		}

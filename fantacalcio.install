@@ -143,6 +143,12 @@ $schema['fanta_competitions'] = array(
       'not null' => TRUE,
       'default' => 0,
     ),
+    'has_newsletters' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
   ),
   'primary key' => array('c_id'),
   'indexes' => array(
@@ -150,6 +156,7 @@ $schema['fanta_competitions'] = array(
     'is_default' => array('is_default'),
     'lineups' => array('has_lineups'),
     'matches' => array('has_matches'),
+    'newsletter' => array('has_newsletters'),
     'standings' => array('has_standings'),
   ),
 );
@@ -193,6 +200,12 @@ $schema['fanta_groups'] = array(
       'not null' => TRUE,
       'default' => 0,
     ),
+    'newsletters_order' => array(
+      'type' => 'int',
+      'size' => 'tiny',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
   ),
   'primary key' => array('g_id'),
   'indexes' => array(
@@ -200,6 +213,7 @@ $schema['fanta_groups'] = array(
     'c_id' => array('c_id'),
     'lineups' => array('lineups_order'),
     'matches' => array('matches_order'),
+    'newsletter_standings' => array('newsletters_order'),
     'standings' => array('standings_order'),
   ),
 );
@@ -1115,42 +1129,35 @@ $schema['fanta_penalties'] = array(
 
 #Installa il Plug In
 function fantacalcio_install() {
-
-	//creo ruolo allenatore
+	/*
+	//allenatore
+	$role = new stdClass();
+	$role->name = 'coach';
+	user_role_save($role);
 	
-	if (user_role_load_by_name('allenatore') == null) {
-	  $role = new stdClass();
-          $role->name = 'allenatore';
-	  user_role_save($role);
-	}
-	
-	$coach_role = user_role_load_by_name('allenatore');
+	$coach_role = user_role_load_by_name('coach');
 	$coach_rid = $coach_role->rid;
 
 	$coach_permissions = array(
-			'access content fantacalcio' => TRUE,
-			'administer team' => TRUE,
+			'access fantacalcio' => TRUE,
+			'manage team' => TRUE,
 	);
- 	user_role_change_permissions($coach_rid, $coach_permissions);
+// 	user_role_change_permissions($coach_rid, $coach_permissions);
   
-	//creo ruolo presidente
-	if (user_role_load_by_name('presidente') == null) {
-	  $role = new stdClass();
-	  $role->name = 'presidente';
-	  user_role_save($role);
-	}
+	//amministratore di lega
+	$role = new stdClass();
+	$role->name = 'league administrator';
+	user_role_save($role);
 	
- 	$administrator_role = user_role_load_by_name('presidente');
- 	$administrator_rid = $administrator_role->rid;
+// 	$administrator_role = user_role_load_by_name('league administrator');
+// 	$administrator_rid = $administrator_role->rid;
 	
- 	$administrator_permissions = array(
- 			'access content fantacalcio' => true, 
-			'administer team' => true, 
-			'administer draft' => true, 
-			'administer fantacalcio' => true, 
- 	);
- 	user_role_change_permissions($administrator_rid, $administrator_permissions);
-
+// 	$administrator_permissions = array(
+// 			'access fantacalcio' => TRUE,
+// 			'administer fantacalcio' => TRUE,
+// 	);
+// 	user_role_change_permissions($administrator_rid, $administrator_permissions);
+*/	
   //variabili di sistema
   variable_set('fantacalcio_user_can_create_team', 0);
 variable_set('fantacalcio_show_teams_filter', 0);

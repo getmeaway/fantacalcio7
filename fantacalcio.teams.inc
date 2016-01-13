@@ -4,7 +4,7 @@
 * @file fantacalcio.inc
 * 
 */
-function fantacalcio_team_form($form, &$form_state, $id) {
+function fantacalcio_team_form($form, $form_state, $id) {
   global $user;
   
   if ($id == null)
@@ -21,28 +21,24 @@ function fantacalcio_team_form($form, &$form_state, $id) {
   
   $form["title"] = array("#title" => check_plain($title));
   
-  if (variable_get("fantacalcio_team_change_name", 0) == 1 || $team == null) {
+  // if (variable_get("fantacalcio_team_change_name", 0) == 1 || $team == null) {
   $form["name"] = array(
     "#type" => "textfield", 
     "#title" => "Nome squadra", 
     "#default_value" => $team ? check_plain($team->name) : "", 
-    "#required" => TRUE);
-   }
-   else {
-   $form ["name"] = array(
-   "#type" => "hidden",
-   "#title" => "Nome squadra",
-   "#suffix" => "<h3>" . check_plain($team->name) . "</h3><br/>",
-   "#default_value" => check_plain($team->name),
-   "#required" => TRUE
-   );
-   }
+    "#required" => TRUE, 
+    "#disabled" => (variable_get("fantacalcio_team_change_name", 0) == 1 || $team != null) ? true : false);
+  // }
+  // else {
+  // $form ["name"] = array(
+  // "#type" => "hidden",
+  // "#title" => "Nome squadra",
+  // "#suffix" => "<h4>" . check_plain($team->name) . "</h4>",
+  // "#default_value" => check_plain($team->name),
+  // "#required" => TRUE
+  // );
+  // }
   
-
-  $form["t_id"] = array(
-    "#type" => "hidden",
-    "#default_value" => $id);
-
   $form["coach"] = array(
     "#type" => "textfield", 
     "#title" => "Allenatore", 
@@ -173,9 +169,9 @@ function fantacalcio_team_form_clear($form, &$form_state) {
 
 function fantacalcio_team_form_validate($form, &$form_state) {
   $name = $form_state["values"]["name"];
-  if (!$name)
+  if (!$name || Team::getByName($name) != null)
     form_set_error("name", t("Inserisci un nome per la squadra"));
-  if (Team::getByName($name) != null && Team::getByName($name)->id != $form_state["values"]["t_id"])
+  if (Team::getByName($name) != null)
     form_set_error("name", t("Il nome della squadra è già stata utilizzato"));
 }
 
@@ -185,7 +181,6 @@ function fantacalcio_team_form_submit($form, &$form_state) {
   $team_name = $form_state["values"]["name"];
   $team_coach = $form_state["values"]["coach"];
   $team_stadium = $form_state["values"]["stadium"];
-  $t_id = $form_state["values"]["t_id"];
   $team_shirt = ""; // shirt_" . $form_state ["values"] ["type"] . "_" . $form_state ["values"] ["color_1"] . "_" . $form_state ["values"] ["color_2"] . ".png";
   $t_id = $form_state["values"]["t_id"];
   $action = $form_state["values"]["action"];
@@ -899,7 +894,7 @@ function fantacalcio_squad_show_favourites() {
 
 function fantacalcio_squad_edit($t_id) {
   // solo per leghe di tipo Gran Premio
-  if (Competition::getDefault()->type != COMPETITION_TYPE_GP)
+  if (variable_get("fantacalcio_league_type", 1) != COMPETITION_TYPE_GP)
     drupal_goto("mie/" . $t_id . "/lista-movimenti");
   
   drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/squad-list.js");
