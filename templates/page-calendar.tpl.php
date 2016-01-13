@@ -15,6 +15,9 @@
 			<table class="table table-responsive">
 			<?php foreach ($last_round->matches as $match): ?>
 				<tr>
+					<?php if ($match->match_label != null) : ?>
+					<td><?php print $match->match_label ?></td>
+					<?php endif; ?>
 					<td>
 					   <?php 
 					     $attributes_1 = array();
@@ -69,6 +72,9 @@
 			<table class="table table-responsive">
 			<?php foreach ($next_round->matches as $match): ?>
 				<tr>
+<?php if ($match->match_label != null) : ?>
+                                        <td><?php print $match->match_label ?></td>
+                                        <?php endif; ?>
 					<td>
 					   <?php 
 					     $attributes_1 = array();
@@ -145,6 +151,9 @@
 			<table class="table table-responsive">
 			<?php foreach ($round_matches as $match): ?>
 				<tr>
+<?php if ($match->match_label != null) : ?>
+                                        <td><?php print $match->match_label ?></td>
+                                        <?php endif; ?>
 					<td>
 					   <?php 
 					     $attributes_1 = array();
