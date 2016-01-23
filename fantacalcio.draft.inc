@@ -150,8 +150,8 @@ function group_summary($g_id) {
     $spent -= $row->money;
   }
     
-    $crediti = variable_get('fantacalcio_credits', 350);
-    $rimasti = $crediti - $spent;// + get_swaps_money($t_id);
+    $credits = $team->credits;
+    $rimasti = $team->credits - $spent;// + get_swaps_money($t_id);
     
     $spesa_max = $rimasti - variable_get('fantacalcio_num_rosa', 25) + $n_giocatori + 1;
     
@@ -306,8 +306,8 @@ function team_summary($g_id, $t_id) {
     $spent -= $row->money;
   }
   
-  $crediti = variable_get('fantacalcio_credits', 350);
-  $rimasti = $crediti - $spent;// + get_swaps_money($t_id);
+  $credits = Team::get($t_id)->credits;
+  $rimasti = $credits - $spent;// + get_swaps_money($t_id);
   
   $spesa_max = (variable_get('fantacalcio_num_rosa', 25) == $n_giocatori) ? "-" : ($rimasti - variable_get('fantacalcio_num_rosa', 25) + $n_giocatori + 1);
   

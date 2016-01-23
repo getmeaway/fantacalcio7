@@ -1,11 +1,3 @@
-<!-- Modal -->
-<div id='player-stats-modal' class='modal fade'>
-    <div class='modal-dialog'>
-        <div class='modal-content'>
-            <!-- Content will be loaded here from 'remote.php' file -->
-        </div>
-    </div>
-</div>
 
 <div role="tabpanel" class="navbar-collapse">
 

@@ -459,7 +459,16 @@ function fantacalcio_menu() {
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.calendar.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
-  
+ 
+ $items['scheda/giornata'] = array(
+    'title' => 'Scheda Partita',
+    'page callback' => 'show_team_round_details',
+    'page arguments' => array(2, 3, 4),
+    'access arguments' => array('access content fantacalcio'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'fantacalcio.calendar.inc',
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+ 
   $items['statistiche'] = array(
     'title' => 'Statistiche', 
     'page callback' => 'stats_home', 

@@ -508,6 +508,46 @@ class Result {
   
   }
   
+  static function updateRealTeamsMatches($vote_round) {
+
+		//recupero voti
+		$query = db_select("fanta_votes", "v");
+		$query->join("fanta_players_rounds", "pr", "v.pl_id = pr.pl_id AND v.round = pr.round");
+		$query->join("fanta_players", "p", "p.pl_id = v.pl_id AND pr.pl_id = p.pl_id");
+		$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
+		$query->condition("v.round", $vote_round);
+		$query->fields("v");
+		$query->fields("pr");
+
+		$result = $query->execute();
+
+		$teams_goals = array();
+		foreach($result as $row) {
+			$goals_against = 0;
+			if (isset($teams_goals[$row->rt_id])) {
+				$goals_against = $teams_goals[$row->rt_id];
+			}
+			$teams_goals[$row->rt_id] = $goals_against + $row->goals_against;
+		}
+
+		foreach($teams_goals as $rt_id => $goals) {
+			//goals_1
+			$query = db_update("fanta_real_teams_matches")->fields(array("goals_1" => $goals))->condition("rt2_id", $rt_id)->condition("round", $vote_round)->execute();
+	
+			//goals_2
+			$query = db_update("fanta_real_teams_matches")->fields(array("goals_2" => $goals))->condition("rt1_id", $rt_id)->condition("round", $vote_round)->execute();
+		}
+
+		//winner_id
+		db_update("fanta_real_teams_matches")->fields(array("winner_id" => "rt1_id"))->condition("goals_1", "goals_2", ">")->condition("round", $vote_round)->execute();
+		db_update("fanta_real_teams_matches")->fields(array("winner_id" => "rt2_id"))->condition("goals_1", "goals_2", "<")->condition("round", $vote_round)->execute();
+		db_update("fanta_real_teams_matches")->fields(array("winner_id" => -1))->condition("goals_1", "goals_2", "=")->condition("round", $vote_round)->execute();
+
+		//played
+		db_update("fanta_real_teams_matches")->fields(array("played", 1))->condition("round", $vote_round)->execute();
+
+	}
+  
   static function closeRound($vote_round) {
 
     global $user;

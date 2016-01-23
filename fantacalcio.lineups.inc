@@ -236,7 +236,7 @@ function show_lineup($team, $competition, $round) {
       // modal
       $out .= "<!-- Modal HTML -->
     <div id='player-stats-modal' class='modal fade'>
-        <div class='modal-dialog'>
+        <div class='modal-dialog modal-xl'>
             <div class='modal-content'>
                 <!-- Content will be loaded here from 'remote.php' file -->
             </div>
@@ -335,8 +335,8 @@ function fantacalcio_lineup_insert_start($team_id = "", $competition_name = "") 
   $lineups_to_insert = array();
   foreach ($round_competitions as $c_id => $competition) {
     foreach ($teams as $t_id => $team) {
-      
-      if ($team->inCompetition($c_id) && ($competition->type == COMPETITION_TYPE_GP || ($competition->type == COMPETITION_TYPE_SD && $team->hasMatch($c_id, $competition->competition_round)))) {
+
+      if ($team->inCompetition($competition->id) && ($competition->type == COMPETITION_TYPE_GP || ($competition->type == COMPETITION_TYPE_SD && $team->hasMatch($competition->id, $competition->competition_round)))) {
         $lineups_to_insert[] = (object) array(
           "team" => $team, 
           "competition" => $competition);
@@ -391,7 +391,7 @@ function fantacalcio_lineup_insert_start($team_id = "", $competition_name = "") 
       foreach($teams as $t_id => $team) {
     
         //partita utente?
-        if ($team->hasMatch($competition_id, $competition_round->competition_round)) {
+        if ($competition->type == COMPETITION_TYPE_SD && $team->hasMatch($competition_id, $competition_round->competition_round)) {
           //partita
           $match = Match::getByTeamAndRound($t_id, $competition_id, $competition_round->competition_round);
           //formazione inserita o no
@@ -412,8 +412,29 @@ function fantacalcio_lineup_insert_start($team_id = "", $competition_name = "") 
             else
               $rows[$t_id][] = "<i>" . l(t("Inserisci formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
           }
-          $rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $match->id, array("html" => true) ) ;
+          $rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $match->id, array("html" => true, "attributes" => array("data-toggle" => "modal", "data-target" => "#match-details-modal")) ) ;
         }
+	else if ($competition->type == COMPETITION_TYPE_GP) {
+
+$rows[$t_id][] = array("data" => $team->name, "width" => array("50%"));
+    
+          $lineup = Lineup::get($competition_id, $t_id, $competition_round->competition_round);
+    
+          if ($lineup != null) {
+            if (time() > $date)
+              $rows[$t_id][] = "<i>" . t("Formazione inserita"). "</i>";
+            else
+              $rows[$t_id][] = "<i>" . l(t("Modifica formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
+          }
+          else {
+            if (time() > $date)
+              $rows[$t_id][] = "<i>" . t("Formazione non inserita"). "</i>";
+            else
+              $rows[$t_id][] = "<i>" . l(t("Inserisci formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
+          }
+          $rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/giornata/" . $competition->sanitized_name . "/" . $competition_round->competition_round . "/" . $t_id, array("html" => true, "attributes" => array("data-toggle" => "modal", "data-target" => "#match-details-modal")) ) ;	
+
+	}
     
       }
     
@@ -542,7 +563,7 @@ function fantacalcio_lineup_form($form, &$form_state, $competition, $team, $roun
   
   $form['round'] = array('#type' => 'hidden', '#value' => $round);
   
-  $form['penalties'] = array('#type' => 'hidden', '#value' => Round::getCompetitionRound($round, $competition->id)->next);
+  $form['penalties'] = array('#type' => 'hidden', '#value' => Round::getCompetitionRound(Round::getRoundByCompetitionRound($round, $competition->id), $competition->id)->next);
   
   $form['lineup'] = array(
     '#type' => 'hidden', 
@@ -681,7 +702,7 @@ function fantacalcio_lineup_form_confirm($form, &$form_state, $competition, $tea
   
   $form['round'] = array('#type' => 'hidden', '#value' => $round);
   
-  $form['penalties'] = array('#type' => 'hidden', '#value' => Round::getCompetitionRound($round, $competition->id)->next);
+  $form['penalties'] = array('#type' => 'hidden', '#value' => Round::getCompetitionRound(Round::getRoundByCompetitionRound($round, $competition->id), $competition->id)->next);
   
   $form['submit'] = array(
     '#type' => 'submit', 
@@ -907,7 +928,7 @@ global $user;
           "data" => fantacalcio_show_status($player->name, $player->team, $player->getStatus($round->round)), 
           "class" => array("player-status"));
         $row_data[] = array(
-          "data" => "<a data-toggle='lightbox' rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $player->pl_id . "' title='Dettagli giocatore'>" . "<i class=\"fa fa-bar-chart\"></i>" . "</a>");
+          "data" => "<a data-toggle='modal' data-target='#player-stats-modal' href='" . base_path() . "scheda/giocatore/" . $player->pl_id . "' title='Dettagli giocatore'>" . "<i class=\"fa fa-bar-chart\"></i>" . "</a>");
         
         $squad_rows[] = array(
           "data" => $row_data, 
@@ -974,7 +995,7 @@ global $user;
           "data" => fantacalcio_show_status($regular->name, $regular->team, $regular->getStatus($round->round)), 
           "class" => array("player-status"));
         $row_data[] = array(
-          "data" => "<a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $regular->id . "' title='Dettagli giocatore'>" . "<i class=\"fa fa-bar-chart\"></i>" . "</a>");
+          "data" => "<a data-toggle='modal' data-target='#player-stats-modal' href='" . base_path() . "scheda/giocatore/" . $regular->id . "' title='Dettagli giocatore'>" . "<i class=\"fa fa-bar-chart\"></i>" . "</a>");
         
         $regulars_rows[] = array(
           "data" => $row_data, 
@@ -1051,7 +1072,7 @@ global $user;
           "data" => fantacalcio_show_status($reserve->name, $reserve->team, $reserve->getStatus($round->round)), 
           "class" => array("player-status"));
         $row_data[] = array(
-          "data" => "<a rel='lightframe[" . $team->id . "|width:770px;]' href='" . base_path() . "scheda/giocatore/" . $reserve->id . "' title='Dettagli giocatore'>" . "<i class=\"fa fa-bar-chart\"></i>" . "</a>");
+          "data" => "<a data-toggle='modal' data-target='#player-stats-modal' href='" . base_path() . "scheda/giocatore/" . $reserve->id . "' title='Dettagli giocatore'>" . "<i class=\"fa fa-bar-chart\"></i>" . "</a>");
         
         $reserves_rows[] = array(
           "data" => $row_data, 

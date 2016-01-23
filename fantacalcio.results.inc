@@ -224,7 +224,7 @@ function fantacalcio_results_lineup_check($vote_round) {
 
     // squadre impegnate nella giornata    
     $teams = Team::getTeamsForRound($competition->id, $round->competitions[$competition->id]->competition_round);
-    
+
     $rows = array();
     
     if (count($teams) > 0) {
@@ -664,6 +664,7 @@ function votes_upload_form_clear($form, &$form_state) {
 }
 
 function votes_upload_form_submit($form, &$form_state) {
+
   $text = $form_state["values"]["text"];
   $round = $form_state["values"]["round"];
   
@@ -672,11 +673,13 @@ function votes_upload_form_submit($form, &$form_state) {
   $votes = json_decode(file_get_contents($votes_url));
 
   foreach ($form_state["values"]["provider"] as $provider) {
-    $out = insert_votes($votes, $round, $provider);
-    insert_default_votes($form_state["values"]["teams_default_1"], $round, 1, $provider);
-    insert_default_votes($form_state["values"]["teams_default_2"], $round, 2, $provider);
+  	if ($provider > 0) {
+      $out = insert_votes($votes, $round, $provider);
+      insert_default_votes($form_state["values"]["teams_default_1"], $round, 1, $provider);
+      insert_default_votes($form_state["values"]["teams_default_2"], $round, 2, $provider);
+  	}
   }
-  
+
   update_players($round + 1);
   
   // risultati provvisori
@@ -696,9 +699,11 @@ function fantacalcio_upload_votes_cron($round) {
   $votes = json_decode(file_get_contents($votes_url));
   
   foreach ($providers as $provider => $vote_provider) {
-    $out = insert_votes($votes[$provider], $round, $provider);
-    insert_default_votes($form_state["values"]["teams_default_1"], $round, 1, $provider);
-    insert_default_votes($form_state["values"]["teams_default_2"], $round, 2, $provider);
+  	if ($provider > 0) {
+      $out = insert_votes($votes[$provider], $round, $provider);
+      insert_default_votes($form_state["values"]["teams_default_1"], $round, 1, $provider);
+      insert_default_votes($form_state["values"]["teams_default_2"], $round, 2, $provider);
+  	}
   }
   
   update_players($round + 1);
@@ -796,16 +801,14 @@ function parse_votes_text($text, $round, $provider) {
 }
 
 function insert_votes($votes, $round, $provider) {
-  $tot = 0;
+  $tot = 0;echo $provider."##";
 
   // VOTI della GIORNATA
-  $sql = "DELETE FROM {fanta_votes} WHERE round = '%d'";
+  $sql = "DELETE FROM {fanta_votes} WHERE round = '%d' AND provider = ";
   
   $query = db_delete("fanta_votes");
-  $query->condition("round", $round);
-  
-  if ($provider > 0)
-    $query->condition("provider", $provider);
+  $query->condition("round", $round);  
+  $query->condition("provider", $provider);
   
   $result = $query->execute();
   
@@ -1102,7 +1105,7 @@ function fantacalcio_find_regulars($vote_round) {
   
   $round = Round::getByRound($vote_round); // print_r($round);die();
   $votes = $round->getVotes(variable_get("fantacalcio_votes_provider", 1)); // get_votes($vote_round);
-  
+//  print_r($round);die();
   $pl_votes = array();
   
   foreach ($votes as $vote) {
@@ -1407,7 +1410,7 @@ function fantacalcio_get_totals($vote_round) {
           $season_positions = array();
           
           foreach ($teams as $team) {
-            $total = get_total($team->id, $competition_round, $vote_round, $competition->id, variable_get("fantacalcio_votes_provider", 1));
+            $total = Result::getTotal($team->id, $competition_round, $vote_round, $competition->id, variable_get("fantacalcio_votes_provider", 1));
             
             $totals[$team->id] = $total;
             $round_positions[$team->id] = $total;

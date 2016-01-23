@@ -58,7 +58,7 @@ function fantacalcio_block_user_summary() {
           else
             $rows[$t_id][] = "<i>" . l(t("Inserisci formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
         }
-$rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $match->id, array("html" => true) ) ;
+$rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $match->id, array("html" => true, "attributes" => array("data-toggle" => "modal", "data-target" => "#match-details-modal")) ) ;
       }
 
     }
@@ -98,7 +98,7 @@ $rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $matc
         $rows[$t_id][] = array("data" => $match->home_team . " - " . $match->away_team, "width" => "50%");
 		$rows[$t_id][] = $match->goals_1 . "-" . $match->goals_2;
 		$rows[$t_id][] = $match->tot_1 . "-" . $match->tot_2;
-		$rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $match->id, array("html" => true) ) ;
+		$rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $match->id, array("html" => true, "attributes" => array("data-toggle" => "modal", "data-target" => "#match-details-modal")) ) ;
       }
 
     }

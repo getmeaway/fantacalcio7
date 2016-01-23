@@ -727,3 +727,7 @@ text-align:left;
 	width: 100%;
 	overflow-x: scroll;
 }
+
+.modal-xl {
+	min-width: 70%;
+}

@@ -135,7 +135,7 @@ function buy_player_validate($t_id, $player, $cost) {
   $player = Player::get($exploded_player[0]);
   $player_role = $player->role;
   $num_roles = array(0, 0, 0, 0);
-  $max_roles = get_max_number_for_roles();print_r($max_roles);
+  $max_roles = get_max_number_for_roles();
   $num_players = 0;
   $spesa = 0; 
   
@@ -167,8 +167,8 @@ function buy_player_validate($t_id, $player, $cost) {
   
   //print_r($num_roles);die();
   
-  $crediti = variable_get('fantacalcio_credits', 350);
-  $rimasti = $crediti - $spesa + get_swaps_money($t_id);
+  $credits = Team::get($t_id)->credits;//variable_get('fantacalcio_credits', 350);
+  $rimasti = $credits - $spesa + get_swaps_money($t_id);
   
   $spesa_max = $rimasti - variable_get('fantacalcio_number_players', 25) + $num_players + 1;
   
@@ -342,7 +342,7 @@ function team_money_transfer_form_validate($form, $form_state) {
     }
   }
   
-  $credits = variable_get('fantacalcio_credits', 350);
+  $credits = Team::get($form_state['values']['t1_id'])->credits;
   $available = $credits - $spent + get_swaps_money($form_state['values']['t1_id']);
   
   $max_offer = $available - variable_get('fantacalcio_num_rosa', 25) + $num_players + 1;

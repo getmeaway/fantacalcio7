@@ -2665,12 +2665,15 @@ function fantacalcio_admin_rounds_list_import_clear($form, &$form_state) {
 function fantacalcio_admin_rounds_list_import_submit($form, &$form_state) {
   $rounds_url = DATA_SOURCE_URL . "/rounds/rounds.json?t=" . time();
   
-  $rounds = json_decode(file_get_contents($rounds_url));print_r($rounds);die();
+  $rounds = json_decode(file_get_contents($rounds_url));//print_r($rounds);die();
     
   db_delete("fanta_rounds")->execute();
+  
+  $c_id = Competition::getDefault()->id;
 
   foreach($rounds as $number => $round) {
     db_insert("fanta_rounds")->fields(array("round" => $number, "date" => $round->date, "end_date" => $round->date, "status" => 0, "reminder_sent" => 0))->execute();
+    db_insert("fanta_rounds_competitions")->fields(array("round" => $number, "c_id" => $c_id, "competition_round" => $number, "round_label" => "", "next" => 0))->execute();
   }
 
   drupal_set_message("Giornate importate");

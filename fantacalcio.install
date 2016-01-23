@@ -54,6 +54,11 @@ $schema['fanta_teams'] = array(
       'not null' => TRUE,
       'default' => '',
     ),
+    'credits' => array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => '0',
+    ),
     'shirt' => array(
       'type' => 'varchar',
       'length' => '64',

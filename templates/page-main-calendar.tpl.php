@@ -43,16 +43,11 @@
 					<?php endif; ?>
 					<?php if ($match->played): ?>
 					<td>
-					 <?php print ($match->goals_1 + $match->goals_ot_1 + $match->penalties_1) 
-					   . " - " . ($match->goals_2 + $match->goals_ot_2 + $match->penalties_2); ?>
+					 <?php print ($match->goals_1) 
+					   . " - " . ($match->goals_2); ?>
 					 <?php if ($match->isDraw())
 					   print " (" . $match->goals_1 . " - " . $match->goals_2 . ")"; ?>
 					</td>
-					<?php if (!$is_main_competition): ?>
-					<td><small><em><?php print $match->tot_1 . " - " . $match->tot_2; ?></em></small></td>
-					<?php endif; ?>
-					<?php else: ?>
-					<td></td>
 					<?php endif; ?>
 					<?php if ($match->played || (isset($next_round) && $match->round == $next_round->round)): ?>
 					<td>

@@ -26,6 +26,7 @@ class Team {
 			$team->coach = $row->coach;
 			$team->stadium = $row->stadium;
 			$team->shirt = $row->shirt;
+			$team->credits = $row->credits;
 			$team->register_date = $row->register_date;
 			$team->completed_date = $row->completed_date;
 			$team->active = $row->active;
@@ -45,6 +46,7 @@ class Team {
 			$team->coach = $row->coach;
 			$team->stadium = $row->stadium;
 			$team->shirt = $row->shirt;
+			$team->credits = $row->credits;
 			$team->register_date = $row->register_date;
 			$team->completed_date = $row->completed_date;
 			$team->active = $row->active;
@@ -67,6 +69,7 @@ class Team {
 			$teams[$row->t_id] = new Team($row->t_id, $row->name, $row->uid);
 			$teams[$row->t_id]->register_date = $row->register_date;
 			$teams[$row->t_id]->active = $row->active;
+			$teams[$row->t_id]->credits = $row->credits;
 		}
 		
 		return $teams;
@@ -85,6 +88,7 @@ class Team {
 			$teams[$row->t_id]->register_date = $row->register_date;
 			$teams[$row->t_id]->completed_date = $row->completed_date;
 			$teams[$row->t_id]->active = $row->active;
+			$teams[$row->t_id]->credits = $row->credits;
 		}
 	
 		return $teams;
@@ -106,6 +110,7 @@ class Team {
 			$teams[$row->t_id]->register_date = $row->register_date;
 			$teams[$row->t_id]->completed_date = $row->completed_date;
 			$teams[$row->t_id]->active = $row->active;
+			$teams[$row->t_id]->credits = $row->credits;
 		}
 		
 		return $teams;
@@ -127,6 +132,7 @@ class Team {
 			$teams[$row->t_id]->register_date = $row->register_date;
 			$teams[$row->t_id]->completed_date = $row->completed_date;
 			$teams[$row->t_id]->active = $row->active;
+			$teams[$row->t_id]->credits = $row->credits;
 		}
 	
 		return $teams;
@@ -152,6 +158,7 @@ class Team {
 			$teams[$row->t_id]->register_date = $row->register_date;
 			$teams[$row->t_id]->completed_date = $row->completed_date;
 			$teams[$row->t_id]->active = $row->active;
+			$teams[$row->t_id]->credits = $row->credits;
 		}
 	
 		return $teams;
@@ -170,6 +177,7 @@ class Team {
 			$teams[$row->t_id]->register_date = $row->register_date;
 			$teams[$row->t_id]->completed_date = $row->completed_date;
 			$teams[$row->t_id]->active = $row->active;
+			$teams[$row->t_id]->credits = $row->credits;
 		}
 	
 		return $teams;
@@ -191,11 +199,21 @@ class Team {
 			array_push($teams, Team::get($row->t2_id));
 		}
 		
+		$query = db_select("fanta_teams_groups", "t");
+		$query->condition("t.g_id", array_keys(Group::allByCompetition($competition_id)), "IN");
+		$query->fields("t");
+		
+		$result = $query->execute();
+		
+		foreach($result as $row) {
+			array_push($teams, Team::get($row->t_id));
+		}
+		
 		return $teams;
 	}
 	
 	static function getMaxNumberForUser($u_id) {
-		$max_teams = 0;
+		$max_teams = 1;
 		$query = db_select("fanta_users", "u");
 		$query->condition("uid", $u_id);
 		$query->fields("u");
@@ -385,8 +403,7 @@ class Team {
 		$query->condition("g.active", 1);
 		
 		$result = $query->execute();
-		
-		return $result->rowCount() == 1;
+		return $result->rowCount() >= 1;
 	}
 	
 	function hasMatch($c_id, $round) {
@@ -704,6 +721,7 @@ class Team {
 			
 			$query = db_select("fanta_teams_rounds", "tr");
 			$query->condition("t_id", $this->id, "!=");
+			$query->addField("tr", "t_id", "t_id");
 			$query->addExpression("SUM(points)", "sum");
 			$query->groupBy("t_id");
 			

@@ -109,7 +109,8 @@ function get_matches_table($competition) {
         "rounds_list" => null, 
         "is_main_competition" => false, 
         "last_round" => $last_round_data, 
-        "next_round" => $next_round_data));
+        "next_round" => $next_round_data, 
+	"g_id" => $group->id));
       
       if (isset($user->groups)) { 
         if (in_array($g_id, $user->groups[$competition->id]) && !$already_active) {
@@ -429,6 +430,26 @@ function show_match_details($m_id) {
     return t("Nessuna partita con questo id");
 }
 
+function show_team_round_details($competition_name, $round, $t_id) {
+
+  if (Team::exists($t_id)) {
+  $team = Team::get($t_id);
+
+  $competition = Competition::getByName($competition_name);
+ 
+  $out = "<div style='margin:auto; margin-bottom: 10px; text-align: center;'>";
+ 
+  $out .= "<h3>" . (!empty($round->round_label) ? $round->round_label : ($round . "&ordf; Giornata")) . "</h3><br>";
+  $out .= "</div>";
+ 
+  $out .= "<div class='team-details col-xs-12 col-sm-12'>" . show_team_details($t_id, $round, $competition->id, null, true, true) . "</div>";
+ 
+  return $out;
+  }
+  else
+    return t("Nessuna squadra con questo id");
+}
+
 function show_match_overtime($match, $t_id) {
 //   $sql = "SELECT round FROM {fanta_rounds_competitions} " . "WHERE competition_round = '%d' " . "AND c_id = '%d'";
 //   $result = db_query($sql, $match->round, get_cid_by_gid($match->g_id));
@@ -663,14 +684,15 @@ function show_match_penalties($match, $t_id, $last_penalty_index) {
   return $out;
 }
 
-function show_team_details($t_id, $competition_round, $c_id, $m_id, $played) {
+function show_team_details($t_id, $competition_round, $c_id, $m_id, $played, $is_gp = false) {
   if ($played == 0)
-    return show_team_details_not_played($t_id, $competition_round, $c_id, $m_id);
+    return show_team_details_not_played($t_id, $competition_round, $c_id, $m_id, $is_gp);
   elseif ($played == 1)
-    return show_team_details_played($t_id, $competition_round, $c_id, $m_id);
+    return show_team_details_played($t_id, $competition_round, $c_id, $m_id, $is_gp);
 }
 
-function show_team_details_played($t_id, $competition_round, $c_id, $m_id) {
+function show_team_details_played($t_id, $competition_round, $c_id, $m_id, $is_gp) {
+
   $team = Team::get($t_id);
   
   $out = "<div style='margin:auto; margin-top: 10px; text-align: center;'>";
@@ -889,12 +911,20 @@ if (variable_get("fantacalcio_points_win_goal", 0) != 0)
     "header" => $header, 
     "rows" => $rows, 
     "attributes" => array("style" => "font-size: 90%"))) . "</div>";
+ 
+
+  if (variable_get("fantacalcio_modifier_role_0", 0) || variable_get("fantacalcio_modifier_role_1", 0) || variable_get("fantacalcio_modifier_role_2", 0) || variable_get("fantacalcio_modifier_role_3", 0)) 
+    $modifiers = get_details_modifiers($t_id, $m_id);
+  else
+    $modifiers = array(0,0,0,0);
   
-  $modifiers = get_details_modifiers($t_id, $m_id);
-  
-  $bonus = get_bonus($t_id, $m_id);
-    
-  $total = $points + array_sum($modifiers) + $bonus;
+  $bonus = 0;
+  $total = $points;
+  if (!$is_gp) {
+    $bonus = get_bonus($t_id, $m_id);
+    $total += $bonus + array_sum($modifiers);
+  }
+
   $goals = floor(($total - 60) / 6);
   $goals = ($goals >= 0) ? $goals : 0;
   
@@ -915,7 +945,9 @@ if (variable_get("fantacalcio_points_win_goal", 0) != 0)
   $rows[] = array(
     "data" => array("Totale", $total), 
     "style" => "font-weight:bold");
-  $rows[] = array("data" => array("Gol", $goals), "style" => "font-weight:bold");
+
+  if (!$is_gp)
+    $rows[] = array("data" => array("Gol", $goals), "style" => "font-weight:bold");
   
   $out .= "<div style='margin:auto; margin-top: 10px;'>" . theme("table", array(
     "header" => array(), 
@@ -930,7 +962,7 @@ if (variable_get("fantacalcio_points_win_goal", 0) != 0)
   return $out;
 }
 
-function show_team_details_not_played($t_id, $competition_round, $c_id, $m_id) {
+function show_team_details_not_played($t_id, $competition_round, $c_id, $m_id, $is_gp) {
   
   // squadra trovata
   if (Team::exists($t_id)) {
@@ -1201,7 +1233,7 @@ function get_details_modifiers($t_id, $m_id) {
 
 function get_bonus($t_id, $m_id) {
   $match = Match::get($m_id);
-  $bonus = array();
+  $bonus = 0;
   
   if ($t_id == $match->t1_id) {
     $bonus = $match->bonus_t1;

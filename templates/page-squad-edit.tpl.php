@@ -48,7 +48,7 @@
 							<label><?php print t("Movimenti"); ?></label>
 							<div class="progress">
 								<div id="progress-movements" class="progress-bar" role="progressbar" aria-valuenow="<?php print $left_movements; ?>" aria-valuemin="0" 
-						  	aria-valuemax="<?php print $left_movements; ?>" style="width: <?php print $movements != 0 ? $left_movements / $movements * 100 : 0; ?>%; min-width: 2em;">
+						  	aria-valuemax="<?php print $left_movements; ?>" style="width: <?php print $movements > 0 ? $left_movements / $movements * 100 : 0; ?>%; min-width: 2em;">
 									<span class="value"><?php print $left_movements; ?></span> / <span
 										class="max" id="maxMovements"><?php print $movements; ?></span>
 									<span class="sr-only"><?php print $left_movements; ?> / <?php print $movements; ?></span>
@@ -145,7 +145,7 @@
 					<div class="clearfix">					
 					</div>
 				</div>
-				<div class="" style="height: 200px; overflow-y: auto; overflow-x: hidden">
+				<div class="" style="height: 400px; overflow-y: auto; overflow-x: hidden">
 				<?php print render($players_list); ?>
 				</div>
 			</div>

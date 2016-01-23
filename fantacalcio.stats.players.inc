@@ -162,6 +162,19 @@ var votes_options = {legendTemplate : '<ul class=\"<%=name.toLowerCase()%>-legen
   }
   
   $out .= "</div>";
+  
+  $fanta_teams = player_get_fantateams($pl_id);
+  
+  if (count($fanta_teams) > 0) {
+  	 $out .= "<div class='row'><div class='col-xs-12'>";
+  	 
+	foreach($fanta_teams as $group => $fanta_team) {
+		$out .= "<p>" . $group . ": " . $fanta_team . "</p>";
+	}
+	  
+	  $out .= "</div></div>";
+  }
+  
   // $out .= "<h3>" . $roles[$player->role] . "</h3><br>";
   // $out .= "<h4>" . ucwords($player->team) . "</h4><br>";
   
@@ -216,6 +229,26 @@ function choose_pl_id_form_submit($form, $form_state) {
   $pl_id = $player_exploded[0];
   
   drupal_goto("statistiche/giocatore/" . $pl_id);
+}
+
+function player_get_fantateams($pl_id) {
+	$query = db_select("fanta_squads", "s");
+	$query->join("fanta_teams", "t", "s.t_id = t.t_id");
+	$query->join("fanta_teams_groups", "tg", "t.t_id = tg.t_id");
+	$query->join("fanta_groups", "g", "g.g_id = tg.g_id");
+	$query->condition("pl_id", $pl_id);
+	$query->condition("g.c_id", Competition::getDefault()->id); 
+	$query->fields("t");
+	$query->addField("g", "name", "group_name");
+	
+	$result = $query->execute();
+	
+	$fanta_teams = array();
+	foreach($result as $row) {
+		$fanta_teams[$row->group_name] = $row->name;
+	}
+	
+	return $fanta_teams;
 }
 
 function player_rounds_stats($pl_id) {
@@ -594,8 +627,8 @@ function players_stats($type, $round_start, $round_stop, $presences, $roles_list
             "html" => TRUE, 
             "attributes" => array(
               "title" => "Dettagli giocatore", 
-              "rel" => "lightframe[width:870px;]", 
-              "class" => "thickbox"))));
+              "data-toggle" => "modal", 
+              "data-target" => "#player-stats-modal"))));
       }
       $i++;
     }
@@ -824,9 +857,8 @@ function get_free_players_role($role, $g_id, $nonfree_players) {
   
   foreach ($players as $pl_id => $player) {
     if (!in_array($player->id, $nonfree_players) && $player->role == $role) {
-      $link_pl_id = "<a rel='lightframe[" . $role . "]' href='" . base_path() . "scheda/giocatore/" . $player->id . "' title='Dettagli giocatore'>" . "<img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/stats.png'>";
       $link_pl_id = l("<i class='fa fa-bar-chart'></i>", "scheda/giocatore/" . $player->id, array(
-        "html" => true));
+        "html" => true, "attributes" => array("data-toggle" => "modal", "data-target" => "#player-stats-modal")));
       
       $class = "active";
       $rows[$pl_id] = array(

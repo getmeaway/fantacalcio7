@@ -38,7 +38,7 @@
 					<?php endif; ?>
 					<?php if ($match->played): ?>
 					<td>
-					 <?php print ($match->goals_1 + $match->goals_ot_1 + $match->penalties_1) 
+					<?php print ($match->goals_1 + $match->goals_ot_1 + $match->penalties_1) 
 					   . " - " . ($match->goals_2 + $match->goals_ot_2 + $match->penalties_2); ?>
 					 <?php if ($match->isDraw())
 					   print " (" . $match->goals_1 . " - " . $match->goals_2 . ")"; ?>
@@ -47,7 +47,7 @@
 					<td><small><em><?php print $match->tot_1 . " - " . $match->tot_2; ?></em></small></td>
 					<?php endif; ?>
 					<td>
-					 <?php print l('<i class="fa fa-bar-chart"></i>', "scheda/partita/" . $match->id, array("html" => true)); ?>					 
+					 <?php print l('<i class="fa fa-bar-chart"></i>', "scheda/partita/" . $match->id, array("html" => true, "attributes" => array("data-target" => "#match-details-modal-" . $g_id, "data-toggle" => "modal"))); ?>					 
 					</td>
 					<?php else: ?>
 					<td></td>
@@ -95,9 +95,9 @@
 					<?php endif; ?>
 					<?php if ($match->played): ?>
 					<td>
-					 <?php print ($match->goals_1 + $match->goals_ot_1 + $match->penalties_1) 
+					<?php print ($match->goals_1 + $match->goals_ot_1 + $match->penalties_1) 
 					   . " - " . ($match->goals_2 + $match->goals_ot_2 + $match->penalties_2); ?>
-					 <?php if ($match->isDraw())
+					 <?php if ($match->isDraw())  
 					   print " (" . $match->goals_1 . " - " . $match->goals_2 . ")"; ?>
 					</td>
 					<?php if (!$is_main_competition): ?>
@@ -107,7 +107,7 @@
 					<td></td>
 					<?php endif; ?>
 					<td>
-					 <?php print l('<i class="fa fa-bar-chart"></i>', "scheda/partita/" . $match->id, array("html" => true)); ?>					 
+					 <?php print l('<i class="fa fa-bar-chart"></i>', "scheda/partita/" . $match->id, array("html" => true, "attributes" => array("data-target" => "#match-details-modal-" . $g_id, "data-toggle" => "modal"))); ?>					 
 					</td>
 				</tr>
 			<?php endforeach; ?>			
@@ -176,7 +176,7 @@
 					<td>
 					 <?php print ($match->goals_1 + $match->goals_ot_1 + $match->penalties_1) 
 					   . " - " . ($match->goals_2 + $match->goals_ot_2 + $match->penalties_2); ?>
-					 <?php if ($match->isDraw())
+					 <?php if ($match->isDraw()) 
 					   print " (" . $match->goals_1 . " - " . $match->goals_2 . ")"; ?>
 					</td>
 					<?php if (!$is_main_competition): ?>
@@ -187,7 +187,7 @@
 					<?php endif; ?>
 					<?php if ($match->played || (isset($next_round) && $match->round == $next_round->round)): ?>
 					<td>
-					 <?php print l('<i class="fa fa-bar-chart"></i>', "scheda/partita/" . $match->id, array("html" => true)); ?>					 
+					 <?php print l('<i class="fa fa-bar-chart"></i>', "scheda/partita/" . $match->id, array("html" => true, "attributes" => array("data-target" => "#match-details-modal-" . $g_id, "data-toggle" => "modal"))); ?>					 
 					</td>
 					<?php else: ?>
 					<td></td>
@@ -199,4 +199,18 @@
 	<?php endforeach; ?>
 	</div>
 	<?php endif; ?>
+</div>
+
+<div id='match-details-modal-<?php echo $g_id; ?>' class='modal fade' tabindex='-1' aria-hidden='true' style='z-index: 2000'>
+        <div class="modal-dialog modal-lg">
+                        <div class="modal-header">
+<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        </div>
+		<div class="modal-content">
+
+                        <div class="modal-body">
+
+                        </div>
+                </div>
+	</div>
 </div>

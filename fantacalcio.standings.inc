@@ -17,7 +17,7 @@ function fantacalcio_standings($name = '', $round = null) {
     drupal_set_title(check_plain(t("Classifica") . " - " . ucwords($name)));
     
     if ($competition->type == COMPETITION_TYPE_GP)
-    	return get_standing_table_gp($competition, null);
+    	return get_standing_table_gp($competition, $round);
     else 
     	return get_standing_table_sd($competition);
   }
@@ -203,7 +203,7 @@ function get_standing_table_gp($competition, $round = '') {
 						$rows[$t_id][] = array("data" => l($team->name, "squadre/" . $team->id), "class" =>$team_class, "data-title" => t("Squadra"));
 						$rows[$t_id][] = array("data" => $team->points, "data-title" => t("Punti"));
 						$rows[$t_id][] = array("data" => $teams[$t_id]->season_position, "data-title" => t("Posizione Stagione"));
-		
+						$rows[$t_id][] = array("data" => l("<i class='fa fa-bar-chart'></i>", "scheda/giornata/" . $competition->sanitized_name . "/" . $round . "/" . $team->id, array("html" => true, "attributes" => array("data-toggle" => "modal", "data-target" => "#match-details-modal"))), "data-title" => t("Scheda giornata"));		
 					}
 					else {
 						$rows[$t_id][] = array("data" => $teams[$t_id]->season_position, "data-title" => t("Posizione"));
