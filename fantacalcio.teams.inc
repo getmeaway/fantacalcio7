@@ -359,7 +359,8 @@ function fantacalcio_show_teams($t_id = "") {
           "items" => $teams_group_list, 
           "attributes" => array("class" => array("list-group")), 
           "type" => "ul", 
-          "title" => "")), 
+          "title" => "")),
+	"count" => count($teams_group_list), 
         "expanded" => $expanded);
     }
     

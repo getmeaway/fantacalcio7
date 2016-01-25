@@ -102,7 +102,8 @@ function _fantacalcio_lineup_view($competition_name, $round_number = null, $t_id
           "items" => $teams_group_list, 
           "attributes" => array("class" => array("list-group")), 
           "type" => "ul", 
-          "title" => "")), 
+          "title" => "")),
+	"count" => count($teams_group_list), 
         "expanded" => $expanded);
       }
     }
@@ -115,12 +116,13 @@ function _fantacalcio_lineup_view($competition_name, $round_number = null, $t_id
       $columns_output["main_output"] = "";
     
     $choose_rounds = array();
-    $max_round = Round::getLastLineup($c_id);
-    for ($i = 1; $i <= $max_round; $i++) {
-      $choose_rounds[$i] = base_path() . "formazioni/view/" . strtolower($competition->sanitized_name) . "/" . $i;
-    }
     
-    $columns_output["round_number"] = isset($_round_number) ? $_round_number : 1;
+    $all_rounds = Round::allLineup($c_id);
+    foreach ($all_rounds as $lineup_round) {
+      $choose_rounds[$lineup_round->label] = base_path() . "formazioni/view/" . strtolower($competition->sanitized_name) . "/" . $lineup_round->competition_round;
+    }
+
+	$columns_output["round_label"] = $all_rounds[$_round_number]->label;
     $columns_output["choose_rounds"] = $choose_rounds;
     
     $competition->output = theme("columns", $columns_output);

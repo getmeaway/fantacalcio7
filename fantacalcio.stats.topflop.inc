@@ -26,24 +26,22 @@ function statistiche_topflop($round = null, $t_id = null) {
   
   global $user;
   
-  $choose_rounds = array();
-  $max_round = Round::getLast();
-  for ($i = 1; $i <= $max_round; $i++) {
-    $choose_rounds[$i] = base_path() . "statistiche/topflop/" . $i;
-  }
+  $competition = Competition::getDefault();
   
+  $choose_rounds = array();
+    
   $round = isset($round) && Round::exists($round) ? $round : Round::getLast();
   
-  $output["round_number"] = $round;
+  $all_rounds = Round::allLineup($competition->id);
+    foreach ($all_rounds as $lineup_round) {
+      $choose_rounds[$lineup_round->label] = base_path() . "formazioni/view/" . strtolower($competition->sanitized_name) . "/" . $lineup_round->competition_round;
+    }
+
+	$output["round_label"] = $all_rounds[$round]->label;
   $output["choose_rounds"] = $choose_rounds;
   
   $competition = Competition::getDefault();
-  
-  // $args = array("t_id" => NULL, "c_id" => variable_get("fantacalcio_main_competition", 1), "c_name" => "", "selected_competition" => "");
-  
-  // if (!empty($t_id) && team_exists($t_id))
-  // $args = array("t_id" => $t_id, "c_id" => variable_get("fantacalcio_main_competition", 1), "c_name" => "", "selected_competition" => "");
-  
+    
   $teams_list = array();
   
   if ($competition) {
@@ -83,6 +81,7 @@ function statistiche_topflop($round = null, $t_id = null) {
               "attributes" => array("class" => array("list-group")),
               "type" => "ul",
               "title" => "")),
+	"count" => count($teams_group_list),
           "expanded" => $expanded);
     }
   

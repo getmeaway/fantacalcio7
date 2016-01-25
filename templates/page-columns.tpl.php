@@ -10,17 +10,8 @@
 		<div>
 			<?php //print ($choose_rounds); ?>
 			<div class="dropdown btn-group">
-			  <!-- <button class="btn btn-sm btn-default dropdown-toggle" type="button" id="dropdown-rounds" data-toggle="dropdown" aria-expanded="true">
-			    <?php print t("Giornata"); ?>
-			    <span class="caret"></span>
-			  </button> -->
-			  <button type="button" class="btn btn-sm btn-default" disabled="disabled" style="border-right: none;">
-			  	<?php print t("Giornata"); ?>
-			  </button>
-			  <button type="button" class="btn btn-sm btn-default" disabled="disabled" style="border-left: none;">
-			  	<?php print render($round_number); ?>
-			  </button>
-			  <button type="button" class="btn btn-sm btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+			  <button type="button" class="btn btn-sm btn-default dropdown-toggle" id="round_select" data-toggle="dropdown" aria-expanded="false">
+			    <?php print render($round_label); ?>   
 			    <span class="caret"></span>
 			    <span class="sr-only">Toggle Dropdown</span>
 			  </button>
@@ -39,7 +30,8 @@
 		<!-- elenco squadre-->
 		
 		<div class="panel-group" id='accordion_1'>
-			<?php if (variable_get("show_teams_filter", 0) > 0 && array_count($teams_list) > variable_get("show_teams_filter", 0)): ?>
+<?php $teams_count = 0; foreach($teams_list as $teams_group) $teams_count += $teams_group["count"]; ?>			
+<?php if (variable_get("fantacalcio_show_teams_filter", 0) > 0 && $teams_count > variable_get("fantacalcio_show_teams_filter", 0)): ?>
 			<div class="input-group">
 				<span class="input-group-btn btn-group-custom">
 					<button id="filterAll" class="btn btn-default"

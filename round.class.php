@@ -112,6 +112,34 @@ class Round
 	
 		return $rounds;
 	}
+
+	static function allLineup($competition_id) {
+                global $rounds_status;
+
+                $rounds = array();
+
+                $query = db_select("fanta_rounds_competitions", "rc");
+                $query->join("fanta_rounds", "r", "r.round = rc.round");
+		$query->join("fanta_lineups", "l", "l.round = rc.competition_round AND l.c_id = rc.c_id");
+                $query->fields("rc");
+                $query->fields("r");
+		$query->condition("l.c_id", $competition_id);
+                $query->distinct();
+		$result = $query->execute();
+
+                foreach ($result as $row) {
+                        $competition_round = new Round();
+                        $competition_round->competition_round= $row->competition_round;
+                        $competition_round->round= $row->round;
+                        $competition_round->label = (empty($row->round_label) ? $row->competition_round . t("ª giornata") : $row->round_label);
+                        $competition_round->next = $row->next;
+                        $competition_round->date = $row->date;
+
+                        $rounds[$row->competition_round] = $competition_round;
+                }
+
+                return $rounds;
+        }
 	
 	static function get($_round, $competition_id) {
 		global $rounds_status;	
