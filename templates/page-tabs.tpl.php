@@ -58,3 +58,49 @@
   <?php endif; ?>
   
 </div>
+<script src="http://fantacazzismo.altervista.org/sites/all/modules/fantacalcio/js/jquery.ui.touch-punch.min.js?o19fva"></script>
+<script src="http://fantacazzismo.altervista.org/sites/all/modules/fantacalcio/js/jquery.mobile.custom.min.js?o19fva"></script>
+<script>
+jQuery(document).ready(function(){
+  // Bind the swipeleftHandler callback function to the swipe event on div.box
+  jQuery( "div[role='tabpanel']" ).not(".tab-pane").on( "swipeleft", function() {
+ 	var panel = jQuery(this); 
+	  jQuery(this).off("swipeleft");
+	  swipeleft(panel);
+  });
+
+  jQuery( "div[role='tabpanel']" ).not(".tab-pane").on( "swiperight", function() {
+	  var panel = jQuery(this); 
+	  jQuery(this).off("swiperight");
+	  swiperight(panel);
+	});
+});
+	
+function swiperight(panel) {
+        var activeTab = jQuery(panel).find(".nav li.active");
+        var prevTab = jQuery(activeTab).prev();
+        if (prevTab)
+                jQuery(prevTab).find("a").tab("show");
+                
+        jQuery(panel).on("swiperight", function() {
+	  		var _panel = jQuery(this); 
+	  		jQuery(_panel).off("swiperight");
+	  		swiperight(_panel);
+	  	});
+  }
+  
+  function swipeleft(panel) {
+        var activeTab = jQuery(panel).find(".nav li.active");
+        var nextTab = jQuery(activeTab).next();
+        if (nextTab)
+                jQuery(nextTab).find("a").tab("show");
+                
+        jQuery(panel).on("swipeleft", function() {
+	  		var _panel = jQuery(this); 
+	  		jQuery(_panel).off("swipeleft");
+	  		swipeleft(_panel);
+	  	});
+  }
+
+</script>
+
