@@ -161,7 +161,8 @@ function show_lineup($team, $competition, $round) {
     
     $out = "<h3 class='team_name'>" . $team->name . "</h3><br>";
     
-    $out .= "<div class='shirt'><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></div>";
+    if (!empty($team->shirt))
+	    $out .= "<div class='shirt'><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></div>";
     $lineup = Lineup::get($competition->id, $team->id, $round->competition_round);
     
     if ($lineup) {

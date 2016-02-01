@@ -16,7 +16,7 @@ class Result {
     
         // formazioni mancanti
         if ($competition->type == COMPETITION_TYPE_SD)
-          $teams = Team::getTeamsForRound($competition->id, $round->competitions[$competition->id]->competition_round);
+          $teams = Team::getTeamsForRound($competition->id, $round->competitions[$competition->id]->competition_round, $competition->type);
         if ($competition->type == COMPETITION_TYPE_GP)
           $teams = Team::allByCompetition($competition->id);
     
@@ -42,7 +42,9 @@ class Result {
   }
   
   static function insertVotes($vote_round) {
-    
+      
+    global $roles;
+ 
     $votes_url = DATA_SOURCE_URL . "/votes/" . $vote_round . "-" . variable_get("fantacalcio_votes_provider", 1) . ".json";
     
     $votes = json_decode(file_get_contents($votes_url));
@@ -53,16 +55,43 @@ class Result {
     $result = $query->execute();
     
     $players_ids = Player::getIdList();
+
+    // cancello i giocatori della giornata per evitare doppioni
+    db_delete("fanta_players_rounds")->condition("round", $vote_round)->execute();
     
+    $query = db_select("fanta_players_rounds", "pr");
+    $query->condition("round", $vote_round - 1);
+    $query->fields("pr"); // "SELECT DISTINCT pl_id, rt_id as team, active FROM {fanta_players_teams} WHERE round = '%d'";
+    $result = $query->execute(); // ($sql, ($round - 1));
+    
+    foreach ($result as $row) {
+      db_insert("fanta_players_rounds")
+      ->fields(array("pl_id" => $row->pl_id, "round" => $vote_round, "rt_id" => $row->rt_id, "quotation" => $row->quotation, "not_rounded_quotation" => $row->not_rounded_quotation, "active" => $row->active))
+      ->execute();
+    }
+    
+    // real teams
+    $real_teams = RealTeam::allNames();
+    $real_teams = array_flip($real_teams);
+    
+    $roles = array_flip($roles);
+
     foreach ($votes->votes as $name => $vote) {
-      if (in_array($name, array_keys($players_ids))) {
-    
+      if (!in_array($name, array_keys($players_ids))) {
+      	$pl_id = db_insert("fanta_players")->fields(array("name" => strtoupper($name), "role" => $roles[strtoupper($vote->role)]))->execute();
+      	$rt_id = $real_teams[strtolower($vote->team)];
+      	db_insert("fanta_players_rounds")->fields(array("pl_id" => $pl_id, "rt_id" => $rt_id, "round" => $vote_round, "active" => 1))->execute();
+      }
+      else {
+      	$pl_id = $players_ids[$name];
+      }
+      
         $total = $vote->vote + ($vote->goals_for * variable_get("fantacalcio_points_goals_for", "3")) + ($vote->penalty_goals * variable_get("fantacalcio_points_penalty_goals", "3")) + ($vote->assists * variable_get("fantacalcio_points_assists", "1")) + ($vote->saved_penalties * variable_get("fantacalcio_points_saved_penalties", "3")) + ($vote->goals_against * variable_get("fantacalcio_points_goals_against", "-1")) + ($vote->red_cards * variable_get("fantacalcio_points_red_card", "-1")) + ($vote->yellow_cards * variable_get("fantacalcio_points_yellow_card", "-0.5")) + ($vote->own_goals * variable_get("fantacalcio_points_own_goal", "-2")) + ($vote->missed_penalties * variable_get("fantacalcio_points_missed_penalties", "-3")) + ($vote->draw_goals * variable_get("fantacalcio_points_draw_goals", "1")) + ($vote->win_goals * variable_get("fantacalcio_points_win_goals", "3"));
     
         $query = db_insert("fanta_votes");
         $query->fields(array(
             "round" => $vote_round,
-            "pl_id" => $players_ids[$name],
+            "pl_id" => $pl_id,
             "provider" => variable_get("fantacalcio_points_goals_for", "1"),
             "total" => $total,
             "vote" => $vote->vote,
@@ -84,21 +113,7 @@ class Result {
         // print $query->arguments();
         $query->execute();
     
-      }
-    }
-
-    // cancello i giocatori della giornata per evitare doppioni
-    db_delete("fanta_players_rounds")->condition("round", $vote_round)->execute();
-    
-    $query = db_select("fanta_players_rounds", "pr");
-    $query->condition("round", $vote_round - 1);
-    $query->fields("pr"); // "SELECT DISTINCT pl_id, rt_id as team, active FROM {fanta_players_teams} WHERE round = '%d'";
-    $result = $query->execute(); // ($sql, ($round - 1));
-    
-    foreach ($result as $row) {
-      db_insert("fanta_players_rounds")
-      ->fields(array("pl_id" => $row->pl_id, "round" => $vote_round, "rt_id" => $row->rt_id, "quotation" => $row->quotation, "not_rounded_quotation" => $row->not_rounded_quotation, "active" => $row->active))
-      ->execute();
+      
     }
   }
  

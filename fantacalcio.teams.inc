@@ -469,7 +469,7 @@ function show_team_squad($t_id) {
 
 function show_team_credits($t_id) {
   $spent = 0;
-  $credits = variable_get("fantacalcio_credits", 1000);
+  $credits = Team::get($t_id)->credits;//variable_get("fantacalcio_credits", 1000);
   
   $query = db_select("fanta_squads", "s");
   $query->condition("t_id", $t_id);

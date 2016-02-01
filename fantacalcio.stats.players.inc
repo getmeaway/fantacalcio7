@@ -14,9 +14,6 @@ function statistiche_autocomplete_players($s) {
   $roles = array("P", "D", "C", "A");
   $round = Round::getNext();
   
-  $subquery = db_select("fanta_squads", "s")->condition("t_id", array_keys($teams), "IN")->condition("status", 1)->fields("s", array(
-    "pl_id"));
-  
   $query = db_select("fanta_players", "p");
   $query->join("fanta_players_rounds", "r", "r.pl_id = p.pl_id");
   $query->join("fanta_real_teams", "rt", "rt.rt_id = r.rt_id");
@@ -27,7 +24,7 @@ function statistiche_autocomplete_players($s) {
   $query->orderBy("p.name");
   $query->range(0, 10);
   
-  $result = $query->execute(); // print $query;
+  $result = $query->execute(); 
   
   foreach ($result as $row) {
     $id = $row->pl_id . ", " . htmlspecialchars(stripslashes($row->name)) . " (" . ucwords($row->team) . ") - " . $roles[$row->role];

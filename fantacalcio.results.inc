@@ -223,7 +223,7 @@ function fantacalcio_results_lineup_check($vote_round) {
   foreach ($competitions as $c_id => $competition) {
 
     // squadre impegnate nella giornata    
-    $teams = Team::getTeamsForRound($competition->id, $round->competitions[$competition->id]->competition_round);
+    $teams = Team::getTeamsForRound($competition->id, $round->competitions[$competition->id]->competition_round, $competition->type);
 
     $rows = array();
     
@@ -511,7 +511,7 @@ function import_lineups_lineups($vote_round) {
       
       // formazioni mancanti
       if ($competition->type == COMPETITION_TYPE_SD)
-        $teams = Team::getTeamsForRound($competition->id, $round->competitions[$competition->id]->competition_round);
+        $teams = Team::getTeamsForRound($competition->id, $round->competitions[$competition->id]->competition_round, $competition->type);
       if ($competition->type == COMPETITION_TYPE_GP)
         $teams = Team::allByCompetition($competition->id);
       
@@ -801,11 +801,11 @@ function parse_votes_text($text, $round, $provider) {
 }
 
 function insert_votes($votes, $round, $provider) {
-  $tot = 0;echo $provider."##";
+  global $roles;
 
-  // VOTI della GIORNATA
-  $sql = "DELETE FROM {fanta_votes} WHERE round = '%d' AND provider = ";
-  
+  $tot = 0;
+
+  // VOTI della GIORNATA  
   $query = db_delete("fanta_votes");
   $query->condition("round", $round);  
   $query->condition("provider", $provider);
@@ -813,17 +813,29 @@ function insert_votes($votes, $round, $provider) {
   $result = $query->execute();
   
   $players_ids = Player::getIdList();
-  
-  // $sql = "INSERT INTO {fanta_votes} (round, pl_id, provider, vote, goals_for, goals_against, saved_penalties, missed_penalties, penalty_goals, own_goals, yellow_cards, red_cards, assists, win_goals, draw_goals) VALUES ";
-  foreach ($votes->votes as $name => $vote) {
-    if (in_array($name, array_keys($players_ids))) {
+
+// real teams
+    $real_teams = RealTeam::allNames();
+    $real_teams = array_flip($real_teams);
+
+    $roles = array_flip($roles);
+
+    foreach ($votes->votes as $name => $vote) {
+      if (!in_array($name, array_keys($players_ids))) {
+      	$pl_id = db_insert("fanta_players")->fields(array("name" => strtoupper($name), "role" => $roles[strtoupper($vote->role)]))->execute();
+      	$rt_id = $real_teams[strtolower($vote->team)];
+      	db_insert("fanta_players_rounds")->fields(array("pl_id" => $pl_id, "rt_id" => $rt_id, "round" => $round, "quotation" => 0, "not_rounded_quotation" => 0, "active" => 1))->execute();
+      }
+      else {
+      	$pl_id = $players_ids[$name];
+      }
       
       $total = $vote->vote + ($vote->goals_for * variable_get("fantacalcio_points_goals_for", "3")) + ($vote->penalty_goals * variable_get("fantacalcio_points_penalty_goals", "3")) + ($vote->assists * variable_get("fantacalcio_points_assists", "1")) + ($vote->saved_penalties * variable_get("fantacalcio_points_saved_penalties", "3")) + ($vote->goals_against * variable_get("fantacalcio_points_goals_against", "-1")) + ($vote->red_cards * variable_get("fantacalcio_points_red_card", "-1")) + ($vote->yellow_cards * variable_get("fantacalcio_points_yellow_card", "-0.5")) + ($vote->own_goals * variable_get("fantacalcio_points_own_goal", "-2")) + ($vote->missed_penalties * variable_get("fantacalcio_points_missed_penalties", "-3")) + ($vote->draw_goals * variable_get("fantacalcio_points_draw_goals", "1")) + ($vote->win_goals * variable_get("fantacalcio_points_win_goals", "3"));
       
       $query = db_insert("fanta_votes");
       $query->fields(array(
         "round" => $round, 
-        "pl_id" => $players_ids[$name], 
+        "pl_id" => $pl_id, 
         "provider" => $provider, 
         "total" => $total, 
         "vote" => $vote->vote, 
@@ -846,7 +858,7 @@ function insert_votes($votes, $round, $provider) {
       $query->execute();
       
       $tot++;
-    }
+    
   }
   
   return $tot . " Voti Inseriti";
@@ -874,9 +886,9 @@ function insert_default_votes($teams = array(), $round, $number_default, $provid
       $message = substr($message, 0, -1);
       drupal_set_message(check_plain($message));
       
-      $sql = "SELECT DISTINCT pl_id FROM {fanta_players_rounds} WHERE rt_id in (" . $team_sql . ") AND round = " . ($round - 1);
-      $result = db_query($sql);
-      foreach ($result as $row) {
+      $sql = "SELECT DISTINCT pl_id FROM {fanta_players_rounds} WHERE rt_id in (" . implode(",", $checked_teams) . ") AND round = " . ($round - 1);
+      echo $sql;$resulta = db_query($sql);
+      foreach ($resulta as $row) {
         $sqla .= "\n(" . $row->pl_id . ", " . $provider_id . ", " . $round . ", " . variable_get('fantacalcio_default_vote_' . $number_default, '6') . ", " . variable_get('fantacalcio_default_vote_' . $number_default, '6') . "),";
       }
       $sqla = substr($sqla, 0, -1);

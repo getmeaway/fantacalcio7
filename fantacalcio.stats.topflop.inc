@@ -130,7 +130,9 @@ function topflop_round_team($t_id, $round) {
   
   $out = "<h3>" . $round . "&ordf; giornata</h3><br>";
   $out .= "<h3 class='team_name'>" . $team->name . "</h3><br>";
-  $out .= "<div class='shirt'><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></div>";
+  
+  if (!empty($team->shirt))
+	    $out .= "<div class='shirt'><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></div>";
   
   //TOP
   $out .= "<p><strong>TOP</strong></p>";

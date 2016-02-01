@@ -183,9 +183,11 @@ class Team {
 		return $teams;
 	}
 	
-	static function getTeamsForRound($competition_id, $competition_round) {
+	static function getTeamsForRound($competition_id, $competition_round, $competition_type) {
 		
 		$teams = array();
+
+		if ($competition_type == COMPETITION_TYPE_SD) {
 		
 		$query = db_select("fanta_matches", "m");
 		$query->condition("m.round", $competition_round);
@@ -198,7 +200,9 @@ class Team {
 			array_push($teams, Team::get($row->t1_id));
 			array_push($teams, Team::get($row->t2_id));
 		}
+		}
 		
+		if($competition_type == COMPETITION_TYPE_GP) {
 		$query = db_select("fanta_teams_groups", "t");
 		$query->condition("t.g_id", array_keys(Group::allByCompetition($competition_id)), "IN");
 		$query->fields("t");
@@ -208,12 +212,12 @@ class Team {
 		foreach($result as $row) {
 			array_push($teams, Team::get($row->t_id));
 		}
-		
+		}
 		return $teams;
 	}
 	
 	static function getMaxNumberForUser($u_id) {
-		$max_teams = 1;
+		$max_teams = 0;
 		$query = db_select("fanta_users", "u");
 		$query->condition("uid", $u_id);
 		$query->fields("u");
