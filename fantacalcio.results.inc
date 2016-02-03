@@ -283,6 +283,7 @@ function fantacalcio_results_lineup_check($vote_round) {
   return $out;
 }
 
+/*
 function fantacalcio_admin_formazione($t_id = "", $competition_name = '') {
   if (!team_exists($t_id))
     return choose_team_formazione_admin();
@@ -480,6 +481,7 @@ function insert_formazione_admin($competition_name, $t_id) {
   
   return $out;
 }
+*/
 
 function import_lineups_form($form, &$form_state, $round) {
   $form['round'] = array(
@@ -551,6 +553,8 @@ function import_lineups_lineups($vote_round) {
 /**
  * *****************
  */
+ 
+ /*
 function fantacalcio_load_votes($round) {
   drupal_set_title(t('Risultati: Giornata #@round', array(
     "@round" => $vote_round)));
@@ -562,7 +566,7 @@ function fantacalcio_load_votes($round) {
     insert_votes($votes[$p_id], $round, $p_id);
   }
   return "";
-}
+}*/
 
 function fantacalcio_upload_votes($vote_round) {
   drupal_set_title(t('Risultati: Giornata #@round', array(
@@ -919,15 +923,6 @@ function update_players($round) {
   
   $message = "Giocatori aggiornati: " . $i . " (Giornata #" . $round . ")";
   drupal_set_message(check_plain($message));
-}
-
-function get_teams_serieA() {
-  $sql = "SELECT rt_id, long_name FROM {fanta_real_teams} ORDER BY long_name";
-  $result = db_query($sql);
-  while ($row = db_fetch_array($result)) {
-    $teams[$row["rt_id"]] = ucwords($row["long_name"]);
-  }
-  return $teams;
 }
 
 /**
