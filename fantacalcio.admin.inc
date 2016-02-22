@@ -37,7 +37,7 @@ function fantacalcio_admin_settings() {
   // );
   
   $form["fantacalcio_generals"]['fantacalcio_credits'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'numberfield', 
     '#title' => t('Crediti'), 
     '#default_value' => variable_get('fantacalcio_credits', '350'), 
     '#size' => 64, 
@@ -89,7 +89,7 @@ function fantacalcio_admin_settings() {
     '#description' => t('Selezionare se l\'utente può creare squadre in maniera autonoma.'));
   
   $form['fantacalcio_team']['fantacalcio_user_teams_limit'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'select', 
     '#title' => t('Limite al numero di squadre che l\'utente può creare'), 
     '#default_value' => variable_get('fantacalcio_user_teams_limit', '0'), 
     '#options' => array("-1" => "Nessun limite") + range(0, 100), 
@@ -108,7 +108,7 @@ function fantacalcio_admin_settings() {
     '#description' => t('Selezionare se assegnare in modo automatico il ruolo di "allenatore" agli utenti. (Consigliato in caso di leghe aperte)'));
   
   $form['fantacalcio_team']['fantacalcio_number_players'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'numberfield', 
     '#title' => t('Numero giocatori della squadra'), 
     '#default_value' => variable_get('fantacalcio_number_players', '25'), 
     '#size' => 3, 
@@ -116,7 +116,7 @@ function fantacalcio_admin_settings() {
     '#description' => t('Numero di giocatori da acquistare per completare la rosa.'));
   
   $form['fantacalcio_team']['fantacalcio_number_role_0'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'numberfield', 
     '#title' => t('Numero Portieri'), 
     '#default_value' => variable_get('fantacalcio_number_role_0', '3'), 
     '#size' => 3, 
@@ -124,7 +124,7 @@ function fantacalcio_admin_settings() {
     '#description' => t('Numero di portieri da inserire in rosa.'));
   
   $form['fantacalcio_team']['fantacalcio_number_role_1'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'numberfield', 
     '#title' => t('Numero Difensori'), 
     '#default_value' => variable_get('fantacalcio_number_role_1', '8'), 
     '#size' => 3, 
@@ -132,7 +132,7 @@ function fantacalcio_admin_settings() {
     '#description' => t('Numero di difensori da inserire in rosa.'));
   
   $form['fantacalcio_team']['fantacalcio_number_role_2'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'numberfield', 
     '#title' => t('Numero Centrocampisti'), 
     '#default_value' => variable_get('fantacalcio_number_role_2', '8'), 
     '#size' => 3, 
@@ -140,7 +140,7 @@ function fantacalcio_admin_settings() {
     '#description' => t('Numero di centrocampisti da inserire in rosa.'));
   
   $form['fantacalcio_team']['fantacalcio_number_role_3'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'numberfield', 
     '#title' => t('Numero Attaccanti'), 
     '#default_value' => variable_get('fantacalcio_number_role_3', '6'), 
     '#size' => 3, 
@@ -430,7 +430,7 @@ function fantacalcio_admin_user_form($form, &$form_state, $user_id) {
   
   $form["allowed_teams"] = array(
     "#title" => t("Numero massimo squadre"), 
-    "#type" => "textfield", 
+    "#type" => "numberfield", 
     '#required' => TRUE, 
     '#default_value' => $user->allowed_teams);
   
@@ -489,7 +489,7 @@ function fantacalcio_admin_user_add_form($form, &$form_state) {
   
   $form["allowed_teams"] = array(
     "#title" => t("Numero massimo squadre"), 
-    "#type" => "textfield", 
+    "#type" => "numberfield", 
     '#required' => TRUE);
   
   $form["payed"] = array(

@@ -27,7 +27,7 @@
 </div>
 <script src="http://fantacazzismo.altervista.org/sites/all/modules/fantacalcio/js/jquery.ui.touch-punch.min.js?o19fva"></script>
 <script src="http://fantacazzismo.altervista.org/sites/all/modules/fantacalcio/js/jquery.mobile.custom.min.js?o19fva"></script>
-<script>
+<script>/*
 jQuery(document).ready(function(){
   // Bind the swipeleftHandler callback function to the swipe event on div.box
   jQuery( "div[role='tabpanel']" ).not(".tab-pane").on( "swipeleft", function() {
@@ -68,5 +68,5 @@ function swiperight(panel) {
 	  		swipeleft(_panel);
 	  	});
   }
-
+*/
 </script>

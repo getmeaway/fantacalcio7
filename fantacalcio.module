@@ -19,7 +19,7 @@ define("COMPETITION_TYPE_SD", 1);
 define("COMPETITION_TYPE_GP", 2);
 define("DATA_SOURCE_URL", "http://fantacalciocircus.altervista.org");
 
-$roles_long = array(t("Portiere"), t("Difensore"), t("Centrocampista"), t("Attaccante"));
+$roles_long = array(t("Portieri"), t("Difensori"), t("Centrocampisti"), t("Attaccanti"));
 $roles = array(t("P"), t("D"), t("C"), t("A"));
 $GLOBALS["roles_long"] = $roles_long;
 $GLOBALS["roles"] = $roles;
@@ -459,6 +459,15 @@ function fantacalcio_menu() {
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.calendar.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
+        
+  $items['live'] = array(
+    'title' => 'Live', 
+    'page callback' => 'fantacalcio_show_live', 
+    'access arguments' => array('administer team'), 
+    'type' => MENU_NORMAL_ITEM, 
+    'file' => 'fantacalcio.calendar.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio')); 
+   
   
   $items['statistiche'] = array(
     'title' => 'Statistiche', 
@@ -1119,7 +1128,7 @@ function fantacalcio_cron() {
   if (variable_get("fantacalcio_automatic_updates", 0)) {
 
   //lista giocatori
-  Player::updateList();
+  //Player::updateList();
 
   //status giocatori
   Player::updateStatus();
@@ -1204,6 +1213,9 @@ function fantacalcio_theme($existing, $type, $theme, $path) {
       'render element' => 'elements', 
       'template' => 'templates/page-tabs'), 
     'lineup-view' => array(
+      'render element' => 'elements', 
+      'template' => 'templates/page-competitions-tabs'), 
+    'live-view' => array(
       'render element' => 'elements', 
       'template' => 'templates/page-competitions-tabs'), 
     'lineup-insert' => array(

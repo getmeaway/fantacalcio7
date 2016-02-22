@@ -22,7 +22,7 @@ function group_buy_player_form($form, &$form_state, $g_id) {
   // "#title" => t("Giocatore")
   ;
   $form['cost'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'numberfield', 
     '#size' => 5,
     "#autocomplete" => "off",
     "#default_value" => 1)
@@ -88,7 +88,7 @@ function team_buy_player_form($form, &$form_state, $g_id, $t_id, $role) {
     "#prefix" => '<div style="float:left;">', 
     "#suffix" => '</div>');
   $form['cost'] = array(
-    '#type' => 'textfield', 
+    '#type' => 'numberfield', 
     '#size' => 3, 
     "#prefix" => '<div style="float:left;">', 
     "#suffix" => '</div>');

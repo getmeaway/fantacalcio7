@@ -187,6 +187,7 @@ function top_round_team_lineup($round, $t_id, $c_id) {
       	$query->condition("p.role", $role);
       	$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
       	$query->condition("s.t_id", $t_id);
+      	$query->condition("s.status", 1);
       	$query->fields("v");
       	$query->fields("p");
       	$query->orderBy("v.total", "DESC");
@@ -310,6 +311,7 @@ function flop_round_team_lineup($round, $t_id, $c_id) {
       	$query->condition("p.role", $role);
       	$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
       	$query->condition("s.t_id", $t_id);
+      	$query->condition("s.status", 1);
       	$query->fields("v");
       	$query->fields("p");
       	$query->orderBy("v.total", "ASC");

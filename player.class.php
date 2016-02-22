@@ -132,7 +132,9 @@ class Player {
     $ids = array();
     
     $query = db_select("fanta_players", "p");
+    $query->join("fanta_players_rounds", "pr", "pr.pl_id = p.pl_id");
     $query->fields("p");
+    $query->distinct();
     $result = $query->execute();
     
     foreach ($result as $row) {
@@ -189,6 +191,13 @@ class Player {
     // cancello giocatori inseriti
     $query = db_delete("fanta_players_rounds");
     $query->condition("round", $round);
+    $query->execute();
+
+    $subquery = db_select("fanta_players_rounds", "pr")
+	->fields("pr", array("pl_id"));
+
+    $query = db_delete("fanta_players");
+    $query->condition("pl_id", $subquery, "NOT IN");
     $query->execute();
     
     //reinserisco tutti i giocatori presenti la giornata precedente (dati default)

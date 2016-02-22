@@ -49,10 +49,8 @@ class Result {
     
     $votes = json_decode(file_get_contents($votes_url));
     
-    $query = db_delete("fanta_votes");
-    $query->condition("round", $vote_round);
-    
-    $result = $query->execute();
+    //cancello voti già inseriti
+    db_delete("fanta_votes")->condition("round", $vote_round)->execute();
     
     $players_ids = Player::getIdList();
 
@@ -61,8 +59,8 @@ class Result {
     
     $query = db_select("fanta_players_rounds", "pr");
     $query->condition("round", $vote_round - 1);
-    $query->fields("pr"); // "SELECT DISTINCT pl_id, rt_id as team, active FROM {fanta_players_teams} WHERE round = '%d'";
-    $result = $query->execute(); // ($sql, ($round - 1));
+    $query->fields("pr");
+    $result = $query->execute();
     
     foreach ($result as $row) {
       db_insert("fanta_players_rounds")
@@ -80,7 +78,7 @@ class Result {
       if (!in_array($name, array_keys($players_ids))) {
       	$pl_id = db_insert("fanta_players")->fields(array("name" => strtoupper($name), "role" => $roles[strtoupper($vote->role)]))->execute();
       	$rt_id = $real_teams[strtolower($vote->team)];
-      	db_insert("fanta_players_rounds")->fields(array("pl_id" => $pl_id, "rt_id" => $rt_id, "round" => $vote_round, "active" => 1))->execute();
+      	db_insert("fanta_players_rounds")->fields(array("pl_id" => $pl_id, "rt_id" => $rt_id, "round" => $vote_round, "quotation" => 0, "not_rounded_quotation" => 0, "active" => 1))->execute();
       }
       else {
       	$pl_id = $players_ids[$name];
@@ -92,7 +90,7 @@ class Result {
         $query->fields(array(
             "round" => $vote_round,
             "pl_id" => $pl_id,
-            "provider" => variable_get("fantacalcio_points_goals_for", "1"),
+            "provider" => variable_get("fantacalcio_votes_provider", "1"),
             "total" => $total,
             "vote" => $vote->vote,
             "goals_for" => $vote->goals_for,
@@ -110,7 +108,7 @@ class Result {
             "substituted" => $vote->substituted,
    	    "has_vote" => $vote->has_vote 
         ));
-        // print $query->arguments();
+
         $query->execute();
     
       
@@ -118,6 +116,7 @@ class Result {
   }
  
   static function updatePlayers($round) {
+  /*
   $i = 0;
 
   // cancello i giocatori della giornata per evitare doppioni
@@ -138,6 +137,7 @@ class Result {
 
   $message = "Giocatori aggiornati: " . $i . " (Giornata #" . $round . ")";
   drupal_set_message(check_plain($message));
+  */
 }
 
  

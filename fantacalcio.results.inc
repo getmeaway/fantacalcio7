@@ -674,7 +674,7 @@ function votes_upload_form_submit($form, &$form_state) {
 
   foreach ($form_state["values"]["provider"] as $provider) {
   	if ($provider > 0) {
-      $out = insert_votes($votes, $round, $provider);
+      $out = Result::insertVotes($round);
       insert_default_votes($form_state["values"]["teams_default_1"], $round, 1, $provider);
       insert_default_votes($form_state["values"]["teams_default_2"], $round, 2, $provider);
   	}
@@ -854,7 +854,7 @@ function insert_votes($votes, $round, $provider) {
         "substituted" => $vote->substituted,
         "has_vote" => $vote->has_vote
       ));
-      // print $query->arguments();
+
       $query->execute();
       
       $tot++;
