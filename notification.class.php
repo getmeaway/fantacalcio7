@@ -14,9 +14,11 @@ class Notification {
 	public static function all($limit = null) {
 		global $user;
 		$notifications = array();
+		
+		$user_or = db_or()->condition('uid', $user->uid)->condition('uid', -1);
 	
 		$query = db_select("fanta_notifications", "n");
-		$query->condition($db_or);
+		$query->condition($user_or);
 		$query->fields("n");
 		$query->orderBy("n.timestamp", "DESC");
 	
@@ -43,7 +45,7 @@ class Notification {
 	
 	}
 
-	public static function create($text, $uid = null) {
+	public static function create($text, $uid = -1) {
 		db_insert("fanta_notifications")->fields(array("text" => $text, "uid" => $uid, "timestamp" => time()))->execute();
 		watchdog('fantacalcio', "Notifica inserita: @text, user: @user", array("@text" => $text, "@user" => ($uid != null ? $uid : "-")), WATCHDOG_NOTICE );
 		watchdog('fantacalcio', '@team: formazione importata', array(
