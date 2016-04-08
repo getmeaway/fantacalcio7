@@ -199,6 +199,8 @@ class Result {
     $max_substitutions = variable_get("fantacalcio_max_substitutions", 0) == -1 ? PHP_INT_MAX : variable_get("fantacalcio_max_substitutions", 0);
   
     $substitutions = 0;
+    
+    $module = Lineup::getModule($t_id, $c_id, $competition_round);
   
     // titolari senza voto da sostituire
     $query = db_select("fanta_lineups", "l");
@@ -225,7 +227,10 @@ class Result {
         while ($search && $substitutions <= $max_substitutions) {
           $query_search = db_select("fanta_lineups", "l");
           $query_search->join("fanta_players", "p", "p.pl_id = l.pl_id");
-          $query_search->condition("role", $role);
+          
+          if(variable_get("fantacalcio_reserves_mode", 0) == 0)
+	          $query_search->condition("role", $role);
+	          
           $query_search->condition("position", $position);
           $query_search->condition("round", $competition_round);
           $query_search->condition("c_id", $c_id);
@@ -240,9 +245,17 @@ class Result {
             foreach ($result_search as $row_search) {
   
               $pl_id = $row_search->pl_id;
+              
+              $new_module_ok = true;
+              if(variable_get("fantacalcio_reserves_mode", 0) == 0) {
+              	$module[$role]--;
+              	$module[$row_search->role]++;
+              	
+              	$new_module_ok =  in_array(implode("-", $module), $modules);              		
+              }
   
               // se con il voto entra la riserva
-              if (in_array($pl_id, $pl_votes) && $row_search->has_played == 0) {
+              if (in_array($pl_id, $pl_votes) && $row_search->has_played == 0 && $new_module_ok) {
                 $query_update = db_update("fanta_lineups");
                 $query_update->fields(array("has_played" => 1));
                 $query_update->condition("pl_id", $pl_id);
@@ -251,7 +264,7 @@ class Result {
                 $query_update->condition("round", $competition_round);
   
                 $query_update->execute();
-  
+                
                 $substitutions++;
                 $search = false;
               }
