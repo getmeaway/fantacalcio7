@@ -7,6 +7,8 @@
 function fantacalcio_team_form($form, $form_state, $id) {
   global $user;
   
+    drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/team.shirt.js");
+    
   if ($id == null)
     $team = null;
   else
@@ -39,7 +41,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
   // );
   // }
   
-  $form["coach"] = array(
+  /*$form["coach"] = array(
     "#type" => "textfield", 
     "#title" => "Allenatore", 
     "#default_value" => $team ? check_plain($team->coach) : "");
@@ -47,98 +49,240 @@ function fantacalcio_team_form($form, $form_state, $id) {
   $form["stadium"] = array(
     "#type" => "textfield", 
     "#title" => "Stadio", 
-    "#default_value" => $team ? check_plain($team->stadium) : "");
+    "#default_value" => $team ? check_plain($team->stadium) : "");*/
   
-  // $form ["shirt"] = array(
-  // "#type" => "fieldset",
-  // "#title" => "Divisa",
-  // "#ahah" => array(
-  // "wrapper" => "prova",
+   $form ["shirt"] = array(
+   "#type" => "fieldset",
+   "#title" => t("Divisa") 
+   );
+    
+    $form ["shirt"] ["metadata"] = array(
+        "#type" => "hidden",
+   "#default_value" => $team ? $team->shirt_metadata : "",
+   );
+        
+    $form ["shirt"] ["image"] = array(
+        "#type" => "hidden",
+   "#default_value" => $team ? json_decode($team->shirt) : "",
+   );
+    
+    /*
+    <div class="btn-group" data-toggle="buttons">
+  <label class="btn btn-primary active">
+    <input type="radio" name="options" id="option1" autocomplete="off" checked> Radio 1 (preselected)
+  </label>
+  <label class="btn btn-primary">
+    <input type="radio" name="options" id="option2" autocomplete="off"> Radio 2
+  </label>
+  <label class="btn btn-primary">
+    <input type="radio" name="options" id="option3" autocomplete="off"> Radio 3
+  </label>
+</div>
+    */
   
-  // // default so not really needed, but included for clarity
-  // "method" => "replace",
-  // "event" => "change",
-  // "path" => "js/divisa.js"
-  // )
-  
-  // );
-  
-  // $form ["shirt"] ["type"] = array(
-  // "#type" => "select",
-  // "#options" => array(
-  // 0 => "solo bordi",
-  // 1 => "righe verticali",
-  // 2 => "righe orizzontali",
-  // 3 => "banda diagonale"
-  // ),
-  // "#title" => "Tipo",
-  // "#default_value" => $team ? check_plain(substr($team->shirt, -9, 1)) : "",
-  // "#ahah" => array(
-  // "wrapper" => "shirt_preview",
-  
-  // // default so not really needed, but included for clarity
-  // "method" => "replace",
-  // "event" => "change",
-  // "path" => "team/js"
-  // )
-  
-  // );
-  
-  // $form ["shirt"] ["color_1"] = array(
-  // "#type" => "select",
-  // "#options" => array(
-  // 0 => "Bianco",
-  // 1 => "Nero",
-  // 2 => "Rosso",
-  // 3 => "Blu",
-  // 4 => "Verde",
-  // 5 => "Giallo"
-  // ),
-  // "#title" => "Colore 1",
-  // "#default_value" => $team ? check_plain(substr($team->shirt, -7, 1)) : "",
-  // "#ahah" => array(
-  // "wrapper" => "shirt_preview",
-  
-  // // default so not really needed, but included for clarity
-  // "method" => "replace",
-  // "event" => "change",
-  // "path" => "team/js"
-  // )
-  
-  // );
-  
-  // $form ["shirt"] ["color_2"] = array(
-  // "#type" => "select",
-  // "#options" => array(
-  // 0 => "Bianco",
-  // 1 => "Nero",
-  // 2 => "Rosso",
-  // 3 => "Blu",
-  // 4 => "Verde",
-  // 5 => "Giallo"
-  // ),
-  // "#title" => "Colore 2",
-  // "#default_value" => $team ? check_plain(substr($team->shirt, -5, 1)) : "",
-  // "#ahah" => array(
-  // "wrapper" => "shirt_preview",
-  
-  // // default so not really needed, but included for clarity
-  // "method" => "replace",
-  // "event" => "change",
-  // "path" => "team/js"
-  // )
-  
-  // );
-  
-  // $form ["shirt"] ["preview"] = array(
-  // "#prefix" => "<div id=\"shirt_preview\" style=\"float:left;\">",
-  // "#suffix" => "</div>",
-  // "#type" => "markup",
-  // "#value" => $team ? "<img src=\"" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "\">" : ""
-  // );
+    $form ["shirt"] ["type_0"] = array(
+        "#type" => "radio",
+        "#default_value" => $team ? $team->shirt_metadata->type : "",
+        //"#value" => "<i class='fa fa-user'></i>",
+        "#prefix" => "<div class='form-group'>" . t("Tipo") .': <div class="btn-group" data-toggle="buttons">' .  '<label class="btn btn-default color-type">' ,
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_0.png" width="30"></label>',
+        "#attributes" => array("class" => array("form-inline"), "id" => "type")
+   );
+    
+    $form ["shirt"] ["type_1"] = array(
+        "#type" => "radio",
+   "#default_value" => $team ? $team->shirt_metadata->type : "",
+        "#prefix" => '<label class="btn btn-default color-type">',
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_1.png" width="30"></label>',
+                "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-1")
+   );
+    $form ["shirt"] ["type_2"] = array(
+        "#type" => "radio",
+   "#default_value" => $team ? $team->shirt_metadata->type : "",
+        "#prefix" => '<label class="btn btn-default color-type">',
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_2.png" width="30"></label>',
+                "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-2")
+   );
+    
+    $form ["shirt"] ["type_3"] = array(
+        "#type" => "radio",
+   "#default_value" => $team ? $team->shirt_metadata->type : "",
+        "#prefix" => '<label class="btn btn-default color-type">',
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_3.png" width="30"></label>',
+                "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-3")
+   );
+    $form ["shirt"] ["type_4"] = array(
+        "#type" => "radio",
+   "#default_value" => $team ? $team->shirt_metadata->type : "",
+        "#prefix" => '<label class="btn btn-default color-type">',
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_4.png" width="30"></label>',
+                "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-4")
+   );
+    
+    $form ["shirt"] ["type_5"] = array(
+        "#type" => "radio",
+   "#default_value" => $team ? $team->shirt_metadata->type : "",
+        "#prefix" => '<label class="btn btn-default color-type">',
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_5.png" width="30"></label>',
+                "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-5")
+   );
+    $form ["shirt"] ["type_6"] = array(
+        "#type" => "radio",
+   "#default_value" => $team ? $team->shirt_metadata->type : "",
+        "#prefix" => '<label class="btn btn-default color-type">',
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_6.png" width="30"></label>',
+                "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-6")
+   );
+    
+    $form ["shirt"] ["type_7"] = array(
+        "#type" => "radio",
+   "#default_value" => $team ? $team->shirt_metadata->type : "",
+        "#prefix" => '<label class="btn btn-default color-type">',
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_7.png" width="30"></label>',
+                "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-7")
+   );
+    $form ["shirt"] ["type_8"] = array(
+        "#type" => "radio",
+   "#default_value" => $team ? $team->shirt_metadata->type : "",
+        "#prefix" => '<label class="btn btn-default color-type">',
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_8.png" width="30"></label>',
+                "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-8")
+   );
+    
+    $form ["shirt"] ["type_9"] = array(
+        "#type" => "radio",
+   "#default_value" => $team ? $team->shirt_metadata->type : "",
+        "#prefix" => '<label class="btn btn-default color-type">',
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_9.png" width="30"></label></div></div>',
+                "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-9")
+   );
+    
+    /*
+    <div class="input-group-btn group-color"> 
+
+        <button type="button" class="btn btn-default btn-box dropdown-toggle" data-toggle="dropdown">
+            <span class="fa fa-square" id="preview"></span> 
+        </button>
+
+        <ul class="dropdown-menu">
+
+            <li>
+
+                <div class="panel panel-default">
+
+                    <div class="panel-heading">
+                        <span class="panel-label">Color Swatch</span>
+                    </div>
+
+                    <div class="panel-body">
+
+                        <ul class="list-inline">
+                            <li><div id="Red" class="swatch swatch-clickable" style="background-color:#FF0000"></div></li>
+                            <li><div id="Lime" class="swatch swatch-clickable" style="background-color:#00FF00"></div></li>
+                            <li><div id="Yellow" class="swatch swatch-clickable" style="background-color:#FFFF00"></div></li>
+                            <li><div id="Lemon" class="swatch swatch-clickable" style="background-color:#0000FF"></div></li>
+                            <li><div id="Lime" class="swatch swatch-clickable" style="background-color:#FF00FF"></div></li>
+                            <li><div id="Evergreen" class="swatch swatch-clickable" style="background-color:#00FFFF"></div></li>
+                        </ul>
+
+                        <ul class="list-inline">
+                            <li><div id="Alizarin" class="swatch swatch-clickable" style="background-color:#EF2326"></div></li>
+                            <li><div id="Green Apple" class="swatch swatch-clickable" style="background-color:#6DBE45"></div></li>
+                            <li><div id="Hot Pink" class="swatch swatch-clickable" style="background-color:#F2EA3F"></div></li>
+                            <li><div id="Sagebrush" class="swatch swatch-clickable" style="background-color:#344EA2"></div></li>
+                            <li><div id="Tan" class="swatch swatch-clickable" style="background-color:#B6519F"></div></li>
+                            <li><div id="White" class="swatch swatch-clickable" style="background-color:#73CDD8"></div></li>
+                        </ul>
+
+                    </div>
+
+                </div>
+
+            </li>
+
+        </ul>
+
+    </div>
+    */
+    
+    $colors_list = array("#FFFFFF", "#FFF0F5", "#FFDEAD", "#FFB6C1", "#DEB887", "#F4A460", "#FFA07A", "#EE82EE", "#D8BFD8", "#FF7F50", "#DB7093", "#C71585", "#FF00FF", "#FF1493", "#DC143C", "#7B68EE", "#8A2BE2", "#483D8B", "#4B0082", "#800080", "#800000", "#FF0000", "#FF4500", "#B22222", "#8B4513", "#A0522D", "#D2691E", "#B8860B", "#FFA500", "#DAA520", "#FFFF00", "#00FF00", "#7FFF00", "#F0E68C", "#BDB76B", "#8FBC8F", "#9ACD32", "#90EE90", "#ADFF2F", "#32CD32", "#228B22", "#006400", "#556B2F", "#6B8E23", "#808000", "#00FF7F", "#00FA9A", "#66CDAA", "#3CB371", "#2E8B57", "#008080", "#20B2AA", "#00FFFF", "#AFEEEE", "#7FFFD4", "#5F9EA0", "#B0C4DE", "#87CEEB", "#1E90FF", "#6495ED", "#4169E1", "#191970", "#00008B", "#0000FF", "#00BFFF", "#B0E0E6", "#E6E6FA", "#D3D3D3", "#808080", "#778899", "#2F4F4F", "#000000");
+    
+    $colors = '<ul class="dropdown-menu">
+													
+							<li>
+
+								<div class="panel panel-default">
+																	   
+									<div class="panel-body">
+										
+										<ul class="list-inline">';
+    
+        $i = 1;
+                                        foreach($colors_list as $color) {
+                                            if (!empty($color)) {
+                                                $colors .= '<li><div id="color-' . $color . '" class="swatch swatch-clickable" style="background-color:' . $color . '"></div></li>';
+                                                if ($i % 8 == 0) {
+                                                    $colors .= "</ul><ul class='list-inline'>";
+                                                }
+
+                                                $i++;
+                                            }
+                                        }
+											
+										$colors .= '</ul>
+
+									</div>
+										
+								</div>
+								
+							</li>
+								
+						</ul>';
+   
+    $form ["shirt"] ["bgColor"] = array(
+        "#type" => "hidden",
+   "#title" => t("Colore 1"),
+    "#prefix" => "<div class='form-group'>" . '<div class="input-group-btn group-color">' . t("Colore 1"),
+        "#suffix" =>  '<button type="button" class="btn btn-default btn-box dropdown-toggle" data-toggle="dropdown">
+							<span class="fa fa-square preview"></span> 
+						</button>' . $colors . '</div>',
+   "#default_value" => $team ? $team->shirt_metadata->bgColor : "",
+    "#attributes" => array("class" => array("btn", "btn-default", "color-val"), "id" => "bg-color")
+   );
+    
+    $form ["shirt"] ["mainColor"] = array(
+            "#type" => "hidden",
+   "#title" => t("Colore 2"),
+    "#prefix" => "<div class='form-group'>" . '<div class="input-group-btn group-color">' . t("Colore 2"),
+        "#suffix" =>  '<button type="button" class="btn btn-default btn-box dropdown-toggle" data-toggle="dropdown">
+							<span class="fa fa-square preview"></span> 
+						</button>' . $colors . '</div>',
+   "#default_value" => $team ? $team->shirt_metadata->mainColor : "",
+        "#attributes" => array("class" => array("btn", "btn-default", "color-val"), "id" => "main-color")
+   );
+    
+    $form ["shirt"] ["border"] = array(
+        "#type" => "checkbox",
+   "#title" => t("Bordo"),
+        "#prefix" => "<div class='form-group'>",
+           "#default_value" => $team ? $team->shirt_metadata->border : "",
+        "#attributes" => array("id" => "border")
+   );
+    
+    $form ["shirt"] ["borderColor"] = array(
+        "#type" => "hidden",
+   "#title" => t("Colore bordo"),
+    "#prefix" => "<div class='form-group'>" . '<div class="input-group-btn group-color">' . t("Colore bordo"),
+        "#suffix" =>  '<button type="button" class="btn btn-default btn-box dropdown-toggle" data-toggle="dropdown">
+							<span class="fa fa-square preview"></span> 
+						</button>' . $colors . '</div></div><canvas id="myCanvas" width="350" height="350"></canvas>',
+   "#default_value" => $team ? $team->shirt_metadata->borderColor : "",
+        "#attributes" => array("class" => array("btn", "btn-default", "color-val"), "id" => "border-color")
+   );
   
   $form["t_id"] = array(
-    "#type" => "hidden", 
+    "#type" => "hidden",
+    
     "#value" => $team ? check_plain($team->id) : "");
   
   $form["action"] = array("#type" => "hidden", "#value" => check_plain($action));

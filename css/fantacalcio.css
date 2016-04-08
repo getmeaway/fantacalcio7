@@ -731,3 +731,17 @@ text-align:left;
 .modal-xl {
 	min-width: 70%;
 }
+
+.swatch {
+width:46px;
+height:46px;
+border-radius:5px;
+border: 1px solid #666;
+margin: 0px;
+}
+
+.swatch-clickable:hover 
+{
+border:  2px solid #111;
+cursor: pointer;
+}

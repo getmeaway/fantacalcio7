@@ -108,6 +108,8 @@ jQuery(function() {
 
 			var position = jQuery(ui.item).parent().parent()
 					.attr('data-position');
+			var group_position = jQuery(ui.item).parent().parent()
+					.attr('data-position');
 			var rows = jQuery(
 					"[data-position=" + position + "]").find(
 					'tbody tr');
@@ -238,6 +240,24 @@ jQuery(function() {
 			else
 				jQuery("#lineup-reserves tbody tr.empty-row")
 						.hide();
+            
+            //TODO aggiungere attributo 'data-position' ai tr (per ordinamento)
+            var $container = jQuery('.lineup-group[data-position="' + group_position + '"] tbody')
+            $container.children("tr").sort(function(a, b) {
+                console.log("sort")
+                if(jQuery(a).attr("data-role") > jQuery(b).attr("data-role"))
+                    return 1;
+                else if(jQuery(a).attr("data-role") < jQuery(b).attr("data-role"))
+                    return -1;
+                else if(jQuery(a).attr("data-role") == jQuery(b).attr("data-role")) {
+                	if(jQuery(a).attr("data-position") > jQuery(b).attr("data-position"))
+                		return 1;
+                	else if(jQuery(a).attr("data-position") < jQuery(b).attr("data-position"))
+                		return -1;
+                    else
+                    	return jQuery(a).attr("data-name") > jQuery(b).attr("data-name")
+                }
+            }).detach().appendTo($container)
 		},
 		});// .disableSelection();
 	

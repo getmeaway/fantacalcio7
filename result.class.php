@@ -2,7 +2,59 @@
 
 
 class Result {
-  
+
+    static function getPoints() {
+	$points = array(
+			"yellow_cards" => array(
+				"title" => t("Amm."),
+				"type" => "checkbox"
+				),
+				"red_cards" => array(
+				"title" => t("Esp."),
+				"type" => "checkbox"
+				),
+				"goals_for" => array(
+				"title" => t("Gol fatti"),
+				"type" => "numberfield"
+				),
+				"penalty_goals" => array(
+				"title" => t("Gol su rigore"),
+				"type" => "numberfield"
+				),
+				"goals_against" => array(
+				"title" => t("Gol subiti"),
+				"type" => "numberfield"
+				),
+				"assists" => array(
+				"title" => t("Assist"),
+				"type" => "numberfield"
+				),
+				"own_goals" => array(
+				"title" => t("Autogol"),
+				"type" => "numberfield"
+				),
+				"missed_penalties" => array(
+				"title" => t("Rigori sbagliati"),
+				"type" => "numberfield"
+				),
+				"saved_penalties" => array(
+				"title" => t("Rigori parati"),
+				"type" => "numberfield"
+				),
+				"draw_goals" => array(
+				"title" => t("Gol vittoria"),
+				"type" => "numberfield"
+				),
+				"win_goals" => array(
+				"title" => t("Gol pareggio"),
+				"type" => "numberfield"
+				),
+				
+				);
+				
+	return $points;
+}
+    
   static function importLineups($vote_round) {
 
     // elenco competizioni

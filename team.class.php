@@ -26,6 +26,7 @@ class Team {
 			$team->coach = $row->coach;
 			$team->stadium = $row->stadium;
 			$team->shirt = $row->shirt;
+            $team->shirt_metadata = $row->shirt_metadata != null ? json_decode($row->shirt_metadata) : null;
 			$team->credits = $row->credits;
 			$team->register_date = $row->register_date;
 			$team->completed_date = $row->completed_date;

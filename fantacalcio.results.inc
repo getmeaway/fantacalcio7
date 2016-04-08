@@ -11,7 +11,7 @@
 /**
  * *********************
  */
-function fantacalcio_results($round = '', $action = '') {
+function fantacalcio_results($round = '', $action = '', $arg = "") {
 
   $round = (is_numeric($round)) ? $round : Round::getLast() + 1;
   
@@ -21,26 +21,37 @@ function fantacalcio_results($round = '', $action = '') {
   
   $actions = array(
     'giornata' => array(
+      'key' => 'giornata', 
       'name' => t('Scegli giornata'), 
       'function' => 'fantacalcio_results_choose_round', 
       'order' => $order++), 
     'formazioni' => array(
+      'key' => 'formazioni', 
       'name' => t('Controlla Formazioni'), 
       'function' => 'fantacalcio_results_lineup_check', 
       'order' => $order++), 
     'voti' => array(
+      'key' => 'voti', 
       'name' => t('Carica Voti'), 
       'function' => 'fantacalcio_upload_votes', 
       'order' => $order++), 
+    'manual' => array(
+      'key' => 'voti', 
+      'name' => t('Inserisci voti'), 
+      'function' => 'fantacalcio_insert_votes', 
+      'order' => $order++), 
     'titolari' => array(
+      'key' => 'titolari', 
       'name' => t('Trova titolari'), 
       'function' => 'fantacalcio_find_regulars', 
       'order' => $order++), 
     'modificatori' => array(
-      'name' => 'Modificatori', 
+      'key' => 'modificatori', 
+      'name' => t('Modificatori'), 
       'function' => 'fantacalcio_get_modifiers', 
       'order' => $order++), 
     'totali' => array(
+      'key' => 'totali', 
       'name' => t('Calcola totali'), 
       'function' => 'fantacalcio_get_totals', 
       'order' => $order++), 
@@ -52,6 +63,7 @@ function fantacalcio_results($round = '', $action = '') {
     // ),
     
     'fine' => array(
+      'key' => 'fine', 
       'name' => t('Chiudi giornata'), 
       'function' => 'fantacalcio_close_round', 
       'order' => $order++));
@@ -68,7 +80,9 @@ function fantacalcio_results($round = '', $action = '') {
       'function' => 'fantacalcio_send_newsletter', 
       'order' => $order++);
   
-  $out = "\n<div id='actions'>";
+  $out .= "\n<div class='row'>";
+
+  $out .= "\n<div id='_actions' class='col-xs-12 col-sm-2'>";
   $out .= get_actions_list($actions, $action, $round);
   $out .= "\n</div>";
   
@@ -77,8 +91,10 @@ function fantacalcio_results($round = '', $action = '') {
   
   $function = $actions[$action]['function'];
   
-  $out .= "\n<div id='data'>";
-  $out .= $function($round);
+  $out .= "\n<div id='_data' class='col-xs-12 col-sm-10'>";
+  $out .= $function($round, $arg);
+  $out .= "\n</div>";
+
   $out .= "\n</div>";
   
   return $out;
@@ -98,31 +114,31 @@ function get_actions_list($actions, $action = '', $round) {
   
   $items = array();
   foreach ($actions as $key => $act) {
-    if ($key == $action)
-      array_push($items, array(
-        "data" => $act['name'], 
-        "class" => array("list-group-item", "selected")));
-    elseif ($act['order'] == ($this_order + 1))
+
+    if (!isset($act["hidden"]) || $act["hidden"] == false) {
       
-      // $out .= "\n<li><a href='" . base_path() . arg(0) . "/" . $round . "/" . $key . "'>" . $act['name'] . "</a></li>";
-      array_push($items, array(
-        "data" => l($act['name'], arg(0) . "/" . $round . "/" . $key), 
-        "class" => array("list-group-item")));
-    elseif ($act['order'] < ($this_order))
+      if ($act["key"] == $action)
+        $items[$act["key"]] = array(
+          "data" => $act['name'], 
+          "class" => array("list-group-item", "selected"));
       
-      // $out .= "\n<li class='done'>" . $act['name'] . "</li>";
-      array_push($items, array(
-        "data" => $act['name'], 
-        "class" => array("done", "list-group-item")));
-    else
-      // $out .= "\n<li>" . $act['name'] . "</li>";
-      array_push($items, array(
-        "data" => $act['name'], 
-        "class" => array("list-group-item")));
+      else if ($act['order'] == ($this_order + 1))
+        $items[$act["key"]] = array(
+          "data" => l($act['name'], arg(0) . "/" . $round . "/" . $key), 
+          "class" => array("list-group-item"));
+
+      else if ($act['order'] < ($this_order))
+        $items[$act["key"]] = array(
+          "data" => $act['name'], 
+          "class" => array("done", "list-group-item"));
+      
+      else
+        $items[$act["key"]] = array(
+          "data" => $act['name'], 
+          "class" => array("list-group-item"));
+    }
   }
-  
-  // $out .= "\n</ul>";
-  
+    
   return theme("item_list", array(
     "items" => $items, 
     "type" => "ul", 
@@ -283,7 +299,6 @@ function fantacalcio_results_lineup_check($vote_round) {
   return $out;
 }
 
-/*
 function fantacalcio_admin_formazione($t_id = "", $competition_name = '') {
   if (!team_exists($t_id))
     return choose_team_formazione_admin();
@@ -481,7 +496,6 @@ function insert_formazione_admin($competition_name, $t_id) {
   
   return $out;
 }
-*/
 
 function import_lineups_form($form, &$form_state, $round) {
   $form['round'] = array(
@@ -553,8 +567,6 @@ function import_lineups_lineups($vote_round) {
 /**
  * *****************
  */
- 
- /*
 function fantacalcio_load_votes($round) {
   drupal_set_title(t('Risultati: Giornata #@round', array(
     "@round" => $vote_round)));
@@ -566,13 +578,289 @@ function fantacalcio_load_votes($round) {
     insert_votes($votes[$p_id], $round, $p_id);
   }
   return "";
-}*/
+}
+
+function fantacalcio_insert_votes($vote_round, $match_id = null) {
+
+  drupal_set_title(t('Risultati: Giornata #@round', array(
+    "@round" => $vote_round)));
+
+  $query = db_select("fanta_real_teams_matches", "m");
+  $query->join("fanta_real_teams", "rt1", "m.rt1_id = rt1.rt_id");
+  $query->join("fanta_real_teams", "rt2", "m.rt2_id = rt2.rt_id");
+  $query->condition("m.round", $vote_round);
+  $query->fields("m");
+  $query->addField("rt1", "name", "home_team");
+  $query->addField("rt2", "name", "away_team");
+
+  $result = $query->execute();
+
+  $out = "";
+  $matches = array();
+  $items = array();
+  foreach ($result as $row) {
+    array_push($matches, $row->m_id);
+    $items[] = l($row->home_team . " - " . $row->away_team, "risultati/" . $vote_round . "/manual/" . $row->m_id);
+  }
+
+  $out .= theme("item_list", array("items" => $items));
+  if (isset($match_id) && in_array($match_id, $matches)) {      
+    $insert_votes_match = drupal_get_form("insert_votes_matches", $match_id, $vote_round);
+    $out .= drupal_render($insert_votes_match);
+  }
+    
+  return $out;
+  
+}
+
+function insert_votes_matches($form, &$form_state, $match_id, $vote_round) {
+
+  $match = RealTeam::getMatch($match_id);
+
+  $players_1 = Player::getByRealTeam($match->rt1_id, $vote_round);
+  $players_2 = Player::getByRealTeam($match->rt2_id, $vote_round);
+
+  $players = array_merge($players_1, $players_2);
+
+  $form['#theme'] = "fantacalcio_insert_votes_matches";
+  $form['#match_id'] = $match_id;
+  $form['#vote_round'] = $vote_round;
+
+  $round = Round::getByRound($vote_round);
+  $votes = $round->getVotes(variable_get("fantacalcio_votes_provider", 1));
+
+  $is_new = count($votes) == 0;
+  
+  $points = Result::getPoints();
+
+  foreach ($players as $player) {
+    $pl_id = $player->pl_id;
+
+    $form["pl_id_" . $pl_id] = array(
+    "#type" => "hidden", 
+    "#default_value" => $pl_id);
+
+    $form["vote_" . $pl_id] = array(
+    "#type" => "numberfield", 
+    "#default_value" => ($is_new ? "" : (isset($votes[$pl_id]) ? $votes[$pl_id]->vote : "")),
+    "#min" => 0,
+    "#max" => 10,
+    "#step" => 0.5,
+    "#attributes" => array("class" => array("input-sm", "vote"))
+    //"#title" => t("Voto")
+    );
+    
+    foreach($points as $key => $point) {
+    	if(variable_get("fantacalcio_points_" . $key, 0) != 0) {
+            $form[$key . "_" . $pl_id] = array(
+                                        "#type" => $point["type"], 
+                                        "#default_value" => ($is_new ? "" : (isset($votes[$pl_id]) ? $votes[$pl_id]->{$key} : ""))
+                );
+            
+            if($point["type"] == "numberfield") {
+                $form[$key . "_" . $pl_id]["#min"] = 0;
+                $form[$key . "_" . $pl_id]["#attributes"] = array("class" => array("input-sm"));                                        
+            }
+                
+        }
+    }
+
+    $form["regular_" . $pl_id] = array(
+    "#type" => "checkbox", 
+    "#default_value" => ($is_new ? "" : (isset($votes[$pl_id]) ? $votes[$pl_id]->regular : "")),
+    //"#title" => t("Ammonizione")
+    );
+
+    $form["substituted_" . $pl_id] = array(
+    "#type" => "checkbox", 
+    "#default_value" => ($is_new ? "" : (isset($votes[$pl_id]) ? $votes[$pl_id]->substituted : "")),
+    //"#title" => t("Espulsione")
+    );
+      
+      $form["minute_in_" . $pl_id] = array(
+    "#type" => "numberfield", 
+    "#min" => 0,
+    "#max" => 90,
+    "#default_value" => ($is_new ? "" : (isset($votes[$pl_id]) ? $votes[$pl_id]->minute_in : "")),
+    //"#title" => t("Ammonizione")
+    );
+
+    $form["minute_out_" . $pl_id] = array(
+    "#type" => "numberfield", 
+    "#min" => 0,
+    "#max" => 90,
+    "#default_value" => ($is_new ? "" : (isset($votes[$pl_id]) ? $votes[$pl_id]->minute_out : "")),
+    //"#title" => t("Espulsione")
+    );
+  }
+
+  $form["submit"] = array(
+    '#type' => "submit",
+    '#title' => t("Salva"),
+    '#value' => t("Salva")
+  );
+
+  $form["clear"] = array(
+    '#type' => "submit",
+    '#title' => t("Annulla"),
+    '#value' => t("Annulla"),
+    '#validate' => array('insert_votes_clear')
+  );
+
+  return $form;
+}
+
+function insert_votes_matches_clear($form, &$form_state) {
+  drupal_goto("risultati/" . $round . "/manual/" . $match_id);
+}
+
+function insert_votes_matches_submit($form, &$form_state) {
+  //TODO funzione di isnerimento dati nel DB
+  $match_id = $form['#match_id'];
+  $vote_round = $form['#vote_round'];
+
+  $match = RealTeam::getMatch($match_id);
+
+  $players_1 = Player::getByRealTeam($match->rt1_id, $vote_round);
+  $players_2 = Player::getByRealTeam($match->rt2_id, $vote_round);
+
+  $players = array_merge($players_1, $players_2);
+  $votes = array();
+  
+  $points = Result::getPoints();
+
+  foreach ($players as $player) {
+    $pl_id = $player->pl_id;
+
+    if ($form_state["values"]["vote_" . $pl_id] > 0) {
+
+      $votes[$pl_id] = new stdClass();
+      $votes[$pl_id]->pl_id = $pl_id;
+      $votes[$pl_id]->round = $vote_round;
+      $votes[$pl_id]->provider = variable_get("fantacalcio_votes_provider", 1);
+      $votes[$pl_id]->vote = $form_state["values"]["vote_" . $pl_id];
+      
+      foreach($points as $key => $point) {
+      	$votes[$pl_id]->{$key} = (isset($form_state["values"][$key . "_" . $pl_id]) ? $form_state["values"][$key . "_" . $pl_id] : 0);
+      }
+
+      $votes[$pl_id]->regular = $form_state["values"]["regular_" . $pl_id];
+      $votes[$pl_id]->substituted = $form_state["values"]["substituted_" . $pl_id];
+      $votes[$pl_id]->minute_in = $form_state["values"]["minute_in_" . $pl_id];
+      $votes[$pl_id]->minute_out = $form_state["values"]["minute_out_" . $pl_id];    
+    
+      
+      $votes[$pl_id]->total = getVoteTotal($votes[$pl_id]);
+    }
+  }
+
+  //cancello voti inseriti precedentemente (pl_id, round, provider)
+  db_delete('fanta_votes')
+    ->condition("round", $vote_round)
+    ->condition("provider", variable_get("fantacalcio_votes_provider", 1))
+    ->condition("pl_id", array_keys($votes), "IN")
+    ->execute();
+
+  //upload dei voti su DB
+  $query = db_insert('fanta_votes')->fields(array('pl_id', 'round', 'provider', 'vote', 'total', 'goals_for', 'goals_against', 'penalty_goals', 'assists', 'red_cards', 'yellow_cards', 'saved_penalties', 'missed_penalties', 'own_goals', 'regular', 'substituted', 'minute_in', 'minute_out' ));
+  foreach ($votes as $record) {
+    $query->values((array)$record);
+  }
+  $query->execute();
+
+  drupal_set_message("Voti aggiunti: " . count($votes));
+  drupal_goto("risultati/" . $vote_round . "/manual/" . $match_id);
+}
+
+function theme_fantacalcio_insert_votes_matches($variables) {
+  $form = $variables["form"];
+
+  //recupero variabili
+  $match_id = $form['#match_id'];
+  $vote_round = $form['#vote_round'];
+
+  $match = RealTeam::getMatch($match_id);
+  
+  $points = Result::getPoints();
+  
+  $header = array("", t("Giocatore"), t("Voto"));
+  foreach($points as $key => $point) {
+    	if (variable_get("fantacalcio_points_" . $key, 0) != 0)
+	    	$header[] = $point["title"];
+  }
+  
+  $header[] = t("Tit.");
+  $header[] = t("Sost.");
+  $header[] = t("Min. Ingresso");
+  $header[] = t("Min. Uscita");
+
+  $players_1 = Player::getByRealTeam($match->rt1_id, $vote_round);
+  $players_2 = Player::getByRealTeam($match->rt2_id, $vote_round);
+
+  foreach ($players_1 as $pl_id => $player) {
+  
+    //per ogni giocatore delle 2 squadre
+    $home_rows[$pl_id][] = fantacalcio_show_role($player->role); 
+    $home_rows[$pl_id][] = $player->name;
+    $home_rows[$pl_id][] = drupal_render($form["vote_" . $pl_id]);
+    
+    foreach($points as $key => $point) {
+    	if (isset($form[$key . "_" . $pl_id]))
+	    	$home_rows[$pl_id][] = drupal_render($form[$key . "_" . $pl_id]);
+    }
+    
+    $home_rows[$pl_id][] = drupal_render($form["regular_" . $pl_id]);
+    $home_rows[$pl_id][] = drupal_render($form["substituted_" . $pl_id]);
+    $home_rows[$pl_id][] = drupal_render($form["minute_in_" . $pl_id]);
+    $home_rows[$pl_id][] = drupal_render($form["minute_out_" . $pl_id]);
+    
+  }
+
+  foreach ($players_2 as $pl_id => $player) {
+  	
+  	 //per ogni giocatore delle 2 squadre
+    $away_rows[$pl_id][] = fantacalcio_show_role($player->role); 
+    $away_rows[$pl_id][] = $player->name;
+    $away_rows[$pl_id][] = drupal_render($form["vote_" . $pl_id]);
+    
+    foreach($points as $key => $point) {
+    	if (isset($form[$key . "_" . $pl_id]))
+	    	$away_rows[$pl_id][] = drupal_render($form[$key . "_" . $pl_id]);
+    }
+    
+    $away_rows[$pl_id][] = drupal_render($form["regular_" . $pl_id]);
+    $away_rows[$pl_id][] = drupal_render($form["substituted_" . $pl_id]);
+    $away_rows[$pl_id][] = drupal_render($form["minute_in_" . $pl_id]);
+    $away_rows[$pl_id][] = drupal_render($form["minute_out_" . $pl_id]);
+  }
+
+  $out = "<h4>" . $match->home_team . "</h4>";
+
+  $out .= theme("table", array(
+    "header" => $header,
+      "rows" => $home_rows, 
+      "attributes" => array("class" => array("insert-votes")),
+    "empty" => t("Nessun giocatore")));
+
+  $out .= "<h4>" . $match->away_team . "</h4>";
+
+  $out .= theme("table", array(
+    "header" => $header,
+      "rows" => $away_rows, 
+      "attributes" => array("class" => array("insert-votes")), 
+    "empty" => t("Nessun giocatore")));
+  
+  $out .= drupal_render($form["submit"]) . drupal_render($form["clear"]) . drupal_render_children($form);
+    
+  return $out;
+}
 
 function fantacalcio_upload_votes($vote_round) {
   drupal_set_title(t('Risultati: Giornata #@round', array(
     "@round" => $vote_round)));
   
   $out = "";
+  $out = l("Voti manuali", "risultati/" . $vote_round . "/manual");
   if (variable_get('fantacalcio_votes_url', '') != "")
     $out = "<p>" . l("Voti", variable_get('fantacalcio_votes_url', '')) . "</p>";
   
@@ -677,11 +965,11 @@ function votes_upload_form_submit($form, &$form_state) {
   $votes = json_decode(file_get_contents($votes_url));
 
   foreach ($form_state["values"]["provider"] as $provider) {
-  	if ($provider > 0) {
+    if ($provider > 0) {
       $out = Result::insertVotes($round);
       insert_default_votes($form_state["values"]["teams_default_1"], $round, 1, $provider);
       insert_default_votes($form_state["values"]["teams_default_2"], $round, 2, $provider);
-  	}
+    }
   }
 
   update_players($round + 1);
@@ -703,11 +991,11 @@ function fantacalcio_upload_votes_cron($round) {
   $votes = json_decode(file_get_contents($votes_url));
   
   foreach ($providers as $provider => $vote_provider) {
-  	if ($provider > 0) {
+    if ($provider > 0) {
       $out = insert_votes($votes[$provider], $round, $provider);
       insert_default_votes($form_state["values"]["teams_default_1"], $round, 1, $provider);
       insert_default_votes($form_state["values"]["teams_default_2"], $round, 2, $provider);
-  	}
+    }
   }
   
   update_players($round + 1);
@@ -826,12 +1114,12 @@ function insert_votes($votes, $round, $provider) {
 
     foreach ($votes->votes as $name => $vote) {
       if (!in_array($name, array_keys($players_ids))) {
-      	$pl_id = db_insert("fanta_players")->fields(array("name" => strtoupper($name), "role" => $roles[strtoupper($vote->role)]))->execute();
-      	$rt_id = $real_teams[strtolower($vote->team)];
-      	db_insert("fanta_players_rounds")->fields(array("pl_id" => $pl_id, "rt_id" => $rt_id, "round" => $round, "quotation" => 0, "not_rounded_quotation" => 0, "active" => 1))->execute();
+        $pl_id = db_insert("fanta_players")->fields(array("name" => strtoupper($name), "role" => $roles[strtoupper($vote->role)]))->execute();
+        $rt_id = $real_teams[strtolower($vote->team)];
+        db_insert("fanta_players_rounds")->fields(array("pl_id" => $pl_id, "rt_id" => $rt_id, "round" => $round, "quotation" => 0, "not_rounded_quotation" => 0, "active" => 1))->execute();
       }
       else {
-      	$pl_id = $players_ids[$name];
+        $pl_id = $players_ids[$name];
       }
       
       $total = $vote->vote + ($vote->goals_for * variable_get("fantacalcio_points_goals_for", "3")) + ($vote->penalty_goals * variable_get("fantacalcio_points_penalty_goals", "3")) + ($vote->assists * variable_get("fantacalcio_points_assists", "1")) + ($vote->saved_penalties * variable_get("fantacalcio_points_saved_penalties", "3")) + ($vote->goals_against * variable_get("fantacalcio_points_goals_against", "-1")) + ($vote->red_cards * variable_get("fantacalcio_points_red_card", "-1")) + ($vote->yellow_cards * variable_get("fantacalcio_points_yellow_card", "-0.5")) + ($vote->own_goals * variable_get("fantacalcio_points_own_goal", "-2")) + ($vote->missed_penalties * variable_get("fantacalcio_points_missed_penalties", "-3")) + ($vote->draw_goals * variable_get("fantacalcio_points_draw_goals", "1")) + ($vote->win_goals * variable_get("fantacalcio_points_win_goals", "3"));
@@ -923,6 +1211,15 @@ function update_players($round) {
   
   $message = "Giocatori aggiornati: " . $i . " (Giornata #" . $round . ")";
   drupal_set_message(check_plain($message));
+}
+
+function get_teams_serieA() {
+  $sql = "SELECT rt_id, long_name FROM {fanta_real_teams} ORDER BY long_name";
+  $result = db_query($sql);
+  while ($row = db_fetch_array($result)) {
+    $teams[$row["rt_id"]] = ucwords($row["long_name"]);
+  }
+  return $teams;
 }
 
 /**
@@ -1762,7 +2059,7 @@ function get_riserve_overtime($match, $t_id, $votes_provider) {
       AND f.has_played = 0 
       AND p.role != 0
       AND v.round = '%d'
-	  AND v.provider = '%d'
+    AND v.provider = '%d'
       ORDER BY position";
   $result = db_query($sql, get_cid_by_gid($match->g_id), $match->round, $t_id, get_round_by_competition_round($match->round, get_cid_by_gid($match->g_id)), $votes_provider);
   while ($row = db_fetch_object($result)) {
@@ -1793,7 +2090,7 @@ function get_penalties_team($match, $t_id, $votes_provider) {
       AND v.round = '%d'
       AND f.round = '%d' 
       AND f.t_id = '%d'
-	  AND v.provider = '%d'
+    AND v.provider = '%d'
       ORDER BY penalty_position";
   $result = db_query($sql, get_cid_by_gid($match->g_id), $match->round, $match->round, $t_id, $votes_provider);
   while ($row = db_fetch_object($result)) {
@@ -2017,4 +2314,21 @@ function fantacalcio_parse_voti($data) {
   $f = file_get_contents("./html_voti.txt");
   
   echo $f;
+}
+
+function getVoteTotal($vote) {
+  $total = $vote->vote 
+    + (isset($vote->goals_for)) ? ($vote->goals_for * variable_get("fantacalcio_points_goals_for", "3")) : 0 
+    + (isset($vote->penalty_goals)) ? ($vote->penalty_goals * variable_get("fantacalcio_points_penalty_goals", "3"))  : 0 
+    + (isset($vote->assists)) ? ($vote->assists * variable_get("fantacalcio_points_assists", "1"))  : 0 
+    + (isset($vote->saved_penalties)) ? ($vote->saved_penalties * variable_get("fantacalcio_points_saved_penalties", "3"))  : 0 
+    + (isset($vote->goals_against)) ? ($vote->goals_against * variable_get("fantacalcio_points_goals_against", "-1"))  : 0 
+    + (isset($vote->red_cards)) ? ($vote->red_cards * variable_get("fantacalcio_points_red_card", "-1"))  : 0 
+    + (isset($vote->yellow_cards)) ? ($vote->yellow_cards * variable_get("fantacalcio_points_yellow_card", "-0.5"))  : 0 
+    + (isset($vote->own_goals)) ? ($vote->own_goals * variable_get("fantacalcio_points_own_goal", "-2"))  : 0 
+    + (isset($vote->missed_penalties)) ? ($vote->missed_penalties * variable_get("fantacalcio_points_missed_penalties", "-3"))  : 0 
+    + (isset($vote->draw_goals)) ? ($vote->draw_goals * variable_get("fantacalcio_points_draw_goals", "1"))  : 0 
+    + (isset($vote->win_goals)) ? ($vote->win_goals * variable_get("fantacalcio_points_win_goals", "3")) : 0 ;
+
+  return $total;
 }

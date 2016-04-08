@@ -10,6 +10,7 @@ include "lineup.class.php";
 include "match.class.php";
 include "round.class.php";
 include "result.class.php";
+include "notification.class.php";
 include "user.class.php";
 include "fantacalcio.block.inc";
 include "fantacalcio.tooltip.inc";
@@ -391,7 +392,7 @@ function fantacalcio_menu() {
   $items['risultati/%'] = array(
     'title' => 'Risultati', 
     'page callback' => 'fantacalcio_results', 
-    'page arguments' => array(1, 2), 
+    'page arguments' => array(1, 2, 3), 
     'access arguments' => array('administer fantacalcio'), 
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.results.inc', 
@@ -623,6 +624,38 @@ function fantacalcio_menu() {
     'file' => 'fantacalcio.stats.players.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
   
+    $items['notifiche']  = array(
+      'title' => t('Notifiche'),
+      'page callback' => 'fantacalcio_notifications',
+      'access arguments' => array('access content fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+    'file' => 'fantacalcio.notifications.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+    
+    $items['notifiche/all']  = array(
+      'title' => t('Notifiche'),
+      'page callback' => 'fantacalcio_notifications_list',
+      'access arguments' => array('access content fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+    'file' => 'fantacalcio.notifications.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+    
+    $items['notifiche/%']  = array(
+      'title' => t('Notifiche'),
+      'page callback' => 'fantacalcio_notifications',
+      'page arguments' => array(1), 
+      'access arguments' => array('access content fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+    'file' => 'fantacalcio.notifications.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+    
+    $items['notifiche/unread']  = array(
+      'title' => t('Notifiche'),
+      'page callback' => 'fantacalcio_unread_notifications',
+      'access arguments' => array('access content fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+    'file' => 'fantacalcio.notifications.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
 
   $items['mercato']  = array(
       'title' => t('Mercato'),
@@ -1182,6 +1215,7 @@ function fantacalcio_theme($existing, $type, $theme, $path) {
     'group_buy_player' => array('render element' => 'form'),
     'fantacalcio_admin_matches_calendar' => array('render element' => 'form'), 
     'fantastats_choose_stats_form' => array('render element' => 'form'), 
+    'fantacalcio_insert_votes_matches' => array('render element' => 'form'), 
     'team' => array(
       'render element' => 'elements', 
       'template' => 'templates/page-team'), 
