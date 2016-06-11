@@ -77,7 +77,7 @@ class Lineup {
         //"updated" => $player_status->updated,
         //"match" => $player_status->match,
         "position" => 0);
-
+print_r($player_status);
 	if ($player_status != null) {
 		$lineup[$pl_id]["status"] = $player_status->status;
 		$lineup[$pl_id]["status_percent"] = $player_status->percent;

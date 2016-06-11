@@ -283,7 +283,7 @@ function fantacalcio_menu() {
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.teams.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
-  
+    
   $items['formazioni'] = array(
     'title' => 'Formazioni', 
     'page callback' => '_fantacalcio_lineup', 
@@ -1272,7 +1272,7 @@ function fantacalcio_show_role($role) {
 }
 
 function fantacalcio_show_status($name, $team, $player_status) {
-    
+    if($player_status != null) {
   $status_class = fantacalcio_get_status_classes($player_status->status, $player_status->position);
   
   if ($player_status->status == "ok") {
@@ -1306,6 +1306,9 @@ function fantacalcio_show_status($name, $team, $player_status) {
   $out .= "</a>";
   
   return $out;
+        
+    }
+    return "";
   
 }
 

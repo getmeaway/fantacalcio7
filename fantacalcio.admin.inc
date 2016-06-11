@@ -172,6 +172,12 @@ function fantacalcio_admin_settings() {
     '#title' => t('Moduli riserve'), 
     '#default_value' => variable_get('fantacalcio_reserves_modules', ''), 
     '#description' => t('Moduli permessi per le riserve (un modulo per riga, es: 1-4-4-2 o 1-3-5-2)'));
+    
+  $form["fantacalcio_results"]['fantacalcio_free_reserves'] = array(
+    '#type' => 'checkbox', 
+    '#title' => t('Riserve libere'), 
+    '#default_value' => variable_get('fantacalcio_free_reserves', '0'), 
+    '#description' => t('Selezionare se abilitare la funzione "riserve libere" per la sostituzione dei giocatori'));
   
   $form["fantacalcio_results"]['fantacalcio_modifier_role_0'] = array(
     '#type' => 'checkbox', 
@@ -893,33 +899,37 @@ function fantacalcio_admin_group($form, &$form_state, $g_id = "") {
     
     $form['teams']['teams'] = array(
       '#type' => 'checkboxes', 
-      '#options' => $teams_options, 
+      '#options' => $teams_options,
       '#default_value' => $checked_teams, 
       '#suffix' => ((count($teams_options) == 0) ? t("Nessuna squadra inserita") : ""));
     
     $form['matches_order'] = array(
-      '#type' => 'weight', 
+      '#type' => 'numberfield', 
+      "#min" => 0,
       '#title' => t('Calendario'), 
       '#default_value' => (isset($group)) ? $group->matches_order : "", 
       '#description' => "0 per non mostrare il calendario, un numero positivo per mostrarlo <br>
                 (il numero inserito stabilisce l'ordine del girone rispetto agli altri nella visualizzazione del calendario)");
     
     $form['standings_order'] = array(
-      '#type' => 'weight', 
+      '#type' => 'numberfield', 
+        "#min" => 0,
       '#title' => t('Classifica'), 
       '#default_value' => (isset($group)) ? $group->standings_order : "", 
       '#description' => "0 per non mostrare la classifica, un numero positivo per mostrarla <br>
                 (il numero inserito stabilisce l'ordine del girone rispetto agli altri nella visualizzazione della classifica)");
     
-    $form['lineups_order'] = array(
-      '#type' => 'weight', 
-      '#title' => t('Formazioni'), 
-      '#default_value' => (isset($group)) ? $group->lineups_order : "", 
+    $form['lineups_order'] = array( 
+      '#type' => 'numberfield',
+        "#min" => 0,
+      '#title' => t('Formazioni'),
+      '#default_value' => (isset($group)) ? $group->lineups_order : "",
       '#description' => "0 per non mostrare le formazioni, un numero positivo per mostrarle <br>
                 (il numero inserito stabilisce l'ordine del girone rispetto agli altri nella visualizzazione delle formazioni)");
     
     $form['newsletters_order'] = array(
-      '#type' => 'weight', 
+      '#type' => 'numberfield', 
+        "#min" => 0,
       '#title' => t('Newsletter'), 
       '#default_value' => (isset($group)) ? $group->newsletters_order : "", 
       '#description' => "0 per non mostrare la newsletter, un numero positivo per mostrarlo <br>

@@ -2,7 +2,7 @@ jQuery(document).ready(function() {
     
     jQuery('.swatch-clickable').each(function () 
     {
-    jQuery(this).attr('title', jQuery(this).attr('id'));
+        jQuery(this).attr('title', jQuery(this).attr('id'));
     });
 
     jQuery('.swatch-clickable').tooltip();
@@ -10,26 +10,27 @@ jQuery(document).ready(function() {
     jQuery(".swatch-clickable").click(function() 
     {
         var color = jQuery(this).attr('id').replace("color-", "");
-        jQuery(this).closest(".group-color").find(".preview").css('color', color);
-        jQuery(this).closest(".group-color").find(".color-val").val(color)
-        var property = jQuery(this).closest(".group-color").find(".color-val").attr("name")
-        console.log(property)
+        jQuery(this).closest(".group-color").parent().find(".preview").css('color', color);
+        jQuery(this).closest(".group-color").parent().parent().find(".color-val").val(color)
+        var property = jQuery(this).closest(".group-color").parent().parent().find(".color-val").attr("name")
         myShirt[property] = color
         myShirt.draw();
     });
 	
-  function shirt() {};
+  function shirt() {
+      this.type = jQuery("#type").val()
+      this.bgColor = jQuery("#bg-color").val()
+      this.mainColor = jQuery("#main-color").val()
+      this.border = jQuery("#border").val()
+      this.borderColor = jQuery("#border-color").val()
+  };
     
     var myShirt = new shirt();
     
-  shirt.prototype.type = jQuery("#type").val()
-  shirt.prototype.bgColor = "#EEE"//jQuery("#bg-color").val()
-  shirt.prototype.mainColor = "#C00"//jQuery("#main-color").val()
-  shirt.prototype.border = jQuery("#border").val()
-  shirt.prototype.borderColor = jQuery("#border-color").val()
+  
   
   jQuery(".color-type").click(function() {
-      console.log("draw")
+      console.log(myShirt)
     myShirt.type = jQuery(this).find("input").attr("id").replace("type-", "");
     myShirt.draw()
   })
@@ -56,12 +57,12 @@ jQuery(document).ready(function() {
   })
 
 shirt.prototype.draw = function () {
-    console.log(shirt)
+    console.log(this)
     
   var canvas = document.getElementById('myCanvas');
   var context = canvas.getContext('2d');
   
-  jQuery("#shirt").val(JSON.stringify(shirt))
+  jQuery("#metadata").val(JSON.stringify(this))
   
 
   // begin custom shape
@@ -295,9 +296,9 @@ shirt.prototype.draw = function () {
   	context3.stroke();
   }
   
-	jQuery("#image").html(canvas.toDataURL())  
+	jQuery("#image").val(canvas.toDataURL())  
 }
 
-
+myShirt.draw();
   
 })

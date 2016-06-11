@@ -6,6 +6,8 @@ author = Sauro Ruggeri
 version = 7.x-1.0
 core = 7.x
 
+dependencies[] = elements:elements
+
 files[] = fantacalcio.admin.inc
 files[] = fantacalcio.teams.inc
 files[] = fantacalcio.calendar.inc

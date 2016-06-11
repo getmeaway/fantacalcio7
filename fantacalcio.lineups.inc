@@ -507,6 +507,8 @@ function fantacalcio_lineup_insert($competition, $team, $competition_round, $is_
     $lineup_form_confirm = (drupal_get_form('fantacalcio_lineup_form_confirm', $competition, $team, $competition_round));
     $output["lineup_form_confirm"] = $lineup_form_confirm;
     // $args_confirm = get_args_confirm($args);
+      
+    $output["lineup_free_reserves"] = variable_get("fantacalcio_free_reserves", 0);
     
     // $out .= confirm_lineup($args_confirm);
     

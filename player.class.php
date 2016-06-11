@@ -85,11 +85,12 @@ class Player {
     $list_rows = array(); //
     
     foreach ($players_list as $pl_id => $player) {
+        $hidden_buy = "";
+        $hidden_bought = "";
       if (array_key_exists($player->id, $squad))
-        $available = "<i class=\"fa fa-check-circle fa-2x text-primary player-bought\"></i>";
+        $hidden_buy = " hidden";
       else {
-        $buy_player_form = drupal_get_form("fantacalcio_buy_player_form", $t_id, $player->id);
-        $available = drupal_render($buy_player_form); // "<button class=\"btn btn-sm btn-success buy-player\" id=\"buy-" . $player->id . "\">" . t("Compra") . "</button>";
+        $hidden_bought = " hidden";
       }
       $list_rows[$player->id] = array(
         "data" => array(
@@ -104,8 +105,9 @@ class Player {
           array(
             "data" => $player->quotation, 
             "class" => array("player-list-text")), 
-          "<a href=\"#\" data-toggle=\"modal\" data-target=\"#player-stats-modal\" class=\"player-stats\" id=\"player-stat-" . $pl_id . "\"><i class=\"fa fa-bar-chart\"></i></a>", 
-          $available), 
+          "<a href=\"#\" data-toggle=\"modal\" data-target=\"#player-stats-modal\" class=\"player-stats\" id=\"player-stat-" . $pl_id . "\"><i class=\"fa fa-bar-chart\"></i></a>",
+            "<i class=\"fa fa-check-circle fa-2x text-primary player-bought" . $hidden_bought . "\"></i>" .
+          "<button class=\"btn btn-sm btn-success buy-player" . $hidden_buy . "\" onclick=\"buyPlayer(" . $player->id . ", " . $t_id . ")\" id=\"buy-" . $player->id . "\">" . t("Compra") . "</button>"), 
         "class" => array(
           "role-" . $player->role, 
           "show-player-role", 
@@ -409,6 +411,8 @@ class Player {
     foreach($result as $row) {
       $status = $row;
     }
+      
+    if ($result->rowCount() > 0) {
     
     //partita
     $query = db_select("fanta_players_rounds", "pr");
@@ -436,7 +440,7 @@ class Player {
         	$status->match = $row->home_team . " - " . $row->away_team;
         }
     } 
-     
+    }
     
     return $status;
   }

@@ -2,6 +2,8 @@ var _line_up = new Array();
 var _positions;
 var _old_json_line_up;
 
+//var free_reserves = jQuery("#free_reserves").val() == "true";
+
 jQuery(document).ready(function() {
 	var json_line_up = jQuery("input[name='lineup']").val();
 	_old_json_line_up = jQuery("input[name='lineup']").val();
@@ -116,7 +118,7 @@ jQuery(function() {
 			console.log(rows);
 			var j = 0;
 			for ( var i = 0; i < rows.length; i++) {
-				if (jQuery(rows[i]).attr("data-role") == role) {
+				if (free_reserves || jQuery(rows[i]).attr("data-role") == role) {
 					j++;
 					if (jQuery(rows[i]).attr("data-id") == pl_id) {
 						var blockPosition = j;
@@ -147,7 +149,7 @@ jQuery(function() {
 					var key = Object.keys(_line_up)[i];
 					if (key != pl_id
 							&& _line_up[key] != undefined) {
-						if (_line_up[key].role == _line_up[pl_id].role) {
+						if (free_reserves || (_line_up[key].role == _line_up[pl_id].role)) { //TODO inserire controllo per riserve libere
 							if (_line_up[key].position >= oldPosition) {
 								_line_up[key].position = parseInt(_line_up[key].position) - 1;
 							}
@@ -164,7 +166,7 @@ jQuery(function() {
 					var key = Object.keys(_line_up)[j];
 					if (key != pl_id
 							&& _line_up[key] != undefined) {
-						if (_line_up[key].role == _line_up[pl_id].role) {
+						if (free_reserves || _line_up[key].role == _line_up[pl_id].role) { //TODO inserire controllo per riserve libere
 							if (_line_up[key].position >= position) {
 								_line_up[key].position = parseInt(_line_up[key].position) + 1;
 							}
@@ -241,8 +243,10 @@ jQuery(function() {
 				jQuery("#lineup-reserves tbody tr.empty-row")
 						.hide();
             
+            console.log("free_reserves: " + free_reserves)
+            
             //TODO aggiungere attributo 'data-position' ai tr (per ordinamento)
-            var $container = jQuery('.lineup-group[data-position="' + group_position + '"] tbody')
+            /*var $container = jQuery('.lineup-group[data-position="' + group_position + '"] tbody')
             $container.children("tr").sort(function(a, b) {
                 console.log("sort")
                 if(jQuery(a).attr("data-role") > jQuery(b).attr("data-role"))
@@ -257,7 +261,8 @@ jQuery(function() {
                     else
                     	return jQuery(a).attr("data-name") > jQuery(b).attr("data-name")
                 }
-            }).detach().appendTo($container)
+            }).detach().appendTo($container)*/
+            
 		},
 		});// .disableSelection();
 	
@@ -335,12 +340,12 @@ function checkLineUp(line_up) {
 	var check_reserves_number = false;
 	var check_reserves_module = false;
 
+    //TODO creare elenco moduli consentiti lato server e aggiungere variabili nel file page-lineup.tpl.php
 	var regulars_modules = new Array(new Array(1, 3, 4, 3), new Array(1, 3, 5,
 			2), new Array(1, 4, 3, 3), new Array(1, 4, 4, 2), new Array(1, 4,
 			5, 1), new Array(1, 5, 3, 2), new Array(1, 5, 4, 1), new Array(1,
 			6, 3, 1));
 	var reserves_modules = new Array(new Array(1, 2, 2, 2));
-	// var modules_3 = new Array(new Array(0, 1, 1, 1));
 
 	// verifico titolari
 	var regulars_module = new Array(0, 0, 0, 0);

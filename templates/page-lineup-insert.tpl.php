@@ -17,6 +17,10 @@
 }
 </style>
 
+<script>
+    var free_reserves = <?php print (render($lineup_free_reserves) == true ? "true" : "false"); ?>;
+</script>
+
 <div id='div-formazione' class="">
 
 	<div id='_formazione_form' class="col-xs-12 col-sm-10 hidden-xs">

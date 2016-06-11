@@ -21,7 +21,9 @@ function fantacalcio_team_form($form, $form_state, $id) {
   $title = ($team) ? t("Gestione squadra") . " - " . $team->name : t("Crea squadra");
   drupal_set_title(filter_xss($title));
   
-  $form["title"] = array("#title" => check_plain($title));
+  $form["#theme"] = "fantacalcio_team_form";
+  
+    $form["title"] = array("#title" => check_plain($title));
   
   // if (variable_get("fantacalcio_team_change_name", 0) == 1 || $team == null) {
   $form["name"] = array(
@@ -29,17 +31,12 @@ function fantacalcio_team_form($form, $form_state, $id) {
     "#title" => "Nome squadra", 
     "#default_value" => $team ? check_plain($team->name) : "", 
     "#required" => TRUE, 
-    "#disabled" => (variable_get("fantacalcio_team_change_name", 0) == 1 || $team != null) ? true : false);
-  // }
-  // else {
-  // $form ["name"] = array(
-  // "#type" => "hidden",
-  // "#title" => "Nome squadra",
-  // "#suffix" => "<h4>" . check_plain($team->name) . "</h4>",
-  // "#default_value" => check_plain($team->name),
-  // "#required" => TRUE
-  // );
-  // }
+    
+  );
+    
+    if ((variable_get("fantacalcio_team_change_name", 0) == 0 && $team != null)) {
+    $form["name"]["#attributes"] = array("readonly" =>  "readonly");
+    }
   
   /*$form["coach"] = array(
     "#type" => "textfield", 
@@ -58,47 +55,35 @@ function fantacalcio_team_form($form, $form_state, $id) {
     
     $form ["shirt"] ["metadata"] = array(
         "#type" => "hidden",
+        "#attributes" => array("id" => "metadata"),
    "#default_value" => $team ? $team->shirt_metadata : "",
    );
         
     $form ["shirt"] ["image"] = array(
         "#type" => "hidden",
+        "#attributes" => array("id" => "image"),
    "#default_value" => $team ? json_decode($team->shirt) : "",
    );
-    
-    /*
-    <div class="btn-group" data-toggle="buttons">
-  <label class="btn btn-primary active">
-    <input type="radio" name="options" id="option1" autocomplete="off" checked> Radio 1 (preselected)
-  </label>
-  <label class="btn btn-primary">
-    <input type="radio" name="options" id="option2" autocomplete="off"> Radio 2
-  </label>
-  <label class="btn btn-primary">
-    <input type="radio" name="options" id="option3" autocomplete="off"> Radio 3
-  </label>
-</div>
-    */
-  
+   
     $form ["shirt"] ["type_0"] = array(
         "#type" => "radio",
-        "#default_value" => $team ? $team->shirt_metadata->type : "",
+        "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         //"#value" => "<i class='fa fa-user'></i>",
-        "#prefix" => "<div class='form-group'>" . t("Tipo") .': <div class="btn-group" data-toggle="buttons">' .  '<label class="btn btn-default color-type">' ,
+        "#prefix" => "<table><tr><td>" . t("Tipo") .': </td><td><div class="btn-group" data-toggle="buttons">' .  '<label class="btn btn-default color-type">' ,
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_0.png" width="30"></label>',
         "#attributes" => array("class" => array("form-inline"), "id" => "type")
    );
     
     $form ["shirt"] ["type_1"] = array(
         "#type" => "radio",
-   "#default_value" => $team ? $team->shirt_metadata->type : "",
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_1.png" width="30"></label>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-1")
    );
     $form ["shirt"] ["type_2"] = array(
         "#type" => "radio",
-   "#default_value" => $team ? $team->shirt_metadata->type : "",
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_2.png" width="30"></label>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-2")
@@ -106,14 +91,14 @@ function fantacalcio_team_form($form, $form_state, $id) {
     
     $form ["shirt"] ["type_3"] = array(
         "#type" => "radio",
-   "#default_value" => $team ? $team->shirt_metadata->type : "",
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_3.png" width="30"></label>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-3")
    );
     $form ["shirt"] ["type_4"] = array(
         "#type" => "radio",
-   "#default_value" => $team ? $team->shirt_metadata->type : "",
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_4.png" width="30"></label>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-4")
@@ -121,14 +106,14 @@ function fantacalcio_team_form($form, $form_state, $id) {
     
     $form ["shirt"] ["type_5"] = array(
         "#type" => "radio",
-   "#default_value" => $team ? $team->shirt_metadata->type : "",
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_5.png" width="30"></label>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-5")
    );
     $form ["shirt"] ["type_6"] = array(
         "#type" => "radio",
-   "#default_value" => $team ? $team->shirt_metadata->type : "",
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_6.png" width="30"></label>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-6")
@@ -136,14 +121,14 @@ function fantacalcio_team_form($form, $form_state, $id) {
     
     $form ["shirt"] ["type_7"] = array(
         "#type" => "radio",
-   "#default_value" => $team ? $team->shirt_metadata->type : "",
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_7.png" width="30"></label>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-7")
    );
     $form ["shirt"] ["type_8"] = array(
         "#type" => "radio",
-   "#default_value" => $team ? $team->shirt_metadata->type : "",
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_8.png" width="30"></label>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-8")
@@ -151,60 +136,12 @@ function fantacalcio_team_form($form, $form_state, $id) {
     
     $form ["shirt"] ["type_9"] = array(
         "#type" => "radio",
-   "#default_value" => $team ? $team->shirt_metadata->type : "",
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
-        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_9.png" width="30"></label></div></div>',
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_9.png" width="30"></label></td></tr>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-9")
    );
-    
-    /*
-    <div class="input-group-btn group-color"> 
-
-        <button type="button" class="btn btn-default btn-box dropdown-toggle" data-toggle="dropdown">
-            <span class="fa fa-square" id="preview"></span> 
-        </button>
-
-        <ul class="dropdown-menu">
-
-            <li>
-
-                <div class="panel panel-default">
-
-                    <div class="panel-heading">
-                        <span class="panel-label">Color Swatch</span>
-                    </div>
-
-                    <div class="panel-body">
-
-                        <ul class="list-inline">
-                            <li><div id="Red" class="swatch swatch-clickable" style="background-color:#FF0000"></div></li>
-                            <li><div id="Lime" class="swatch swatch-clickable" style="background-color:#00FF00"></div></li>
-                            <li><div id="Yellow" class="swatch swatch-clickable" style="background-color:#FFFF00"></div></li>
-                            <li><div id="Lemon" class="swatch swatch-clickable" style="background-color:#0000FF"></div></li>
-                            <li><div id="Lime" class="swatch swatch-clickable" style="background-color:#FF00FF"></div></li>
-                            <li><div id="Evergreen" class="swatch swatch-clickable" style="background-color:#00FFFF"></div></li>
-                        </ul>
-
-                        <ul class="list-inline">
-                            <li><div id="Alizarin" class="swatch swatch-clickable" style="background-color:#EF2326"></div></li>
-                            <li><div id="Green Apple" class="swatch swatch-clickable" style="background-color:#6DBE45"></div></li>
-                            <li><div id="Hot Pink" class="swatch swatch-clickable" style="background-color:#F2EA3F"></div></li>
-                            <li><div id="Sagebrush" class="swatch swatch-clickable" style="background-color:#344EA2"></div></li>
-                            <li><div id="Tan" class="swatch swatch-clickable" style="background-color:#B6519F"></div></li>
-                            <li><div id="White" class="swatch swatch-clickable" style="background-color:#73CDD8"></div></li>
-                        </ul>
-
-                    </div>
-
-                </div>
-
-            </li>
-
-        </ul>
-
-    </div>
-    */
-    
+          
     $colors_list = array("#FFFFFF", "#FFF0F5", "#FFDEAD", "#FFB6C1", "#DEB887", "#F4A460", "#FFA07A", "#EE82EE", "#D8BFD8", "#FF7F50", "#DB7093", "#C71585", "#FF00FF", "#FF1493", "#DC143C", "#7B68EE", "#8A2BE2", "#483D8B", "#4B0082", "#800080", "#800000", "#FF0000", "#FF4500", "#B22222", "#8B4513", "#A0522D", "#D2691E", "#B8860B", "#FFA500", "#DAA520", "#FFFF00", "#00FF00", "#7FFF00", "#F0E68C", "#BDB76B", "#8FBC8F", "#9ACD32", "#90EE90", "#ADFF2F", "#32CD32", "#228B22", "#006400", "#556B2F", "#6B8E23", "#808000", "#00FF7F", "#00FA9A", "#66CDAA", "#3CB371", "#2E8B57", "#008080", "#20B2AA", "#00FFFF", "#AFEEEE", "#7FFFD4", "#5F9EA0", "#B0C4DE", "#87CEEB", "#1E90FF", "#6495ED", "#4169E1", "#191970", "#00008B", "#0000FF", "#00BFFF", "#B0E0E6", "#E6E6FA", "#D3D3D3", "#808080", "#778899", "#2F4F4F", "#000000");
     
     $colors = '<ul class="dropdown-menu">
@@ -217,7 +154,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
 										
 										<ul class="list-inline">';
     
-        $i = 1;
+                                        $i = 1;
                                         foreach($colors_list as $color) {
                                             if (!empty($color)) {
                                                 $colors .= '<li><div id="color-' . $color . '" class="swatch swatch-clickable" style="background-color:' . $color . '"></div></li>';
@@ -242,47 +179,47 @@ function fantacalcio_team_form($form, $form_state, $id) {
     $form ["shirt"] ["bgColor"] = array(
         "#type" => "hidden",
    "#title" => t("Colore 1"),
-    "#prefix" => "<div class='form-group'>" . '<div class="input-group-btn group-color">' . t("Colore 1"),
-        "#suffix" =>  '<button type="button" class="btn btn-default btn-box dropdown-toggle" data-toggle="dropdown">
-							<span class="fa fa-square preview"></span> 
-						</button>' . $colors . '</div>',
-   "#default_value" => $team ? $team->shirt_metadata->bgColor : "",
+    "#prefix" => "<tr><td>" . t("Colore 1") . "</td><td>",
+        "#suffix" =>  "<div class='form-group'><div class='input-group-btn group-color'><button type='button' class='btn btn-default btn-box change-color dropdown-toggle' data-toggle='dropdown'>
+							<span class='fa fa-square preview'></span> 
+						</button>" . $colors . '</div></div></td></tr>',
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->bgColor : "",
     "#attributes" => array("class" => array("btn", "btn-default", "color-val"), "id" => "bg-color")
    );
     
     $form ["shirt"] ["mainColor"] = array(
             "#type" => "hidden",
    "#title" => t("Colore 2"),
-    "#prefix" => "<div class='form-group'>" . '<div class="input-group-btn group-color">' . t("Colore 2"),
-        "#suffix" =>  '<button type="button" class="btn btn-default btn-box dropdown-toggle" data-toggle="dropdown">
+    "#prefix" => "<tr><td>" . t("Colore 2") . "</td><td>",
+        "#suffix" =>  '<div class="form-group"><div class="input-group-btn group-color"><button type="button" class="btn btn-default btn-box change-color dropdown-toggle" data-toggle="dropdown">
 							<span class="fa fa-square preview"></span> 
-						</button>' . $colors . '</div>',
-   "#default_value" => $team ? $team->shirt_metadata->mainColor : "",
+						</button>' . $colors . '</td></tr>',
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->mainColor : "",
         "#attributes" => array("class" => array("btn", "btn-default", "color-val"), "id" => "main-color")
    );
     
     $form ["shirt"] ["border"] = array(
         "#type" => "checkbox",
-   "#title" => t("Bordo"),
-        "#prefix" => "<div class='form-group'>",
-           "#default_value" => $team ? $team->shirt_metadata->border : "",
+   /*"#title" => t("Bordo"),*/
+        "#prefix" => "<tr><td>" . t("Bordo") . "</td><td>",
+        "#suffix" => "</td></tr>",
+           "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->border : "",
         "#attributes" => array("id" => "border")
    );
     
     $form ["shirt"] ["borderColor"] = array(
         "#type" => "hidden",
    "#title" => t("Colore bordo"),
-    "#prefix" => "<div class='form-group'>" . '<div class="input-group-btn group-color">' . t("Colore bordo"),
-        "#suffix" =>  '<button type="button" class="btn btn-default btn-box dropdown-toggle" data-toggle="dropdown">
+    "#prefix" => "<tr><td>" . t("Colore bordo") . "</td><td>",
+        "#suffix" =>  '<div class="form-group"><div class="input-group-btn group-color"><button type="button" class="btn btn-default btn-box change-color dropdown-toggle" data-toggle="dropdown">
 							<span class="fa fa-square preview"></span> 
-						</button>' . $colors . '</div></div><canvas id="myCanvas" width="350" height="350"></canvas>',
-   "#default_value" => $team ? $team->shirt_metadata->borderColor : "",
+						</button>' . $colors . '</td></tr></table><canvas id="myCanvas" width="350" height="350"></canvas>',
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->borderColor : "",
         "#attributes" => array("class" => array("btn", "btn-default", "color-val"), "id" => "border-color")
    );
   
   $form["t_id"] = array(
     "#type" => "hidden",
-    
     "#value" => $team ? check_plain($team->id) : "");
   
   $form["action"] = array("#type" => "hidden", "#value" => check_plain($action));
@@ -297,45 +234,53 @@ function fantacalcio_team_form($form, $form_state, $id) {
   return $form;
 }
 
-function fantacalcio_team_form_ahah() {
-  $type = $_POST["type"];
-  $color_1 = $_POST["color_1"];
-  $color_2 = $_POST["color_2"];
-  
-  $output = "<img src=\"" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/shirt_" . $type . "_" . $color_1 . "_" . $color_2 . ".png\" >";
-  print drupal_to_js(array("data" => $output, "status" => true));
-  exit();
-}
-
 function fantacalcio_team_form_clear($form, &$form_state) {
   $form_state["rebuild"] = TRUE;
 }
 
 function fantacalcio_team_form_validate($form, &$form_state) {
-  $name = $form_state["values"]["name"];
-  if (!$name || Team::getByName($name) != null)
-    form_set_error("name", t("Inserisci un nome per la squadra"));
-  if (Team::getByName($name) != null)
-    form_set_error("name", t("Il nome della squadra è già stata utilizzato"));
+    //update
+    if ($form_state["values"]["action"] == "update") {
+        $name = $form_state["values"]["name"];
+        if (!$name && Team::getByName($name) != null)
+            form_set_error("name", t("Inserisci un nome per la squadra"));
+        if ($form_state["values"]["action"] == "insert" && Team::getByName($name) != null)
+            form_set_error("name", t("Il nome della squadra è già stata utilizzato"));
+    }
+    //create
+    else {
+        $name = $form_state["values"]["name"];
+        if (!$name && Team::getByName($name) != null)
+            form_set_error("name", t("Inserisci un nome per la squadra"));
+        if ($form_state["values"]["action"] == "insert" && Team::getByName($name) != null)
+            form_set_error("name", t("Il nome della squadra è già stata utilizzato"));
+    }
+    
 }
 
 function fantacalcio_team_form_submit($form, &$form_state) {
   global $user;
   
   $team_name = $form_state["values"]["name"];
-  $team_coach = $form_state["values"]["coach"];
-  $team_stadium = $form_state["values"]["stadium"];
-  $team_shirt = ""; // shirt_" . $form_state ["values"] ["type"] . "_" . $form_state ["values"] ["color_1"] . "_" . $form_state ["values"] ["color_2"] . ".png";
+  $team_coach = "";//$form_state["values"]["coach"];
+  $team_stadium = "";//$form_state["values"]["stadium"];
+  $team_shirt = $form_state["values"]["image"]; // shirt_" . $form_state ["values"] ["type"] . "_" . $form_state ["values"] ["color_1"] . "_" . $form_state ["values"] ["color_2"] . ".png";
+  $team_shirt_metadata = $form_state["values"]["metadata"]; // shirt_" . $form_state ["values"] ["type"] . "_" . $form_state ["values"] ["color_1"] . "_" . $form_state ["values"] ["color_2"] . ".png";
   $t_id = $form_state["values"]["t_id"];
   $action = $form_state["values"]["action"];
+    
+    $fields = array(
+      'coach' => $team_coach, 
+      'stadium' => $team_stadium, 
+      "shirt_metadata" => $team_shirt_metadata,
+      "shirt" => $team_shirt);
+    
+    if (variable_get("fantacalcio_team_change_name", 0) == 1)
+        $fields["name"] = $team_name;
   
   if ($action == "update") {
     $query = db_update('fanta_teams');
-    $query->fields(array(
-      'name' => $team_name, 
-      'coach' => $team_coach, 
-      'stadium' => $team_stadium, 
-      "shirt" => $team_shirt));
+    $query->fields($fields);
     $query->condition('t_id', $t_id);
     $query->execute();
     
@@ -350,6 +295,7 @@ function fantacalcio_team_form_submit($form, &$form_state) {
       "coach" => $team_coach, 
       "stadium" => $team_stadium, 
       "shirt" => $team_shirt, 
+      "shirt_metadata" => "", 
       "credits" => variable_get("fantacalcio_credits", 0), 
       "active" => 1, 
       "uid" => $user->uid))->execute();
@@ -365,13 +311,13 @@ function fantacalcio_team_form_submit($form, &$form_state) {
   drupal_goto("mie");
 }
 
-function fantacalcio_get_title_team() {
-  $team = get_team_data();
-  
-  if (count($team) == 0)
-    return "Crea Squadra";
-  else
-    return "Modifica Squadra";
+function theme_fantacalcio_team_form($variables) {
+    
+    $form = $variables["form"];
+    
+    $out = "";
+    
+    return $out;
 }
 
 /**
@@ -1099,8 +1045,8 @@ function fantacalcio_squad_edit($t_id) {
         $player->cost, 
         $player->quotation, 
         "<a href=\"#\" data-toggle=\"modal\" data-target=\"#player-stats-modal\" class=\"player-stats\" id=\"player-stat-" . $pl_id . "\"><i class=\"fa fa-bar-chart\"></i></a>", 
-        drupal_render($sell_player_form)), 
-      "class" => array("squad-player-role-" . $player->role));
+        "<button class=\"btn btn-sm btn-warning sell-player\" onclick=\"sellPlayer(" . $pl_id . ", " . $t_id . ");\" id=\"sell-" . $pl_id . "\">" . t("Vendi") . "</button>"), 
+      "class" => array("player", "squad-player-role-" . $player->role));
     
     $outflow += $player->cost;
     $bought_players_role[$player->role]++;
@@ -1295,31 +1241,45 @@ function fantacalcio_sell_player_form_validate($form, &$form_state) {
   $team = Team::get($form_state["input"]["t_id"]);
   $player = Player::get($form_state["input"]["pl_id"]);
   
-  $credits = $team->getCredits();
-  $movements_count = $team->getMovementsCount();
-  $num_players = $team->getNumberPlayers();
+  $check = fantacalcio_sell_player_form_validate_inner($form_state["input"]["t_id"], $form_state["input"]["pl_id"]);
   
-  $max_movements = variable_get("fantacalcio_max_movements", 0) > 0 ? variable_get("fantacalcio_max_movements", 0) : PHP_INT_MAX;
-  
-  // verifica squadra appartenente all'utente
-  if ($user->uid != $team->user)
-    form_set_error('', t("Impossibile completare l'operazione.") . " " . t('La squadra non appartiene all\'utente'));
-    
-    // verifico numero movimenti rimasti
-  $needed_movements = variable_get("fantacalcio_number_players", 25) - array_sum($num_players) - 1;
-  // echo $needed_movements ."$$";echo $max_movements."$$"; echo $movements_count."";die();
-  if ($needed_movements > ($max_movements - $movements_count))
-    form_set_error('', t("Impossibile completare l'operazione.") . " " . t('I movimenti a disposizione non sono sufficienti'));
+      if(!$check)
+         form_set_error('', $check);
 }
 
 function fantacalcio_sell_player_form_submit($form, &$form_state) {
   fantacalcio_sell_player_function($form_state["input"]["t_id"], $form_state["input"]["pl_id"]);
+    
+      drupal_set_message(t("Cessione completata"), "status");
+}
+
+function fantacalcio_sell_player_form_validate_inner($t_id, $player) {
+  
+  global $user;
+  
+  $team = Team::get($t_id);
+  
+  // verifica squadra appartenente all'utente
+  if ($user->uid != $team->user)
+    return array("success" => false, "error" => t("Impossibile completare l'operazione.") . " " . t('La squadra non appartiene all\'utente'));
+    
+  $credits = $team->getCredits();
+  $movements_count = $team->getMovementsCount();
+  $num_players = $team->getNumberPlayers();
+  
+  $max_movements = 10000;//variable_get("fantacalcio_max_movements", 0) > 0 ? variable_get("fantacalcio_max_movements", 0) : PHP_INT_MAX;
+    
+  // verifico numero movimenti rimasti
+  $needed_movements = variable_get("fantacalcio_number_players", 25) - array_sum($num_players) - 1;
+  
+  /*if ($needed_movements > intval($max_movements - $movements_count));
+    return array("success" => false, "error" => t("Impossibile completare l'operazione.") . " " . t('I movimenti a disposizione non sono sufficienti'));*/
+    
+  return array("success" => true);
 }
 
 function fantacalcio_sell_player_function($t_id, $pl_id) {
   global $user;
-  
-  // print_r($form_state["values"]);die();
   
   $team = Team::get($t_id);
   $player = Player::get($pl_id);
@@ -1347,15 +1307,74 @@ function fantacalcio_sell_player_function($t_id, $pl_id) {
         "temporary" => $temporary));
       // print_r($query->fields());die();
       $query->execute();
-      
-      drupal_set_message(t("Cessione completata"), "status");
-      
+            
       watchdog("fantacalcio", t("%team: Cessione di %player (+%quotation crediti)"), array(
         "%team" => $team->name, 
         "%player" => $player->name, 
         "%quotation" => $player->getQuotation()), WATCHDOG_INFO);
+    return array("success" => true);
     }
+      else
+      return array("success" => false, "error" => t("Giocatore non presente in rosa"));
   }
+    else
+    return array("success" => false, "error" => t("Modifiche non consentite su questa squadra"));
+}
+
+function fantacalcio_sell_player_ajax($t_id, $pl_id) {
+    
+    $result = fantacalcio_sell_player_form_validate_inner($t_id, $pl_id);
+    if ($result["success"] == true)
+        $result = fantacalcio_sell_player_function($t_id, $pl_id);
+        
+    return drupal_json_output(array_merge($result, fantacalcio_get_squad($t_id)));
+}
+
+function fantacalcio_get_squad($t_id) {
+   
+    $team = Team::get($t_id);
+    
+    $squad = $team->getSquad();
+  $squad_rows = array();
+  $bought_players_role = array("0" => 0, "1" => 0, "2" => 0, "3" => 0);
+  $outflow = 0;
+  
+  foreach ($squad as $pl_id => $player) {
+    
+    $squad_rows[] = array(
+        "pl_id" => $pl_id, 
+        "name" => $player->name, 
+        "team" => ucfirst($player->team), 
+          "role" => $player->role,
+        "cost" => $player->cost, 
+        "quotation" => $player->quotation
+      );
+    
+    $outflow += $player->cost;
+    $bought_players_role[$player->role]++;
+  }
+  
+  $content["squad_data"] = $squad_rows;
+  
+  $content["max_credits"] = variable_get("fantacalcio_credits", 100);
+  
+    $content["outflow"] = $outflow;
+  
+    $content["credits"] = variable_get("fantacalcio_credits", 100) - $outflow;
+    
+  $content["expected_players"] = array(
+    "0" => variable_get("fantacalcio_number_role_0", 1), 
+    "1" => variable_get("fantacalcio_number_role_1", 1), 
+    "2" => variable_get("fantacalcio_number_role_2", 1), 
+    "3" => variable_get("fantacalcio_number_role_3", 1));
+  $content["bought_players"] = $bought_players_role;
+  
+  $content["movements"] = variable_get("fantacalcio_max_movements", 0);
+  $content["left_movements"] = variable_get("fantacalcio_max_movements", 0) - $team->getMovementsCount();
+  
+  $content["is_team_complete"] = $team->canConfirm();
+  
+  return $content;
 }
 
 function fantacalcio_buy_player_form($form, &$form_state, $t_id, $pl_id) {
@@ -1386,48 +1405,56 @@ function fantacalcio_buy_player_form_validate($form, &$form_state) {
   
   $team = Team::get($form_state["input"]["t_id"]);
   $player = Player::get($form_state["input"]["pl_id"]);
+    
+$check = fantacalcio_buy_player_form_validate_inner($form_state["input"]["t_id"], $form_state["input"]["pl_id"]);
+
+    if(!$check)
+        form_set_error('', $check);
+}
+
+function fantacalcio_buy_player_form_validate_inner($t_id, $pl_id) {
+  // TODO controllare squadra appartenenza, crediti rimasti, numero giocatori, numero movimenti
+  global $user;
+  
+  $team = Team::get($t_id);
+  $player = Player::get($pl_id);
   
   $credits = $team->getCredits();
   $movements_count = $team->getMovementsCount();
   $num_players = $team->getNumberPlayers();
   
-  $max_movements = variable_get("fantacalcio_max_movements", 0) > 0 ? variable_get("fantacalcio_max_movements", 0) : PHP_INT_MAX;
+  $max_movements = 10000;//variable_get("fantacalcio_max_movements", 0) > 0 ? variable_get("fantacalcio_max_movements", 0) : PHP_INT_MAX;
   
   // verifica squadra appartenente all'utente
   if ($user->uid != $team->user)
-    form_set_error('', t("Impossibile completare l'operazione.") . " " . t('La squadra non appartiene all\'utente'));
+    return array("success" => false, "error" => t("Impossibile completare l'operazione.") . " " . t('La squadra non appartiene all\'utente'));
     
     // verifico numero movimenti rimasti
   if ($movements_count > $max_movements)
-    form_set_error('', t("Impossibile completare l'operazione.") . " " . t('I movimenti a disposizione sono terminati'));
+    return array("success" => false, "error" => t("Impossibile completare l'operazione.") . " " . t('I movimenti a disposizione sono terminati'));
     
     // verifico crediti
   if ($player->getQuotation() > $credits)
-    form_set_error('', t("Impossibile completare l'operazione.") . " " . t('I crediti rimasti non sono sufficienti a completare l\'acquisto'));
+    return array("success" => false, "error" => t("Impossibile completare l'operazione.") . " " . t('I crediti rimasti non sono sufficienti a completare l\'acquisto'));
     
     // verifico numero giocatori in squadra
   if (array_sum($num_players) >= variable_get("fantacalcio_number_players", 25))
-    form_set_error('', t("Impossibile completare l'operazione.") . " " . t('La squadra &egrave; gi&agrave; al completo'));
+    return array("success" => false, "error" => t("Impossibile completare l'operazione.") . " " . t('La squadra &egrave; gi&agrave; al completo'));
     
-    // verifico numero giocatori del ruolo
+    // verifico numero giocatori del ruolo    
   if (isset($num_players[$player->role]) && $num_players[$player->role] >= variable_get("fantacalcio_number_role_" . $player->role, 0))
-    form_set_error('', t("Impossibile completare l'operazione.") . " " . t('Il ruolo &egrave; gi&agrave; al completo'));
-  // echo $form_state["input"]["search_string"]; die();
-  // drupal_goto("mie/" . $form_state["input"]["t_id"] . "/movimenti" , array("query" => array("s" => $form_state["input"]["search_string"])));
+    return array("success" => false, "error" => t("Impossibile completare l'operazione.") . " " . t('Il ruolo &egrave; gi&agrave; al completo'));
+  
+    return array("success" => true);
 }
 
 function fantacalcio_buy_player_form_submit($form, &$form_state) {
   fantacalcio_buy_player_function($form_state["input"]["t_id"], $form_state["input"]["pl_id"], $form_state["input"]["search_string"]);
+    drupal_set_message(t("Acquisto completato"), "status");
 }
 
-function fantacalcio_buy_player_ajax($t_id, $pl_id, $s) {
-  fantacalcio_buy_player_function($t_id, $pl_id, $s);
+function fantacalcio_buy_player_function($t_id, $pl_id) {
   
-  return drupal_json_output("ok");
-}
-
-function fantacalcio_buy_player_function($t_id, $pl_id, $s) {
-  // echo $team->isConfirmed();die();
   global $user;
   
   $team = Team::get($t_id);
@@ -1463,17 +1490,30 @@ function fantacalcio_buy_player_function($t_id, $pl_id, $s) {
         "temporary" => $temporary));
       $query->execute();
       
-      drupal_set_message(t("Acquisto completato"), "status");
-      
-      drupal_goto("mie/" . $t_id . "/movimenti", array(
-        "query" => array("s" => $s)));
+      //drupal_goto("mie/" . $t_id . "/movimenti", array(
+        //"query" => array("s" => $s)));
       
       watchdog("fantacalcio", t("%team: Acquisto di %player (-%quotation crediti)"), array(
         "%team" => $team->name, 
         "%player" => $player->name, 
         "%quotation" => $player->getQuotation()), WATCHDOG_INFO);
+        
+        return array("success" => true);
     }
+      else
+    return array("success" => false, "error" => t("Giocatore già presente in rosa"));
   }
+    else
+    return array("success" => false, "error" => t("Modifiche non consentite su questa squadra"));
+}
+
+function fantacalcio_buy_player_ajax($t_id, $pl_id) {
+    
+    $result = fantacalcio_buy_player_form_validate_inner($t_id, $pl_id);
+    if ($result["success"] === true)
+        $result = fantacalcio_buy_player_function($t_id, $pl_id);    
+            
+    return drupal_json_output(array_merge($result, fantacalcio_get_squad($t_id)));
 }
 
 function fantacalcio_squad_movements($t_id) {
@@ -1516,7 +1556,7 @@ function fantacalcio_user_can_add_team() {
   global $user;
   
   $max_teams_for_user = variable_get("fantacalcio_user_teams_limit", 0) > 0 ? variable_get("fantacalcio_user_teams_limit", 0) : PHP_INT_MAX;
-  $max_teams_for_user = min(Team::getMaxNumberForUser($user->uid), $max_teams_for_user);
+ // $max_teams_for_user = min(Team::getMaxNumberForUser($user->uid), $max_teams_for_user);
 
   $teams_for_user = count(Team::allByUser($user->uid));
   
