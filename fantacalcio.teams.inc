@@ -64,25 +64,72 @@ function fantacalcio_team_form($form, $form_state, $id) {
         "#attributes" => array("id" => "image"),
    "#default_value" => $team ? json_decode($team->shirt) : "",
    );
+    
+    /*
+    <div class="btn-group" role="group" aria-label="...">
+      <button type="button" class="btn btn-default">Left</button>
+      <button type="button" class="btn btn-default">Middle</button>
+      <button type="button" class="btn btn-default">Right</button>
+    </div>
+    */
+    
+    $types = "<table><tr><td>" . t("Tipo") .": </td><td><div data-toggle='buttons' class='btn-group' role='group' aria-label='...'>";
+    
+    for($i = 0; $i < 9; $i++) {
+        $types .= "<label class='shirt-type btn btn-default' data-type='" . $i . "'>
+        <input type='radio' class='shirt-type-btn' data-type='" . $i . "'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_" . $i . ".png' width='30'>
+      </label>";
+    } 
+        /*<label class='shirt-type btn btn-default' data-type='1'>
+        <input type='radio' class='shirt-type' data-type='1'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_0.png' width='30'>
+      </label>
+      <label class='shirt-type btn btn-default' data-type='0'>
+        <input type='radio' class='shirt-type' data-type='0'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_0.png' width='30'>
+        </label>
+      <label class='btn btn-default' data-type='1'>
+        <input type='radio' class='shirt-type' data-type='1'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_1.png' width='30'>
+      </label>
+      <label class='btn btn-default' data-type='2'>
+        <input type='radio' class='shirt-type' data-type='2'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_2.png' width='30'>
+      </label>
+      <label class='btn btn-default' data-type='3'>
+        <input type='radio' class='shirt-type' data-type='3'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_3.png' width='30'>
+        </label>
+      <label class='btn btn-default' data-type='4'>
+        <input type='radio' class='shirt-type' data-type='4'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_4.png' width='30'>
+      </label>
+      <label class='btn btn-default' data-type='5'>
+        <input type='radio' class='shirt-type' data-type='5'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_5.png' width='30'>
+      </label>
+      <label class='btn btn-default' data-type='6'>
+        <input type='radio' class='shirt-type' data-type='6'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_6.png' width='30'>
+        </label>
+      <label class='btn btn-default' data-type='7'>
+        <input type='radio' class='shirt-type' data-type='7'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_7.png' width='30'>
+      </label>
+      <label class='btn btn-default' data-type='8'>
+        <input type='radio' class='shirt-type' data-type='8'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_8.png' width='30'>
+      </label>
+    </div></td></tr>";*/
    
-    $form ["shirt"] ["type_0"] = array(
-        "#type" => "radio",
+   /* $form ["shirt"] ["type_0"] = array(
+        "#type" => "button",
         "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         //"#value" => "<i class='fa fa-user'></i>",
-        "#prefix" => "<table><tr><td>" . t("Tipo") .': </td><td><div class="btn-group" data-toggle="buttons">' .  '<label class="btn btn-default color-type">' ,
-        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_0.png" width="30"></label>',
+        "#prefix" => "<table><tr><td>" . t("Tipo") .': </td><td><div class="btn-group"  role="group">' ,
+        "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_0.png" width="30"></div>',
         "#attributes" => array("class" => array("form-inline"), "id" => "type")
    );
     
     $form ["shirt"] ["type_1"] = array(
-        "#type" => "radio",
+        "#type" => "button",
    "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_1.png" width="30"></label>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-1")
    );
     $form ["shirt"] ["type_2"] = array(
-        "#type" => "radio",
+        "#type" => "button",
    "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_2.png" width="30"></label>',
@@ -90,7 +137,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
    );
     
     $form ["shirt"] ["type_3"] = array(
-        "#type" => "radio",
+        "#type" => "button",
    "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_3.png" width="30"></label>',
@@ -113,7 +160,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
    );
     $form ["shirt"] ["type_6"] = array(
         "#type" => "radio",
-   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
+   "#value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_6.png" width="30"></label>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-6")
@@ -140,6 +187,15 @@ function fantacalcio_team_form($form, $form_state, $id) {
         "#prefix" => '<label class="btn btn-default color-type">',
         "#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_9.png" width="30"></label></td></tr>',
                 "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type-9")
+   );*/
+    
+    $form ["shirt"] ["type"] = array(
+        "#type" => "hidden",
+   "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->type : "",
+        //"#prefix" => '<label class="btn btn-default color-type">',
+        //"#suffix" => '<img src="' . base_path(). drupal_get_path("module", "fantacalcio") . '/images/tipo_9.png" width="30"></label></td></tr>',
+        "#suffix" => $types,
+                "#attributes" => array("class" => array("btn", "btn-default"), "id" => "type")
    );
           
     $colors_list = array("#FFFFFF", "#FFF0F5", "#FFDEAD", "#FFB6C1", "#DEB887", "#F4A460", "#FFA07A", "#EE82EE", "#D8BFD8", "#FF7F50", "#DB7093", "#C71585", "#FF00FF", "#FF1493", "#DC143C", "#7B68EE", "#8A2BE2", "#483D8B", "#4B0082", "#800080", "#800000", "#FF0000", "#FF4500", "#B22222", "#8B4513", "#A0522D", "#D2691E", "#B8860B", "#FFA500", "#DAA520", "#FFFF00", "#00FF00", "#7FFF00", "#F0E68C", "#BDB76B", "#8FBC8F", "#9ACD32", "#90EE90", "#ADFF2F", "#32CD32", "#228B22", "#006400", "#556B2F", "#6B8E23", "#808000", "#00FF7F", "#00FA9A", "#66CDAA", "#3CB371", "#2E8B57", "#008080", "#20B2AA", "#00FFFF", "#AFEEEE", "#7FFFD4", "#5F9EA0", "#B0C4DE", "#87CEEB", "#1E90FF", "#6495ED", "#4169E1", "#191970", "#00008B", "#0000FF", "#00BFFF", "#B0E0E6", "#E6E6FA", "#D3D3D3", "#808080", "#778899", "#2F4F4F", "#000000");
@@ -181,7 +237,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
    "#title" => t("Colore 1"),
     "#prefix" => "<tr><td>" . t("Colore 1") . "</td><td>",
         "#suffix" =>  "<div class='form-group'><div class='input-group-btn group-color'><button type='button' class='btn btn-default btn-box change-color dropdown-toggle' data-toggle='dropdown'>
-							<span class='fa fa-square preview'></span> 
+							<span class='fa fa-square preview preview-bg-color'></span> 
 						</button>" . $colors . '</div></div></td></tr>',
    "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->bgColor : "",
     "#attributes" => array("class" => array("btn", "btn-default", "color-val"), "id" => "bg-color")
@@ -192,11 +248,12 @@ function fantacalcio_team_form($form, $form_state, $id) {
    "#title" => t("Colore 2"),
     "#prefix" => "<tr><td>" . t("Colore 2") . "</td><td>",
         "#suffix" =>  '<div class="form-group"><div class="input-group-btn group-color"><button type="button" class="btn btn-default btn-box change-color dropdown-toggle" data-toggle="dropdown">
-							<span class="fa fa-square preview"></span> 
+							<span class="fa fa-square preview preview-main-color"></span> 
 						</button>' . $colors . '</td></tr>',
    "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->mainColor : "",
         "#attributes" => array("class" => array("btn", "btn-default", "color-val"), "id" => "main-color")
    );
+    
     
     $form ["shirt"] ["border"] = array(
         "#type" => "checkbox",
@@ -212,7 +269,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
    "#title" => t("Colore bordo"),
     "#prefix" => "<tr><td>" . t("Colore bordo") . "</td><td>",
         "#suffix" =>  '<div class="form-group"><div class="input-group-btn group-color"><button type="button" class="btn btn-default btn-box change-color dropdown-toggle" data-toggle="dropdown">
-							<span class="fa fa-square preview"></span> 
+							<span class="fa fa-square preview preview-border-color"></span> 
 						</button>' . $colors . '</td></tr></table><canvas id="myCanvas" width="350" height="350"></canvas>',
    "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->borderColor : "",
         "#attributes" => array("class" => array("btn", "btn-default", "color-val"), "id" => "border-color")
@@ -284,8 +341,6 @@ function fantacalcio_team_form_submit($form, &$form_state) {
     $query->condition('t_id', $t_id);
     $query->execute();
     
-    // $sql = "UPDATE {fanta_teams} " . "SET name = \"%s\", " . "coach = \"%s\", " . "stadium = \"%s\", " . "shirt = \"%s\" " . "WHERE t_id = \"%d\"";
-    // $result = db_query($sql, $team_name, $team_coach, $team_stadium, $team_shirt, $t_id);
     return drupal_set_message(t("Squadra modificata con successo"));
   }
   elseif ($action == "insert") {

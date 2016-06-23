@@ -16,6 +16,17 @@ jQuery(document).ready(function() {
         myShirt[property] = color
         myShirt.draw();
     });
+    
+    jQuery(".shirt-type[data-type=" + jQuery("#type").val() + "]").addClass("active");
+    jQuery(".preview-bg-color").css('color', jQuery("#bg-color").val());
+    jQuery(".preview-main-color").css('color', jQuery("#main-color").val());
+    jQuery(".preview-border-color").css('color', jQuery("#border-color").val());
+    
+    jQuery(".shirt-type").click(function() 
+    {
+        var type = jQuery(this).attr("data-type");
+        jQuery("#type").val(type);
+    });
 	
   function shirt() {
       this.type = jQuery("#type").val()
@@ -29,9 +40,10 @@ jQuery(document).ready(function() {
     
   
   
-  jQuery(".color-type").click(function() {
-      console.log(myShirt)
-    myShirt.type = jQuery(this).find("input").attr("id").replace("type-", "");
+  jQuery(".shirt-type").click(function() {
+      var type = jQuery(this).attr("data-type");
+        jQuery("#type").val(type);
+    myShirt.type = type;
     myShirt.draw()
   })
   
