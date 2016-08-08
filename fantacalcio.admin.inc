@@ -2680,6 +2680,8 @@ function fantacalcio_admin_rounds_list_import_submit($form, &$form_state) {
   db_delete("fanta_rounds")->execute();
   
   $c_id = Competition::getDefault()->id;
+    
+  db_insert("fanta_rounds")->fields(array("round" => 0, "date" => 0, "end_date" => 0, "status" => 0, "reminder_sent" => 0))->execute();
 
   foreach($rounds as $number => $round) {
     db_insert("fanta_rounds")->fields(array("round" => $number, "date" => $round->date, "end_date" => $round->date, "status" => 0, "reminder_sent" => 0))->execute();

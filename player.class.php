@@ -147,134 +147,170 @@ class Player {
   }
   
   static function updateList() {
-  	$players_url = DATA_SOURCE_URL . "/players/" . variable_get("fantacalcio_votes_provider", 1) . ".json?t=" . time();
+
+      $players_url = DATA_SOURCE_URL . "/players/" . variable_get("fantacalcio_votes_provider", 1) . ".json?t=" . time();
   
   $players = json_decode(file_get_contents($players_url));
   
   $round = Round::getLast() + 1;
   
   if (count($players) > 0 && $round >= 0) {
-    
-    // real teams
-    $real_teams = RealTeam::allNames();
-    $real_teams = array_flip($real_teams);
-    
-    // player ids
-    $players_ids = Player::getIdList();
-    
-    $tmp_players = array();
-    $new_players = array();
-    
-    foreach ($players as $player) {
-      
-      if (isset($players_ids[$player->name])) {
-        $tmp_player = (object) array(
-          "pl_id" => $players_ids[$player->name], 
-          "name" => $player->name, 
-          "quotation" => $player->quotation, 
-          "not_rounded_quotation" => $player->not_rounded_quotation, 
-          "team" => $real_teams[strtolower($player->team)], 
-          "role" => $player->role);
-        
-        $tmp_players[$tmp_player->pl_id] = $tmp_player;
-      }
-      else {
-        $new_player = (object) array(
-          "name" => $player->name, 
-          "quotation" => $player->quotation, 
-          "not_rounded_quotation" => $player->not_rounded_quotation, 
-          "team" => $real_teams[strtolower($player->team)], 
-          "role" => $player->role);
-        
-        $new_players[] = $new_player;
-      }
-    }
-    
-    // cancello giocatori inseriti
-    $query = db_delete("fanta_players_rounds");
-    $query->condition("round", $round);
-    $query->execute();
 
-    $subquery = db_select("fanta_players_rounds", "pr")
-	->fields("pr", array("pl_id"));
+        // real teams
+        $real_teams = RealTeam::allNames();
+        $real_teams = array_flip($real_teams);
 
-    $query = db_delete("fanta_players");
-    $query->condition("pl_id", $subquery, "NOT IN");
-    $query->execute();
-    
-    //reinserisco tutti i giocatori presenti la giornata precedente (dati default)
-    $query = db_select("fanta_players_rounds", "pr");
-    $query->condition("round", $round - 1);
-    $query->fields("pr");
-    
-    $result = $query->execute();
-    
-    $last_players = array();
-    foreach($result as $row) {
-      db_insert("fanta_players_rounds")->fields(array(
-      "pl_id" => $row->pl_id,
-      "rt_id" => $row->rt_id,
-      "quotation" => 0,
-      "not_rounded_quotation" => 0,
-      "round" => $round,
-      "active" => 0))->execute();
+        // player ids
+        $players_ids = Player::getIdList();
+
+        $tmp_players = array();
+        $new_players = array();
+
+        foreach ($players as $player) {
+
+          if (isset($players_ids[$player->name])) {
+
+            $tmp_player = (object) array(
+              "pl_id" => $players_ids[$player->name], 
+              "name" => $player->name, 
+              "quotation" => $player->quotation, 
+              "not_rounded_quotation" => $player->not_rounded_quotation, 
+              "team" => $real_teams[strtolower($player->team)], 
+              "role" => $player->role);
+
+            $tmp_players[$tmp_player->pl_id] = $tmp_player;
+          }
+          else {
+            $new_player = (object) array(
+              "name" => $player->name, 
+              "quotation" => $player->quotation, 
+              "not_rounded_quotation" => $player->not_rounded_quotation, 
+              "team" => $real_teams[strtolower($player->team)], 
+              "role" => $player->role);
+
+            $new_players[] = $new_player;
+          }
+        }
       
-      $last_players[] = $row->pl_id;
-    }
-    
-    // aggiorno i giocatori già presenti
-    if (count($tmp_players) > 0) {
-      foreach ($tmp_players as $player) {
-        db_update("fanta_players_rounds")->fields(array(
-//          "pl_id" => $player->pl_id, 
-          "rt_id" => $player->team, 
-          "quotation" => $player->quotation, 
-          "not_rounded_quotation" => $player->not_rounded_quotation, 
-          "active" => 1))->condition("pl_id", $player->pl_id)->condition("round", $round)->execute();
-      }
-    }
-    
-    // aggiungo i giocatori nuovi
-    if (count($new_players) > 0) {
-      foreach ($new_players as $player) {
-        // print_r( $player->name)."<br>";
-        $new_id = db_insert("fanta_players")->fields(array(
-          "name" => strtoupper($player->name), 
-          "role" => $player->role))->execute();
-        
-        db_insert("fanta_players_rounds")->fields(array(
-          "pl_id" => $new_id, 
-          "rt_id" => $player->team, 
-          "quotation" => $player->quotation, 
-          "not_rounded_quotation" => $player->not_rounded_quotation, 
-          "round" => $round, 
-          "active" => 1))->execute();
-      }
-    }
-    
-    // disattivo i vecchi giocatori
-    $old_players = array();
-    foreach ($players_ids as $pl_id) {
-      if (!in_array($pl_id, array_keys($tmp_players)) && !in_array($pl_id, $last_players)) {
-        db_insert("fanta_players_rounds")->fields(array(
-          "pl_id" => $pl_id, 
-          "rt_id" => NULL, 
-          "quotation" => 0, 
-          "not_rounded_quotation" => 0, 
-          "round" => $round, 
+      echo "tmp_player:" . count($tmp_players) . "<br>";
+      echo "new_player:" . count($new_players) . "<br>";
+
+        $subquery = db_select("fanta_players_rounds", "pr")
+        ->fields("pr", array("pl_id"));
+
+        $query = db_delete("fanta_players");
+        $query->condition("pl_id", $subquery, "NOT IN");
+        $query->execute();
+      
+      // cancello giocatori inseriti
+        $query = db_delete("fanta_players_rounds");
+        $query->condition("round", $round);
+        $query->execute();
+
+        //reinserisco tutti i giocatori presenti la giornata precedente (dati default)
+        $query = db_select("fanta_players_rounds", "pr");
+        $query->condition("round", $round - 1);
+        $query->fields("pr");
+
+        $result = $query->execute();
+
+        $last_players = array();
+        foreach($result as $row) {
+          db_insert("fanta_players_rounds")->fields(array(
+          "pl_id" => $row->pl_id,
+          "rt_id" => $row->rt_id,
+          "quotation" => 0,
+          "not_rounded_quotation" => 0,
+          "round" => $round,
           "active" => 0))->execute();
-        
-        $old_players[] = $pl_id;
+
+          $last_players[] = $row->pl_id;
+        }
+      
+      echo "last_player:" . count($last_players) . "<br>";
+
+        // aggiorno i giocatori già presenti
+        if (count($tmp_players) > 0) {
+            if (count($last_players) > 0) {
+                $i = 0;
+              foreach ($tmp_players as $player) {
+                db_update("fanta_players_rounds")->fields(array(
+        //          "pl_id" => $player->pl_id, 
+                  "rt_id" => $player->team, 
+                  "quotation" => $player->quotation, 
+                  "not_rounded_quotation" => $player->not_rounded_quotation, 
+                  "active" => 1))
+                    ->condition("pl_id", $player->pl_id)
+                    ->condition("round", $round)
+                    ->execute();
+                  $i++;
+              }
+                echo "update: ". $i . "<br>";
+            }
+            else {
+                $i = 0;
+                echo "min: ". min(array_keys($tmp_players)) . "<br>";
+               foreach ($tmp_players as $player) {
+                db_insert("fanta_players_rounds")->fields(array(
+                  "pl_id" => $player->pl_id, 
+                  "rt_id" => $player->team, 
+                  "round" => $round, 
+                  "quotation" => $player->quotation, 
+                  "not_rounded_quotation" => $player->not_rounded_quotation, 
+                  "active" => 1))
+        //            ->condition("pl_id", $player->pl_id)
+        //            ->condition("round", $round)
+                    ->execute();
+                   $i++;
+              }
+                echo "insert: ". $i . "<br>";
+            }
+        }
+//print_r($new_players);die();
+        // aggiungo i giocatori nuovi
+        if (count($new_players) > 0) {
+          foreach ($new_players as $player) {
+            // print_r( $player->name)."<br>";
+            $new_id = db_insert("fanta_players")->fields(array(
+              "name" => strtoupper($player->name), 
+              "role" => $player->role))->execute();
+
+            db_insert("fanta_players_rounds")->fields(array(
+              "pl_id" => $new_id, 
+              "rt_id" => $player->team, 
+              "quotation" => $player->quotation, 
+              "not_rounded_quotation" => $player->not_rounded_quotation, 
+              "round" => $round, 
+              "active" => 1))->execute();
+          }
+        }
+
+        // disattivo i vecchi giocatori
+        $old_players = array();
+        foreach ($players_ids as $pl_id) {
+          if (!in_array($pl_id, array_keys($tmp_players)) && !in_array($pl_id, $last_players)) {
+            db_insert("fanta_players_rounds")->fields(array(
+              "pl_id" => $pl_id, 
+              "rt_id" => NULL, 
+              "quotation" => 0, 
+              "not_rounded_quotation" => 0, 
+              "round" => $round, 
+              "active" => 0))->execute();
+
+            $old_players[] = $pl_id;
+          }
+        }
+
+      echo "old_player:" . count($old_players) . "<br>";
+      //die();
+      
+        drupal_set_message(check_plain("Giocatori aggiornati: " . count($tmp_players)));
+        drupal_set_message(check_plain("Giocatori disattivati: " . count($old_players)));
+        drupal_set_message(check_plain("Giocatori nuovi: " . count($new_players)));
+
+        watchdog("fantacalcio", t("Lista giocatori aggiornata"), null, WATCHDOG_INFO);
+
       }
-    }
-    
-    drupal_set_message(check_plain("Giocatori aggiornati: " . count($tmp_players)));
-    drupal_set_message(check_plain("Giocatori disattivati: " . count($old_players)));
-    drupal_set_message(check_plain("Giocatori nuovi: " . count($new_players)));
-    
-    watchdog("fantacalcio", t("Lista giocatori aggiornata"), null, WATCHDOG_INFO);
-    
-  }
   }
 
   static function updateStatus() {

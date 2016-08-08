@@ -1069,7 +1069,7 @@ function fantacalcio_squad_edit($t_id) {
   
   $team = Team::get($t_id);
 
-  if (variable_get("fantacalcio_free_movements") == 0)
+  if (variable_get("fantacalcio_free_movements") != 1)
     drupal_goto("mie/" . $team->id . "/lista-movimenti");
   
   if ($team->user != $user->uid)
