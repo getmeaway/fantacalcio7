@@ -1129,6 +1129,13 @@ function fantacalcio_block_info() {
       // Default setting.
       'cache' => DRUPAL_CACHE_PER_ROLE,
   );
+
+  $blocks['fanta_countdown'] = array(
+      // The name that will appear in the block list.
+      'info' => t('Countdown'),
+      // Default setting.
+      'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
   return $blocks;
 }
 
@@ -1146,6 +1153,10 @@ function fantacalcio_block_view($delta = '') {
     case 'wall_last_messages' :
       $block['subject'] = t('Wall');
       $block['content'] = fantacalcio_block_last_wall_messages();
+      break;
+    case 'fanta_countdown' :
+      $block['subject'] = t('Countdown');
+      $block['content'] = fantacalcio_block_countdown();
       break;
   }
   return $block;
