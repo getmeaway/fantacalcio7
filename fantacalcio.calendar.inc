@@ -442,6 +442,14 @@ function fantacalcio_show_live() {
 
 }
 
+function fantacalcio_get_live() {
+    $live = file_get_contents(DATA_SOURCE_URL . "/live/live.json?t=" . time());
+    
+    print($live);   
+    exit();
+    //return drupal_json_output($live);
+}
+
 function show_match_details($m_id, $show_round = true) {
   $match = Match::get($m_id);
 

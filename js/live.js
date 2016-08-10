@@ -17,8 +17,8 @@ jQuery(document).ready(function() {
 	
 	setInterval(function () {
 		jQuery.ajax({
-			url: "http://fantacalciocircus.altervista.org/live/live.json?t=" + Date.now() + "&callback=live",
-			dataType: "jsonp",
+			url: Drupal.settings.basePath + "live/get",
+			dataType: "json",
 			type: "GET",
 			success: function (data) {
 					updateVotes(data.votes);

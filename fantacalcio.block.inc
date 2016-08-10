@@ -134,11 +134,11 @@ $rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $matc
       $rows[] = array(
         t("Distacco dal primo"),
         $team->statGap($default_competition) . " pt");
-
-  if (abs(time() - $next_round->date) > (abs(time() - $last_round->end_date)))
+//print_r($last_round);
+  //if (abs(time() - $next_round->date) > (abs(time() - $last_round->end_date)))
     $out = $out_last . "<div class='clearfix'>&nbsp;</div>" .$out_next;
-  else 
-    $out = $out_next . "<div class='clearfix'>&nbsp;</div>" .$out_last;
+  //else 
+    //$out = $out_next . "<div class='clearfix'>&nbsp;</div>" .$out_last;
 
   $out .= "<div class='clearfix'>&nbsp;</div>";
   $out .= "<h4 class='bold'>" . t("Situazione") . "</h4>";

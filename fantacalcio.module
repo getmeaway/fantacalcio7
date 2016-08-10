@@ -469,6 +469,13 @@ function fantacalcio_menu() {
     'file' => 'fantacalcio.calendar.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio')); 
    
+  $items['live/get'] = array(
+    'title' => 'Live', 
+    'page callback' => 'fantacalcio_get_live', 
+    'access arguments' => array('administer team'), 
+    'type' => MENU_NORMAL_ITEM, 
+    'file' => 'fantacalcio.calendar.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio')); 
   
   $items['statistiche'] = array(
     'title' => 'Statistiche', 
