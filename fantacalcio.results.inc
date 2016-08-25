@@ -35,11 +35,11 @@ function fantacalcio_results($round = '', $action = '', $arg = "") {
       'name' => t('Carica Voti'), 
       'function' => 'fantacalcio_upload_votes', 
       'order' => $order++), 
-    'manual' => array(
+    /*'manual' => array(
       'key' => 'voti', 
       'name' => t('Inserisci voti'), 
       'function' => 'fantacalcio_insert_votes', 
-      'order' => $order++), 
+      'order' => $order++), */
     'titolari' => array(
       'key' => 'titolari', 
       'name' => t('Trova titolari'), 
@@ -1192,7 +1192,7 @@ function insert_default_votes($teams = array(), $round, $number_default, $provid
 
 function update_players($round) {
   $i = 0;
-  
+  //die();
   // cancello i giocatori della giornata per evitare doppioni
   db_delete("fanta_players_rounds")->condition("round", $round)->execute();
   
@@ -1200,6 +1200,8 @@ function update_players($round) {
   $query->condition("round", $round - 1);
   $query->fields("pr"); // "SELECT DISTINCT pl_id, rt_id as team, active FROM {fanta_players_teams} WHERE round = '%d'";
   $result = $query->execute(); // ($sql, ($round - 1));
+    
+    $c = $result->rowCount();
   
   foreach ($result as $row) {
     $i++;
@@ -1209,7 +1211,7 @@ function update_players($round) {
     ->execute();
   }
   
-  $message = "Giocatori aggiornati: " . $i . " (Giornata #" . $round . ")";
+  $message = $c. "Giocatori aggiornati: " . $i . " (Giornata #" . $round . ")";
   drupal_set_message(check_plain($message));
 }
 

@@ -67,7 +67,7 @@ function _fantacalcio_lineup_view($competition_name, $round_number = null, $t_id
     $teams_list = array();
     
     foreach ($competition->groups as $g_id => $group) {
-    
+    //print_r($round->competition_round);
       if ($competition->type == COMPETITION_TYPE_GP || ($competition->type == COMPETITION_TYPE_SD && $group->hasMatches($c_id, $round->competition_round))) {
       
       $teams = Team::allByGroupLineups($competition->id, $group->id, $round->competition_round);

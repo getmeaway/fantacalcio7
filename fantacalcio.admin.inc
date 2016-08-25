@@ -173,10 +173,10 @@ function fantacalcio_admin_settings() {
     '#default_value' => variable_get('fantacalcio_reserves_modules', ''), 
     '#description' => t('Moduli permessi per le riserve (un modulo per riga, es: 1-4-4-2 o 1-3-5-2)'));
     
-  $form["fantacalcio_results"]['fantacalcio_free_reserves'] = array(
+  $form["fantacalcio_results"]['fantacalcio_reserves_mode'] = array(
     '#type' => 'checkbox', 
     '#title' => t('Riserve libere'), 
-    '#default_value' => variable_get('fantacalcio_free_reserves', '0'), 
+    '#default_value' => variable_get('fantacalcio_reserves_mode', '0'), 
     '#description' => t('Selezionare se abilitare la funzione "riserve libere" per la sostituzione dei giocatori'));
   
   $form["fantacalcio_results"]['fantacalcio_modifier_role_0'] = array(

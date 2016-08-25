@@ -357,7 +357,7 @@ class Player {
       }
     }
     
-    watchdog("fantacalcio", t("Status giocatori aggiornati"), null, WATCHDOG_INFO);
+    watchdog("fantacalcio", t("Status giocatori aggiornati (Giornata #@round)"), array('@round' => $round), WATCHDOG_INFO);
   }
 
   function getPlayerRounds() {

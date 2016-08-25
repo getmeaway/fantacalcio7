@@ -107,17 +107,19 @@ class Result {
     $players_ids = Player::getIdList();
 
     // cancello i giocatori della giornata per evitare doppioni
-    db_delete("fanta_players_rounds")->condition("round", $vote_round)->execute();
-    
-    $query = db_select("fanta_players_rounds", "pr");
-    $query->condition("round", $vote_round - 1);
-    $query->fields("pr");
-    $result = $query->execute();
-    
-    foreach ($result as $row) {
-      db_insert("fanta_players_rounds")
-      ->fields(array("pl_id" => $row->pl_id, "round" => $vote_round, "rt_id" => $row->rt_id, "quotation" => $row->quotation, "not_rounded_quotation" => $row->not_rounded_quotation, "active" => $row->active))
-      ->execute();
+    if ($vote_round > 1) {
+        db_delete("fanta_players_rounds")->condition("round", $vote_round)->execute();
+
+        $query = db_select("fanta_players_rounds", "pr");
+        $query->condition("round", $vote_round - 1);
+        $query->fields("pr");
+        $result = $query->execute();
+
+        foreach ($result as $row) {
+          db_insert("fanta_players_rounds")
+          ->fields(array("pl_id" => $row->pl_id, "round" => $vote_round, "rt_id" => $row->rt_id, "quotation" => $row->quotation, "not_rounded_quotation" => $row->not_rounded_quotation, "active" => $row->active))
+          ->execute();
+        }
     }
     
     // real teams
@@ -200,7 +202,7 @@ class Result {
   
     $substitutions = 0;
     
-    $module = Lineup::getModule($t_id, $c_id, $competition_round);
+    //$module = Lineup::getModule($t_id, $c_id, $competition_round);
   
     // titolari senza voto da sostituire
     $query = db_select("fanta_lineups", "l");
@@ -247,7 +249,7 @@ class Result {
               $pl_id = $row_search->pl_id;
               
               $new_module_ok = true;
-              if(variable_get("fantacalcio_reserves_mode", 0) == 0) {
+              if(variable_get("fantacalcio_reserves_mode", 0) == 1) {
               	$module[$role]--;
               	$module[$row_search->role]++;
               	
