@@ -202,7 +202,7 @@ class Result {
   
     $substitutions = 0;
     
-    //$module = Lineup::getModule($t_id, $c_id, $competition_round);
+    $module = Lineup::getModule($t_id, $c_id, $competition_round);
   
     // titolari senza voto da sostituire
     $query = db_select("fanta_lineups", "l");

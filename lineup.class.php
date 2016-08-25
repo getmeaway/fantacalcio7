@@ -224,7 +224,7 @@ class Lineup {
     $lineup = self::get($competition->id, $team->id, $competition_round);
     
     $confirm_lineup = self::getLastForTeam($competition->id, $team->id, $competition_round);
-    //   print_r($confirm_lineup);die();
+    
     //inserisco la formazione
     foreach ($confirm_lineup->positions as $position => $positions_player) {
       foreach ($positions_player as $pl_id => $player) {
@@ -257,6 +257,28 @@ class Lineup {
     
     watchdog('fantacalcio', '@team: formazione importata', array(
     '@team' => $team->name), WATCHDOG_NOTICE);
+  }
+    
+  static function getModule($t_id, $c_id, $competition_round) {
+      
+      $module = array(0 => 0, 1 => 0, 2 => 0, 3 => 0);
+      
+      $query = db_select("fanta_lineups", "l");
+      $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
+      $query->condition("l.t_id", $t_id);
+      $query->condition("l.c_id", $c_id);
+      $query->condition("l.round", $competition_round);
+      $query->condition("l.position", 1);
+      $query->fields("l");
+      $query->fields("p");
+      
+      $result = $query->execute();
+      
+      foreach($result as $row) {
+          $module[$row->role]++;
+      }
+      
+      return $module;
   }
 
   function getCheckValues() {
