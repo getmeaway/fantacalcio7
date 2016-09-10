@@ -1126,6 +1126,12 @@ function fantacalcio_admin_matches_calendar($form, &$form_state, $g_id = "") {
       8 => 8, 
       9 => 9, 
       10 => 10));
+
+$form['round_start'] = array(
+ '#title' => t('Giornata di partenza'), 
+    '#type' => 'numberfield',
+  '#default_value' => 1
+);
   
   $form['home_away'] = array(
     '#title' => t('Inverti squadre (andata e ritorno)'), 
@@ -1156,6 +1162,7 @@ function fantacalcio_admin_matches_calendar_submit($form, &$form_state) {
   $teams = array();
   $turns = $form_state['values']['turns'];
   $g_id = $form_state['values']['g_id'];
+$round_start = $form_state['values']['round_start'];
   
   // cancello vecchio calendario
   if ($form_state['values']['delete_old'] == true) {
@@ -1208,7 +1215,7 @@ function fantacalcio_admin_matches_calendar_submit($form, &$form_state) {
     
     for ($i = 0; $i < $rounds; $i++) {
       /* stampa le partite di questa giornata */
-      $round = $k * $rounds + $i + 1;
+      $round = $k * $rounds + $i + $round_start;
       echo '<BR>' . $round . 'a Giornata<BR>';
       
       // //////////////////////////////////
@@ -1714,7 +1721,7 @@ function fantacalcio_choose_group($form_state) {
 
 function fantacalcio_choose_group_submit($form, &$form_state) {
   if (Group::exists($form_state['values']['group']))
-    drupal_goto("admin/fantacalcio/matches/" . $form_state['values']['group']);
+    drupal_goto("admin/fantacalcio/matches/" . $form_state['values']['group'] . "/calendar");
 }
 
 function fantacalcio_choose_round($form_state, $g_id) {
@@ -2256,6 +2263,16 @@ function fantacalcio_admin_real_teams_list_import_clear($form, &$form_state) {
 
 function fantacalcio_admin_real_teams_list_import_submit($form, &$form_state) {
   $teams_url = DATA_SOURCE_URL . "/teams/teams.json?t=" . time();
+  
+  $teams = json_decode(file_get_contents($teams_url));
+    
+  db_delete("fanta_real_teams")->execute();
+
+  foreach($teams as $team) {
+    db_insert("fanta_real_teams")->fields(array("rt_id" => $team->id, "name" => $team->name, "active" => 1))->execute();
+  }
+
+$teams_url = DATA_SOURCE_URL . "/teams/teams.json?t=" . time();
   
   $teams = json_decode(file_get_contents($teams_url));
     

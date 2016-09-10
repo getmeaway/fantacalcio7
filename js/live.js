@@ -1,19 +1,19 @@
 jQuery(document).ready(function() {
 
 	//icone
-	var bonusMalus = {"in": {icon: "http://www.fantaeuropeo.com/leghe/icons/entrato.png", points: 0},
-						"out": {icon: "http://www.fantaeuropeo.com/leghe/icons/uscito.png", points: 0},
-						"yellow_cards": {icon: "http://www.fantaeuropeo.com/leghe/icons/amm.png", points: -0.5},
-						"red_cards": {icon: "http://www.fantaeuropeo.com/leghe/icons/esp.png", points: -1},
-						"assists": {icon: "http://www.fantaeuropeo.com/leghe/icons/assist.png", points: 1},
-						"own_goals": {icon: "http://www.fantaeuropeo.com/leghe/icons/autogol.png", points: -2},
-						"missed_penalties": {icon: "http://www.fantaeuropeo.com/leghe/icons/rigoresbagliato.png", points: -3},
-						"saved_penalties": {icon: "http://www.fantaeuropeo.com/leghe/icons/rigoreparato.png", points: 3},
-						"goals_for": {icon: "http://www.fantaeuropeo.com/leghe/icons/golfatto.png", points: 3},
-						"goals_against": {icon: "http://www.fantaeuropeo.com/leghe/icons/golsubito.png", points: -1},
-						"penalty_goals": {icon: "http://www.fantaeuropeo.com/leghe/icons/rigoresegnato.png", points: 3},
-						"win_goal": {icon: "http://www.fantaeuropeo.com/leghe/icons/golvittoria.png", points: 0},
-						"draw_goal": {icon: "http://www.fantaeuropeo.com/leghe/icons/golpareggio.png", points: 0}};
+	var bonusMalus = {"in": {icon: "http://www.fantagazzetta.com/img/live_ico/entrato_s.png", points: 0},
+						"out": {icon: "http://www.fantagazzetta.com/img/live_ico/uscito_s.png", points: 0},
+						"yellow_cards": {icon: "http://www.fantagazzetta.com/img/live_ico/amm_s.png", points: -0.5},
+						"red_cards": {icon: "http://www.fantagazzetta.com/img/live_ico/esp_s.png", points: -1},
+						"assists": {icon: "http://www.fantagazzetta.com/img/live_ico/assist_s.png", points: 1},
+						"own_goals": {icon: "http://www.fantagazzetta.com/img/live_ico/autogol_s.png", points: -2},
+						"missed_penalties": {icon: "http://www.fantagazzetta.com/img/live_ico/rigoresbagliato_s.png", points: -3},
+						"saved_penalties": {icon: "http://www.fantagazzetta.com/img/live_ico/rigoreparato_s.png", points: 3},
+						"goals_for": {icon: "http://www.fantagazzetta.com/img/live_ico/golfatto_s.png", points: 3},
+						"goals_against": {icon: "http://www.fantagazzetta.com/img/live_ico/golsubito_s.png", points: -1},
+						"penalty_goals": {icon: "http://www.fantagazzetta.com/img/live_ico/rigoresegnato_s.png", points: 3},
+						"win_goal": {icon: "http://www.fantagazzetta.com/img/live_ico/golvittoria_s.png", points: 0},
+						"draw_goal": {icon: "http://www.fantagazzetta.com/img/live_ico/golpareggio_s.png", points: 0}};
 	
 	setInterval(function () {
 		jQuery.ajax({
@@ -39,12 +39,14 @@ jQuery(document).ready(function() {
 				var outEvents = "";
 				
 				if (vote.events != undefined) {
-					for(eventType in vote.events) {
-						for(event in vote.events[eventType]) {
-							outEvents += "<img src='" + bonusMalus[eventType].icon + "'> " + vote.events[eventType][event] + "'&nbsp;&nbsp;";
+					//for(eventType in vote.events) {
+						//for(event in vote.events[eventType]) {
+						for(var i = 0; i < vote.events.length; i++) {
+                            var eventType = vote.events[i];
+                            outEvents += "<img src='" + bonusMalus[eventType].icon + "'> ";// + vote.events[eventType][event] + "'&nbsp;&nbsp;";
 							totalPoints += bonusMalus[eventType].points;
 						}
-					}
+					//}
 					
 					totalPoints = totalPoints > 0 ? "+" + totalPoints : (totalPoints < 0 ? totalPoints  : "");
 			

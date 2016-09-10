@@ -539,6 +539,7 @@ function fantamercato_show_team($g_id, $t_id) {
 /* funzioni per la visualizzazione del mercato - Girone */
 function fantamercato_view_group($g_id) {
   if (draft_is_enabled()) {
+drupal_add_js("setInterval(function() {location.reload()}, 2000)", array('type' => 'inline', 'scope' => 'footer'));
     drupal_set_title(filter_xss("Mercato - " . Group::get($g_id)->name . " - Visualizzazione"));
     return fantamercato_links($g_id) . group_summary($g_id);
   }
