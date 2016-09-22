@@ -1197,7 +1197,7 @@ function fantacalcio_cron() {
     $dates = array_map(function ($item){ return $item->date;}, $matches->data);
     $start = min($dates);
     $start -= variable_get('fantacalcio_round_advance_minutes', '0') * 60;
-    $end = max($dates) + 5 * 3600; //5 ore dopo l'inizio dell'ultima partita
+    $end = max($dates) + 9 * 3600; //9 ore dopo l'inizio dell'ultima partita
     $round->updateDates($start, $end);
 
     watchdog('fantacalcio', t('Date aggiornate per la giornata: %round'), array('%round' => $round->round), WATCHDOG_NOTICE);
@@ -1296,7 +1296,7 @@ function fantacalcio_show_status($name, $team, $player_status) {
   if ($player_status->status == "ok") {
     $position = $player_status->position == 1 ? t("Titolare") : t("Riserva");
   $content = "<p>" . $player_status->match . "</p>";
-    $content .= "<table class=\"table\"><tr><th>Posizione probabile:</th><td>" . $position ."</td></tr><tr><th>Probabilità di giocare:</th><td>" . $player_status->percent . "%</td></tr></table><i class=\"caption\">Ultimo aggiornamento: " . date("d-m-Y H:i", $player_status->updated) . "</i>";
+    $content .= "<table class='table'><tr><th>Posizione probabile:</th><td>" . $position ."</td></tr><tr><th>Probabilità di giocare:</th><td>" . $player_status->percent . "%</td></tr></table><i class='caption'>Ultimo aggiornamento: " . date("d-m-Y H:i", $player_status->updated) . "</i>";
   }
   else {
     switch ($player_status->status) {
@@ -1311,13 +1311,13 @@ function fantacalcio_show_status($name, $team, $player_status) {
         break;
     }
     
-    $content = "<table class=\"table\"><tr><th>Stato:</th><td>" . $status . "</td></tr></table><i class=\"caption\">Ultimo aggiornamento: " . date("d-m-Y H:i", $player_status->updated) . "</i>";
+    $content = "<table class='table'><tr><th>Stato:</th><td>" . $status . "</td></tr></table><i class='caption'>Ultimo aggiornamento: " . date("d-m-Y H:i", $player_status->updated) . "</i>";
   }
   
-  $out = "<a tabindex='0' role='button' data-trigger='focus' data-toggle='popover' data-placement='top' title='" . $name . " (" . $team . ")" 
-. "' data-content='" . $content 
-. "' data-html='" . true 
-. "'>";
+  $out = "<a tabindex=\"0\" role=\"button\" data-trigger=\"focus\" data-toggle=\"popover\" data-placement=\"top\" title=\"" . $name . " (" . $team . ")" 
+. "\" data-content=\"" . $content 
+. "\" data-html=\"" . true 
+. "\">";
   
   $out .= "<i class='fa fa-lg fa-circle " . $status_class . "'></i>";
   

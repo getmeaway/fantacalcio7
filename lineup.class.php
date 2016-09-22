@@ -19,6 +19,7 @@ class Lineup {
     $query->condition("l.t_id", $team_id);
     $query->condition("l.c_id", $competition_id);
     $query->condition("l.round", $competition_round);
+    $query->condition("l.valid", 1);
     $query->fields("l");
     $query->fields("p");
     $query->addField("rt", "name", "team");
@@ -96,6 +97,7 @@ class Lineup {
     $query->condition("l.t_id", $team_id);
     $query->condition("l.c_id", $competition_id);
     $query->condition("l.round", $competition_round);
+    $query->condition("l.valid", 1);
     $query->condition("pr.round", $round->round);
     $query->condition("ps.round", $round->round);
     $query->fields("l");
@@ -138,6 +140,7 @@ class Lineup {
     $query = db_select("fanta_lineups", "l");
     $query->condition("c_id", $competition->id);
     $query->condition("round", $competition_round);
+    $query->condition("l.valid", 1);
     $query->fields("l");
     
     $result = $query->execute();
@@ -208,6 +211,7 @@ class Lineup {
     $query->condition("t_id", $t_id);
     $query->condition("c_id", $c_id);
     $query->condition("round", $round);
+    $query->condition("valid", 1);
     $query->fields("l");
     $result = $query->execute();
     
@@ -236,6 +240,7 @@ class Lineup {
             "c_id" => $competition->id,
             "round" => $competition_round,
             "position" => $position,
+            "valid" => 1,
             "timestamp" => time(),
             "uid" => $user->uid));
         $query->execute();
@@ -269,6 +274,7 @@ class Lineup {
       $query->condition("l.c_id", $c_id);
       $query->condition("l.round", $competition_round);
       $query->condition("l.position", 1);
+      $query->condition("l.valid", 1);
       $query->fields("l");
       $query->fields("p");
       
@@ -439,6 +445,7 @@ class Lineup {
     $query->condition("c_id", $c_id);
     $query->condition("round", $round);
     $query->condition("pl_id", $pl_id);
+    $query->condition("l.valid", 1);
     $query->fields("l", array("position"));
     
     $result = $query->execute();

@@ -587,6 +587,62 @@ class Result {
   
       }
     }
+      die();
+      $competition = Competition::getDefault();
+      $groups = Group::allByCompetition($competition->id);
+      $competition_round = $round->competitions[$competition->c_id]->competition_round;
+      print_r($competition_round);
+      foreach ($groups as $group) {
+          $teams = Team::allByGroup($group->g_id);
+          if ($teams) {
+  
+            $total = array();
+            $round_positions = array();
+            $season_positions = array();
+  
+            foreach ($teams as $team) {
+              $team_points = 0 + $team->numWin($team, $group_id, $round, $conn) * 3 + $team->numDraw($team, $group_id, $round, $conn);
+  
+              $points[$team] = $team_points;
+              $round_positions[$team] = $team_points;
+              $season_positions[$team] = $team_points;
+            }
+  
+            arsort($round_positions);
+            arsort($season_positions);
+  
+            foreach ($teams as $team) {
+  
+//              if ($points[$team] > 0) {
+  
+                $round_position = array_search($team, array_keys($round_positions)) + 1;
+                $season_position = array_search($team, array_keys($season_positions)) + 1;
+                
+                $query = db_delete("fanta_teams_rounds");
+                $query->condition("t_id", $team->t_id);
+                $query->condition("round", $competition_round);
+                $query->execute();
+  
+                $query = db_insert("fanta_teams_rounds");
+                $query->fields(array(
+                    "t_id" => $team->t_id,
+                    "c_id" => $competition->c_id,
+                    "round" => $competition_round,
+                    "mode" => 1,
+                    "points" => $points[$team],
+                    "round_position" => $round_position,
+                    "season_position" => $season_position));
+  
+                $query->execute();
+                
+                /*$sql = "INSERT INTO fanta_teams_rounds (t_id, c_id, round, mode, points, round_position, season_position) 
+                VALUES (".$team.", ".$c_id.", ".$round.", 1, ".$points[$team].", ".$round_position.", ".$season_position.")";
+                mysql_query($sql, $conn) or die($sql .mysql_error());*/
+  
+  //            }
+            }
+          }
+      }
   
   }
   
@@ -730,9 +786,6 @@ class Result {
     $pl_ids = array();
     $role_0_lineup_number = 0;
     $role_0_played_number = 0;
-    $sql = "SELECT * FROM {fanta_lineups} f, {fanta_players} p " . "WHERE f.pl_id = p.pl_id " . "AND p.role = 1 " . "AND f.c_id = '%d' " . "AND f.round = '%d'" . "AND f.t_id = '%d'";
-  
-    // $result = db_query($sql, $c_id, $competition_round, $t_id);
   
     $query = db_select("fanta_lineups", "l");
     $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
@@ -757,14 +810,10 @@ class Result {
         $role_0_lineup_number++;
     }
   
-    $elenco_dif_ids = implode(',', $pl_ids);
-  
     $tot = 0;
-    $sql = "SELECT DISTINCT pl_id, vote FROM {fanta_votes} " . "WHERE pl_id IN ($elenco_dif_ids) " . "AND round = '%d' " . "AND provider = '%d'";
-    // $result = db_query($sql, $vote_round, $votes_provider);
   
     if (count($pl_ids) > 0) {
-  
+
       $query = db_select("fanta_votes", "v");
   
       $query->fields("v");
@@ -774,7 +823,7 @@ class Result {
       $query->condition("provider", $votes_provider);
   
       $result = $query->execute();
-  
+
       foreach ($result as $row) {
         $tot += $row->vote;
       }
@@ -784,7 +833,7 @@ class Result {
   
       $modifier = 27 - $role_0_lineup_number - floor($avg * 4);
   
-      // echo "$t_id : $tot_difesa : $avg_difesa : $role_0_lineup_number : $mod_difesa <br>";
+//      echo "$t_id : $tot : $avg : $role_0_lineup_number : $role_0_played_number : $count : $ccc  ::: $modifier <br>";
   
       return $modifier;
     }

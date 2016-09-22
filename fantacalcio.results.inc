@@ -1165,7 +1165,7 @@ function insert_default_votes($teams = array(), $round, $number_default, $provid
     }
     
     if ($checked_teams) {
-      $sqla = "INSERT INTO {fanta_votes} (pl_id, provider, round, total, vote) VALUES ";
+      $sqla = "INSERT INTO {fanta_votes} (pl_id, provider, round, total, vote, has_vote) VALUES ";
       
       $message = "Voto di default #" . $number_default . " (" . variable_get('fantacalcio_default_vote_' . $number_default, '6') . ") per i giocatori di";
       
@@ -1181,7 +1181,7 @@ function insert_default_votes($teams = array(), $round, $number_default, $provid
       $sql = "SELECT DISTINCT pl_id FROM {fanta_players_rounds} WHERE rt_id in (" . implode(",", $checked_teams) . ") AND round = " . ($round - 1);
       echo $sql;$resulta = db_query($sql);
       foreach ($resulta as $row) {
-        $sqla .= "\n(" . $row->pl_id . ", " . $provider_id . ", " . $round . ", " . variable_get('fantacalcio_default_vote_' . $number_default, '6') . ", " . variable_get('fantacalcio_default_vote_' . $number_default, '6') . "),";
+        $sqla .= "\n(" . $row->pl_id . ", " . $provider_id . ", " . $round . ", " . variable_get('fantacalcio_default_vote_' . $number_default, '6') . ", " . variable_get('fantacalcio_default_vote_' . $number_default, '6') . ", 1),";
       }
       $sqla = substr($sqla, 0, -1);
       
@@ -1764,6 +1764,62 @@ function fantacalcio_get_totals($vote_round) {
           "classes" => array("table", "table-responsive", "table-striped"))));
     }
   }
+    
+    $competition = Competition::getDefault();
+      $groups = Group::allByCompetition($competition->id);
+      $competition_round = $round->competitions[$competition->id]->competition_round;
+      
+      foreach ($groups as $group) {
+          $teams = Team::allByGroup($group->id);
+          if ($teams) {
+  
+            $total = array();
+            $round_positions = array();
+            $season_positions = array();
+  
+            foreach ($teams as $team) {
+              $team_points = 0 + $team->numWin($group->id) * 3 + $team->numDraw($group->id);
+  
+              $points[$team->id] = $team_points;
+              $round_positions[$team->id] = $team_points;
+              $season_positions[$team->id] = $team_points;
+            }
+  
+            arsort($round_positions);
+            arsort($season_positions);
+  
+            foreach ($teams as $team) {
+  
+//              if ($points[$team] > 0) {
+  
+                $round_position = array_search($team->id, array_keys($round_positions)) + 1;
+                $season_position = array_search($team->id, array_keys($season_positions)) + 1;
+                
+                $query = db_delete("fanta_teams_rounds");
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                $query->condition("t_id", $team->id);
+                $query->condition("round", $competition_round);
+                $query->execute();
+  
+                $query = db_insert("fanta_teams_rounds");
+                $query->fields(array(
+                    "t_id" => $team->id,
+                    "c_id" => $competition->id,
+                    "round" => $competition_round,
+                    "mode" => 1,
+                    "points" => $points[$team->id                                                                                                                                                                                                                                                                                                                                                   ],
+                    "round_position" => $round_position,
+                    "season_position" => $season_position));
+  
+                $query->execute();
+                
+                /*$sql = "INSERT INTO fanta_teams_rounds (t_id, c_id, round, mode, points, round_position, season_position) 
+                VALUES (".$team.", ".$c_id.", ".$round.", 1, ".$points[$team].", ".$round_position.", ".$season_position.")";
+                mysql_query($sql, $conn) or die($sql .mysql_error());*/
+  
+  //            }
+            }
+          }
+      }
   
   return $out;
 }

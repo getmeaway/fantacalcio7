@@ -443,11 +443,18 @@ function fantacalcio_show_live() {
 }
 
 function fantacalcio_get_live() {
+
+$vote_round = Round::getNext();
+	$round = Round::getByRound($vote_round);
+	
+	if (time() < $round->date || $round->status == 1)
+$live = json_encode(array("round" => $vote_round, "votes" => array()));
+else
     $live = file_get_contents(DATA_SOURCE_URL . "/live/live.json?t=" . time());
     
     print($live);   
     exit();
-    //return drupal_json_output($live);
+    
 }
 
 function show_match_details($m_id, $show_round = true) {

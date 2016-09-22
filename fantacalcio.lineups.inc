@@ -614,7 +614,14 @@ function fantacalcio_lineup_form_submit($form, &$form_state) {
     $lineup = json_decode($form_state['input']['lineup']);
     
     // cancello la vecchia formazione
-    $query = db_delete("fanta_lineups");
+    /*$query = db_delete("fanta_lineups");
+    $query->condition("t_id", $t_id);
+    $query->condition("c_id", $c_id);
+    $query->condition("round", $round);
+    $query->execute();*/
+      
+    $query = db_update("fanta_lineups");
+    $query->fields(array("valid" => 0));
     $query->condition("t_id", $t_id);
     $query->condition("c_id", $c_id);
     $query->condition("round", $round);
@@ -631,6 +638,7 @@ function fantacalcio_lineup_form_submit($form, &$form_state) {
           "c_id" => $c_id, 
           "round" => $round, 
           "position" => $player->position, 
+          "valid" => 1,
           "timestamp" => time(), 
           "uid" => $user->uid));
         $query->execute();
@@ -680,7 +688,14 @@ function fantacalcio_lineup_form_clean_submit($form, &$form_state) {
   // cancella la lineup inserita
   $competition = Competition::get($form_state['values']['c_id']);
   
-  $query = db_delete("fanta_lineups");
+  /*$query = db_delete("fanta_lineups");
+  $query->condition("t_id", $form_state['values']['t_id']);
+  $query->condition("c_id", $form_state['values']['c_id']);
+  $query->condition("round", $form_state['values']['round']);
+  $query->execute();*/
+    
+  $query = db_update("fanta_lineups");
+  $query->fields(array("valid" => 0));
   $query->condition("t_id", $form_state['values']['t_id']);
   $query->condition("c_id", $form_state['values']['c_id']);
   $query->condition("round", $form_state['values']['round']);
@@ -726,7 +741,14 @@ function fantacalcio_lineup_form_confirm_submit($form, &$form_state) {
   // conferma la formazione inserita
   $competition = Competition::get($form_state['values']['c_id']);
   
-  $query = db_delete("fanta_lineups");
+  /*$query = db_delete("fanta_lineups");
+  $query->condition("t_id", $form_state['values']['t_id']);
+  $query->condition("c_id", $form_state['values']['c_id']);
+  $query->condition("round", $form_state['values']['round']);
+  $query->execute();*/
+    
+  $query = db_update("fanta_lineups");
+  $query->fields(array("valid" => 0));
   $query->condition("t_id", $form_state['values']['t_id']);
   $query->condition("c_id", $form_state['values']['c_id']);
   $query->condition("round", $form_state['values']['round']);
@@ -746,6 +768,7 @@ function fantacalcio_lineup_form_confirm_submit($form, &$form_state) {
           "c_id" => $form_state['values']['c_id'],
           "round" => $form_state['values']['round'],
           "position" => $position,
+          "valid" => 1,
           "timestamp" => time(),
           "uid" => $user->uid));
       $query->execute();
@@ -1150,7 +1173,14 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
       "status" => 0));
     $query->execute();
  
-  $query = db_delete("fanta_lineups");
+  /*$query = db_delete("fanta_lineups");
+  $query->condition("t_id", $t_id);
+  $query->condition("c_id", $c_id);
+  $query->condition("round", $round);
+  $query->execute();*/
+        
+  $query = db_update("fanta_lineups");
+  $query->fields(array("valid" => 0));
   $query->condition("t_id", $t_id);
   $query->condition("c_id", $c_id);
   $query->condition("round", $round);
@@ -1170,6 +1200,7 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
           "c_id" => $c_id,
           "round" => $round,
           "position" => $position,
+          "valid" => 1,
           "timestamp" => time(),
           "uid" => $user->uid));
       $query->execute();

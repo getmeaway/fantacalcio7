@@ -52,8 +52,10 @@ jQuery(document).ready(function() {
 			
 				}
 				
-				jQuery(this).parent().find("td.team").remove() //rimuovo squadra per questioni di spazio
-				jQuery(this).parent().find("td.live").attr("colspan", 2).html("<strong>" + vote.vote + " " + totalPoints + "</strong>&nbsp;<small>" + outEvents + "</small>");
+				jQuery(this).parent().find("td.team").html("<strong>" + vote.vote + " " + totalPoints + "</strong>"); //rimuovo squadra per questioni di spazio
+				//jQuery(this).parent().find("td.live").attr("colspan", 2).html("<strong>" + vote.vote + " " + totalPoints + "</strong>&nbsp;<small>" + outEvents + "</small>");
+                //jQuery(this).parent().find("td.live").html("<strong>" + vote.vote + " " + totalPoints + "</strong>");
+                jQuery(this).parent().find("td.live").html("<td><small>" + outEvents + "</small></td>");
 			}
 		});
 	}
