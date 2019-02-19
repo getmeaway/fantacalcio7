@@ -18,7 +18,10 @@ include "fantacalcio.cron.inc";
 
 define("COMPETITION_TYPE_SD", 1);
 define("COMPETITION_TYPE_GP", 2);
-define("DATA_SOURCE_URL", "http://fantacalciocircus.altervista.org");
+//define("DATA_SOURCE_URL", "http://fantacalciocircus.altervista.org");
+//define("DATA_SOURCE_URL", "http://basten2.esy.es");
+//define("DATA_SOURCE_URL", "http://fantacircus.000webhostapp.com");
+define("DATA_SOURCE_URL", "http://fantacircus.netsons.org");
 
 $roles_long = array(t("Portieri"), t("Difensori"), t("Centrocampisti"), t("Attaccanti"));
 $roles = array(t("P"), t("D"), t("C"), t("A"));
@@ -26,7 +29,6 @@ $GLOBALS["roles_long"] = $roles_long;
 $GLOBALS["roles"] = $roles;
 $GLOBALS["rounds_status"] = array("-1" => t("Risultati provvisori"), "0" => t("Non giocata"), "1" => t("Giocata"), 
 "2" => t("Congelata"), "3" => t("Saltata") );
-$GLOBALS["providers"] = array("1" => "Milano", "2" => "Roma", "3" => "Napoli", "4" => "Italia" );
 
 // Css file
 // drupal_add_css('sites/all/modules/fantacalcio/css/style.css', 'themes', 'all', TRUE);
@@ -146,6 +148,7 @@ function fantacalcio_permission() {
       'title' => 'access content fantacalcio'), 
     'administer team' => array('title' => 'administer team'), 
     'administer draft' => array('title' => 'administer draft'), 
+    'administer payments' => array('title' => 'administer payments'), 
     'administer fantacalcio' => array('title' => 'administer fantacalcio'), 
     );
 }
@@ -165,7 +168,7 @@ function fantacalcio_menu() {
   $items['classifica'] = array(
     'title' => 'Classifica', 
     'page callback' => 'fantacalcio_standings', 
-    'page arguments' => array(1, 2), 
+    'page arguments' => array(1, 2, 3), 
     'access arguments' => array('access content fantacalcio'), 
     'type' => MENU_NORMAL_ITEM, 
     'file' => 'fantacalcio.standings.inc', 
@@ -292,12 +295,12 @@ function fantacalcio_menu() {
     'file' => 'fantacalcio.lineups.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
   
-  $items['formazioni/multe'] = array(
-    'title' => 'Multe', 
+  $items['quote'] = array(
+    'title' => 'Quote', 
     'page callback' => 'fantacalcio_show_payments', 
     'access arguments' => array('administer team'), 
     'type' => MENU_NORMAL_ITEM, 
-    'file' => 'fantacalcio.lineups.inc', 
+    'file' => 'fantacalcio.payments.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
   
   $items['formazioni/view'] = array(
@@ -663,6 +666,41 @@ function fantacalcio_menu() {
       'type' => MENU_NORMAL_ITEM,
     'file' => 'fantacalcio.notifications.inc', 
     'file path' => drupal_get_path('module', 'fantacalcio'));
+
+  $items['pagamenti']  = array(
+      'title' => t('Pagamenti'),
+      'page callback' => 'fantacalcio_payments',
+      'access arguments' => array('administer payments'),
+      'type' => MENU_NORMAL_ITEM,
+    'file' => 'fantacalcio.payments.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+
+  $items['pagamenti/%']  = array(
+      'title' => t('Pagamenti'),
+      'page callback' => 'fantacalcio_payments_team',
+      'page arguments' => array(1),
+      'access arguments' => array('administer payments'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.payments.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
+
+  $items['pagamenti/all']  = array(
+      'title' => t('Pagamenti'),
+      'page callback' => 'fantacalcio_payments_all',
+      'page arguments' => array(),
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_NORMAL_ITEM,
+    'file' => 'fantacalcio.payments.inc', 
+    'file path' => drupal_get_path('module', 'fantacalcio'));
+
+  $items['pagamenti/all/%']  = array(
+      'title' => t('Pagamenti'),
+      'page callback' => 'fantacalcio_payments_all_team',
+      'page arguments' => array(2),
+      'access arguments' => array('administer fantacalcio'),
+      'type' => MENU_CALLBACK,
+      'file' => 'fantacalcio.payments.inc',
+      'file path' => drupal_get_path('module', 'fantacalcio'));
 
   $items['mercato']  = array(
       'title' => t('Mercato'),
@@ -1174,7 +1212,13 @@ function fantacalcio_block_view($delta = '') {
 function fantacalcio_cron() {
   
   $vote_round = Round::getNext();
+  if(!$vote_round || $vote_round == null)
+	  return;
+  
   $round = Round::getByRound($vote_round);
+  
+  if(!$round || $round == null)
+	  return;
 
   if (variable_get("fantacalcio_automatic_updates", 0)) {
 
@@ -1187,34 +1231,39 @@ function fantacalcio_cron() {
   //giornate
   $rounds_dates = json_decode(file_get_contents(DATA_SOURCE_URL . "/rounds/rounds.json"));
   foreach ($rounds_dates as $_round => $round_date) {
-    db_update("fanta_rounds")->fields(array("date" => $round_date->date, "end_date" => $round_date->date))->condition("round", $_round)->condition("status", "1", "!=")->execute();
-
+    //db_update("fanta_rounds")->fields(array("date" => $round_date->date, "end_date" => $round_date->date))->condition("round", $_round)->condition("status", "1", "!=")->execute();
   }
 
-  $matches = json_decode(file_get_contents(DATA_SOURCE_URL . "/matches/" . $round->round . ".json"));
+  $matches = json_decode(@file_get_contents(DATA_SOURCE_URL . "/matches/" . $round->round . ".json"));
+  
+  if($matches != null) {
 
   if (isset($matches->data) && count($matches->data) > 0) {
     $dates = array_map(function ($item){ return $item->date;}, $matches->data);
+	
     $start = min($dates);
-    $start -= variable_get('fantacalcio_round_advance_minutes', '0') * 60;
-    $end = max($dates) + 9 * 3600; //9 ore dopo l'inizio dell'ultima partita
-    $round->updateDates($start, $end);
+    //$start -= variable_get('fantacalcio_round_advance_minutes', '0') * 60;
+    //$end = max($dates); //18 ore dopo l'inizio dell'ultima partita
+	$end = date("Y-m-d H:i:s", strtotime('+18 hours', strtotime(max($dates))));
+	$round->updateDates($start, $end);
 
     watchdog('fantacalcio', t('Date aggiornate per la giornata: %round'), array('%round' => $round->round), WATCHDOG_NOTICE);
 
     $round = Round::getByRound($vote_round);
 
   }
+  }
 
   //calcola risultati 
-  if (time() > $round->end_date && $round->status_id != 1)
-    fantacalcio_cron_calculate_results($round->round);
-
+  //if (time() > $round->end_date && $round->status_id != 1)
+    //fantacalcio_cron_calculate_results($round->round);
   }
 
   //promemoria formazioni
   $reminder_hours = variable_get("fantacalcio_lineups_reminder_hours", 0);
-  if ($reminder_hours > 0 && time() > ($round->date - ($reminder_hours * 3600)) && $round->reminder_sent == false)
+  $reminder_date = date("Y-m-d H:i:s", strtotime('-' . $reminder_hours . ' hours', strtotime($round->date)));
+
+  if ($reminder_hours > 0 && (date("Y-m-d H:i:s") > $reminder_date) && $round->reminder_sent == false)
     fantacalcio_create_lineups_reminder($round); 
 }
 
@@ -1234,9 +1283,12 @@ function fantacalcio_theme($existing, $type, $theme, $path) {
     'fantacalcio_admin_matches_calendar' => array('render element' => 'form'), 
     'fantastats_choose_stats_form' => array('render element' => 'form'), 
     'fantacalcio_insert_votes_matches' => array('render element' => 'form'), 
+    'modal' => array(
+      'render element' => 'elements', 
+      'template' => 'templates/page-modal'),
     'team' => array(
       'render element' => 'elements', 
-      'template' => 'templates/page-team'), 
+      'template' => 'templates/page-team'),
     'columns' => array(
       'render element' => 'elements', 
       'template' => 'templates/page-columns'), 
@@ -1289,14 +1341,27 @@ function fantacalcio_show_role($role) {
 				</span>";
 }
 
-function fantacalcio_show_status($name, $team, $player_status) {
+function fantacalcio_show_status($name, $team, $player_status, $pl_id = null) {
     if($player_status != null) {
   $status_class = fantacalcio_get_status_classes($player_status->status, $player_status->position);
+
+  $avg_total = Player::getAvgTotal($pl_id);
+  $avg_vote = Player::getAvgVote($pl_id);
+
+  $regular = Player::getRegular($pl_id);
+  $sub = Player::getSub($pl_id);
+  $not_played = Player::getNotPlayed($pl_id);
   
   if ($player_status->status == "ok") {
     $position = $player_status->position == 1 ? t("Titolare") : t("Riserva");
   $content = "<p>" . $player_status->match . "</p>";
-    $content .= "<table class='table'><tr><th>Posizione probabile:</th><td>" . $position ."</td></tr><tr><th>Probabilità di giocare:</th><td>" . $player_status->percent . "%</td></tr></table><i class='caption'>Ultimo aggiornamento: " . date("d-m-Y H:i", $player_status->updated) . "</i>";
+    //$content .= "<table class='table'><tr><th><i class='fa fa-2x fa-circle " . $status_class . "'></i></th><th>" . $player_status->percent . "%</th></tr><tr class='hidden'><th>Probabilità di giocare:</th><td>" . $player_status->percent . "%</td></tr></table>";
+	$content .= "<p><i class='fa fa-2x fa-circle " . $status_class . "'></i>&nbsp;&nbsp;<span style='position:relative;top:-5px'><strong>" . $player_status->percent . "%</strong></span></p>";
+    $content .= "<div><small><strong>MV:</strong> " . $avg_vote . "&nbsp;<strong>FV:</strong> " . $avg_total . "&nbsp;&nbsp;&nbsp;";
+
+    $content .= "<small><i class='fa fa-circle text-success'></i></small>&nbsp;" . $regular . "&nbsp;&nbsp;<small><i class='fa fa-circle text-warning'></i></small>&nbsp;" . $sub . "&nbsp;&nbsp;<small><i class='fa fa-circle text-danger'></i></small>&nbsp;" . $not_played . "</small></div><br>";
+
+    $content .= "<small><i class='caption'>Ultimo aggiornamento: " . date("d/m/Y H:i", strtotime($player_status->updated)) . "</i></small>";
   }
   else {
     switch ($player_status->status) {
@@ -1311,7 +1376,14 @@ function fantacalcio_show_status($name, $team, $player_status) {
         break;
     }
     
-    $content = "<table class='table'><tr><th>Stato:</th><td>" . $status . "</td></tr></table><i class='caption'>Ultimo aggiornamento: " . date("d-m-Y H:i", $player_status->updated) . "</i>";
+	$content = "";
+    //$content .= "<table class='table'><tr><th><i class='fa fa-2x fa-circle " . $status_class . "'></i></th><th>" . $status . "</th></tr></table>";
+	$content .= "<p><i class='fa fa-2x fa-circle " . $status_class . "'></i>&nbsp;&nbsp;<span style='position:relative;top:-5px'><strong>" . $status . "</strong></span></p>";
+
+    $content .= "<div><strong>MV:</strong> " . $avg_vote . "&nbsp;<strong>FV:</strong> " . $avg_total . "&nbsp;&nbsp;&nbsp;";
+
+    $content .= "<small><i class='fa fa-circle text-success'></i></small>&nbsp;" . $regular . "&nbsp;&nbsp;<small><i class='fa fa-circle text-warning'></i></small>&nbsp;" . $sub . "&nbsp;&nbsp;<small><i class='fa fa-circle text-danger'></i></small>&nbsp;" . $not_played . "</div><br>";
+    $content .= "<small><i class='caption'>Ultimo aggiornamento: " . date("d/m/Y H:i", strtotime($player_status->updated)) . "</i></small>";
   }
   
   $out = "<a tabindex=\"0\" role=\"button\" data-trigger=\"focus\" data-toggle=\"popover\" data-placement=\"top\" title=\"" . $name . " (" . $team . ")" 

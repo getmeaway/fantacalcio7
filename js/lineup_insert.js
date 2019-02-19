@@ -442,8 +442,8 @@ function checkLineUp(line_up) {
 			check_reserves_module == true ? "text-success" : "text-danger");
 
 	// risultato
-	console.log(check_regulars_number, check_regulars_module,
-			check_reserves_number, check_reserves_module);
+	//console.log(check_regulars_number, check_regulars_module,
+		//	check_reserves_number, check_reserves_module);
 
 	return new Array(check_regulars_number, check_regulars_module,
 			check_reserves_number, check_reserves_module);
@@ -748,7 +748,8 @@ jQuery('body').on('click', function (e) {
 
 function fantacalcio_show_status(player) {
     
-var date = new Date(player.updated *1000);
+var date = new Date(player.updated );
+console.log(date, player.updated);
 var year = date.getFullYear();
 var month = date.getMonth() + 1 > 9 ? date.getMonth() + 1 : "0" + parseInt(date.getMonth() + 1);
 var day = date.getDate() > 9 ? date.getDate() : "0" + parseInt(date.getDate());

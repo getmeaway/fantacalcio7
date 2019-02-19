@@ -189,7 +189,7 @@ function team_players_list($g_id, $t_id) {
   //$players = get_all_players();
   //$real_teams = get_real_teams();
   
-  $header = array(t("Ruolo"), t("Giocatore"), t("Squadra"), t("Costo"), "");
+  $header = array(t("Ruolo"), t("Giocatore"), t("Squadra"), t("Costo"), "", "");
   
   $spesa = 0;
   $n_giocatori = 0;
@@ -215,6 +215,10 @@ function team_players_list($g_id, $t_id) {
     $team_players[$row->role][$row->pl_id] = $row;
   }
   
+  $ex_data = file_get_contents(DATA_SOURCE_URL . "/players/ex.json");
+  $ex_players = (array)json_decode($ex_data);  
+  $ex_players = (array_keys($ex_players));
+  
   // ciclo per ogni ruolo
   for ($i = 0; $i < 4; $i++) {
     if (isset($team_players[$i])) {
@@ -222,6 +226,8 @@ function team_players_list($g_id, $t_id) {
       $role_count = count($team_players[$i]);
       
       foreach ($team_players[$i] as $pl_id => $player) {
+		  
+		$is_ex = in_array(strtolower($player->name), $ex_players);
         
         $sell_form = drupal_get_form('team_action_player_form', $t_id, $pl_id, 'sell');
         $regain_form = drupal_get_form('team_action_player_form', $t_id, $pl_id, 'regain');
@@ -235,7 +241,8 @@ function team_players_list($g_id, $t_id) {
         $data[] = array(
           "data" => ucwords($player->team));
         $data[] = array("data" => $player->cost, "class" => array("num"));
-        $data[] = drupal_render($sell_form) . drupal_render($regain_form) . drupal_render($delete_form);
+        $data[] = ($is_ex ? drupal_render($regain_form) : drupal_render($sell_form));
+		$data[] = drupal_render($delete_form);
         
         $rows[$i . "_" . $pl_id] = array(
           "data" => $data, 

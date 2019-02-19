@@ -33,8 +33,9 @@ function statistiche_topflop($round = null, $t_id = null) {
   $round = isset($round) && Round::exists($round) ? $round : Round::getLast();
   
   $all_rounds = Round::allLineup($competition->id);
+ksort($all_rounds);
     foreach ($all_rounds as $lineup_round) {
-      $choose_rounds[$lineup_round->label] = base_path() . "formazioni/view/" . strtolower($competition->sanitized_name) . "/" . $lineup_round->competition_round;
+      $choose_rounds[$lineup_round->label] = base_path() . "statistiche/topflop/" . $lineup_round->competition_round;
     }
 
 	$output["round_label"] = $all_rounds[$round]->label;
@@ -132,7 +133,7 @@ function topflop_round_team($t_id, $round) {
   $out .= "<h3 class='team_name'>" . $team->name . "</h3><br>";
   
   if (!empty($team->shirt))
-	    $out .= "<div class='shirt'><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></div>";
+	    $out .= "<div class='shirt'><img src='" . $team->shirt . "'></div>";
   
   //TOP
   $out .= "<p><strong>TOP</strong></p>";
@@ -185,23 +186,13 @@ function top_round_team_lineup($round, $t_id, $c_id) {
       	$query->condition("v.round", $round);
       	$query->condition("v.has_vote", 1);
       	$query->condition("p.role", $role);
-      	$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
       	$query->condition("s.t_id", $t_id);
       	$query->condition("s.status", 1);
       	$query->fields("v");
       	$query->fields("p");
       	$query->orderBy("v.total", "DESC");
       	$query->range(0, $number_role);
-      	    
-        $sql = "SELECT * FROM {fanta_votes} v, {fanta_players} p
-            WHERE v.round = '%d' 
-            AND p.pl_id = v.pl_id
-            AND p.role = '%d' 
-            AND v.provider = '%d'
-            AND p.pl_id IN (SELECT pl_id FROM {fanta_squads} WHERE t_id = '%d' AND in_team = 1)          
-            ORDER BY v.total DESC";
-  //      $result = db_query_range($sql, array($round, $role, variable_get("fantacalcio_votes_provider", 1), $t_id), 0, $number_role);
-  
+        
   		$result = $query->execute();
         
         foreach ($result as $row) {
@@ -249,21 +240,11 @@ function top_round_all_lineup($round, $c_id) {
       	$query->condition("v.round", $round);
       	$query->condition("v.has_vote", 1);
       	$query->condition("p.role", $role);
-      	$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
       	$query->fields("v");
       	$query->fields("p");
       	$query->orderBy("v.total", "DESC");
       	$query->range(0, $number_role);
-      	    
-        $sql = "SELECT * FROM {fanta_votes} v, {fanta_players} p
-            WHERE v.round = '%d' 
-            AND p.pl_id = v.pl_id
-            AND p.role = '%d' 
-            AND v.provider = '%d'
-            AND p.pl_id IN (SELECT pl_id FROM {fanta_squads} WHERE t_id = '%d' AND in_team = 1)          
-            ORDER BY v.total DESC";
-  //      $result = db_query_range($sql, array($round, $role, variable_get("fantacalcio_votes_provider", 1), $t_id), 0, $number_role);
-  
+        
   		$result = $query->execute();
         
         foreach ($result as $row) {
@@ -309,22 +290,12 @@ function flop_round_team_lineup($round, $t_id, $c_id) {
       	$query->condition("v.round", $round);
       	$query->condition("v.has_vote", 1);
       	$query->condition("p.role", $role);
-      	$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
       	$query->condition("s.t_id", $t_id);
       	$query->condition("s.status", 1);
       	$query->fields("v");
       	$query->fields("p");
       	$query->orderBy("v.total", "ASC");
       	$query->range(0, $number_role);
-      	    
-        $sql = "SELECT * FROM {fanta_votes} v, {fanta_players} p
-            WHERE v.round = '%d' 
-            AND p.pl_id = v.pl_id
-            AND p.role = '%d' 
-            AND v.provider = '%d'
-            AND p.pl_id IN (SELECT pl_id FROM {fanta_squads} WHERE t_id = '%d' AND in_team = 1)          
-            ORDER BY v.total DESC";
-  //      $result = db_query_range($sql, array($round, $role, variable_get("fantacalcio_votes_provider", 1), $t_id), 0, $number_role);
   
   		$result = $query->execute();
         
@@ -379,20 +350,10 @@ function flop_round_all_lineup($round, $c_id) {
       	$query->condition("v.round", $round);
       	$query->condition("v.has_vote", 1);
       	$query->condition("p.role", $role);
-      	$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
       	$query->fields("v");
       	$query->fields("p");
       	$query->orderBy("v.total", "ASC");
       	$query->range(0, $number_role);
-      	    
-        $sql = "SELECT * FROM {fanta_votes} v, {fanta_players} p
-            WHERE v.round = '%d' 
-            AND p.pl_id = v.pl_id
-            AND p.role = '%d' 
-            AND v.provider = '%d'
-            AND p.pl_id IN (SELECT pl_id FROM {fanta_squads} WHERE t_id = '%d' AND in_team = 1)          
-            ORDER BY v.total DESC";
-  //      $result = db_query_range($sql, array($round, $role, variable_get("fantacalcio_votes_provider", 1), $t_id), 0, $number_role);
   
   		$result = $query->execute();
         

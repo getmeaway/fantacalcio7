@@ -4,22 +4,29 @@
 * 
 */
 
-function fantacalcio_standings($name = '', $round = null) {
+function fantacalcio_standings($name = '', $type = null, $round = null) {
+
+	$name = str_replace("-", " ", $name);
 	
 	$competition = Competition::getByName($name);
 	
   if ($competition == null || $competition->has_standings != 1) { 
-    $items = Competition::choose(array("has_standings" => 1), "classifica");
+    $items = Competition::choose(array("has_standings" => 1, "active" => 1), "classifica");
      
     return theme_item_list(array("items" => $items, "attributes" => array("class" => array("list-group")), "type" => "ul", "title" => ""));
   }
   else {
     drupal_set_title(check_plain(t("Classifica") . " - " . ucwords($name)));
     
-    if ($competition->type == COMPETITION_TYPE_GP)
+    if ($type == 'f') {
+		drupal_set_title(check_plain(t("Classifica") . " - " . ucwords($name) . " - Final 8"));
+    	return get_standing_table_f($competition, 1, 14, 8);
+	}
+	else if ($competition->type == COMPETITION_TYPE_GP)
     	return get_standing_table_gp($competition, $round);
-    else 
+    else if($competition->type == COMPETITION_TYPE_SD)
     	return get_standing_table_sd($competition);
+	
   }
 
 }
@@ -35,7 +42,32 @@ function get_standing_table_sd($competition) {
   $output = array();
   $index = 0;
   $already_active = false;
-  
+
+  $standing_f8 = array();
+//$i = 0;
+  foreach($competition->groups as $g_id => $group) {
+    $teams = Team::allByGroup($g_id);
+//$j = 0;
+    foreach ($teams as $t_id => $team) {
+	$standing_f8[$t_id] = $team->pointsForF8($g_id, 1, 14);
+//$standing_f8[$t_id] = $i * 10 + $j;
+//$j++;
+    }
+//$i++;
+  }
+
+  asort($standing_f8);
+  $standing_f8 = array_reverse($standing_f8, true);
+
+  $_standing_f8 = array();
+  $index = 1;
+  foreach($standing_f8 as $t_id => $points) {
+	$_standing_f8[$t_id] = $index;
+        $index++;
+  }
+
+  $standing_f8 = $_standing_f8;
+//print_r($standing_f8);  
   foreach($competition->groups as $g_id => $group) {
   	
   	if ($group->standings_order > 0) {
@@ -63,6 +95,7 @@ function get_standing_table_sd($competition) {
 			    $teams[$t_id]->goals_in = 0 + $team->goalsFor($g_id);//get_goals_in($t_id, $g_id);
 			    $teams[$t_id]->goals_against = 0 + $team->goalsAgainst($g_id);//get_goals_out($t_id, $g_id);
 			    $teams[$t_id]->points_in = 0 + $team->pointsFor($g_id);//get_points_in($t_id, $g_id);
+			    $teams[$t_id]->points_in_f8 = 0 + $team->pointsForF8($g_id, 1, 14);//get_points_in($t_id, $g_id);
 			    $teams[$t_id]->points_against = 0 + $team->pointsAgainst($g_id);//get_points_out($t_id, $g_id);
 			    $teams[$t_id]->pts = $teams[$t_id]->n_win * 3 + $teams[$t_id]->n_draw * 1;
 			    $points[$t_id] = $teams[$t_id]->n_win * 3 + $teams[$t_id]->n_draw * 1;
@@ -72,7 +105,7 @@ function get_standing_table_sd($competition) {
 	
 			array_multisort($points, SORT_DESC, $goals_for, SORT_DESC, $points_for, SORT_DESC, $teams);
 		  
-			$header = array("", t("Squadra"), t("Pts"), t("Vinte"), t("Perse"), t("Pari"), t("Gol f."), t("Gol s."), t("Diff Gol"), t("Pti f."), t("Pti s."), t("Diff Pti"));
+			$header = array("", t("Squadra"), t("Pts"), t("Vinte"), t("Perse"), t("Pari"), t("Gol f."), t("Gol s."), t("Diff Gol"), t("Pti f."), t("Pti s."), t("Diff Pti"), t("Pti F8"), t("Posizione F8"));
 		
 			$i = 0;
 			$rows = array();
@@ -97,6 +130,8 @@ function get_standing_table_sd($competition) {
 			    $rows[$t_id][] = array("data" => $team->points_in, "data-title" => t("Pti f."));
 			    $rows[$t_id][] = array("data" => $team->points_against, "data-title" => t("Pti s."));
 			    $rows[$t_id][] = array("data" => ($team->points_in - $team->points_against), "data-title" => t("Diff. Pti"));
+			    $rows[$t_id][] = array("data" => $team->points_in_f8, "data-title" => t("Pti F8"));
+			    $rows[$t_id][] = array("data" => $standing_f8[$team->id], "data-title" => t("Posizione F8"));
 		
 			}
 	
@@ -231,4 +266,74 @@ function get_standing_table_gp($competition, $round = '') {
     
 	return theme("standings", $output);
 // 	return $out . theme_table(array("header" => $header, "rows" => $rows, "attributes" => array("class" => array("table", "table-responsive", "table-striped", "-tablesorter", "-tablesorter-blue", "-classifica"), "id" => "classifica" ), "caption" => "", "sticky" => "", "empty" => t("Nessuna squadra presente"), "colgroups" => array()));
+}
+
+function get_standing_table_f($competition, $round_start, $round_end, $limit) {
+
+	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.tablesorter.js");
+	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.metadata.js");
+	drupal_add_js("jQuery(window).ready(function() {jQuery(\".standings	\").tablesorter({cssAsc: \"sort-asc\", cssDesc: \"sort-desc\", cssHeader: \"sort-header\"});})", "inline");
+
+  global $user;
+  
+  $output = array();
+    
+  $all_teams = array();
+  $points = array();
+  $goals_for = array();
+
+  foreach($competition->groups as $g_id => $group) {
+  	  	$group = Group::get($g_id);
+	  
+	  	$teams = Team::allByGroup($g_id);
+	  	
+		
+		if ($teams) {
+	
+		    foreach ($teams as $t_id => $team) {
+				$all_teams[$t_id] = $team;
+				$pts = $team->pointsForF8($g_id, $round_start, $round_end);
+				$goals = $team->goalsFor($g_id);
+				$all_teams[$t_id]->points_in_f8 = $pts;
+				$all_teams[$t_id]->goals_in = 
+			    $points[$t_id] = $pts;
+				$goals_for[$t_id] = $goals;
+			}
+		}
+	  	
+	  	
+}
+
+	array_multisort($points, SORT_DESC, $goals_for, SORT_DESC, $all_teams);
+  
+	$header = array("", t("Squadra"), t("Punti"));
+
+	$i = 0;
+	$rows = array();
+
+	foreach ($all_teams as $t_id => $team) {
+
+		$i++;
+		
+		$team_class = array();
+		if($i <= $limit) {
+			array_push($team_class, "bg-success");
+		}
+		
+		if ($team->user == $user->uid)
+		   array_push($team_class, "bold");
+
+		$rows[$t_id][] = array("data" => $i, "data-title" => t("Posizione"), "class" => $team_class);
+		$rows[$t_id][] = array("data" => l($team->name, "squadre/" . $team->id), "data-title" => t("Squadra"), "class" => $team_class);
+		$rows[$t_id][] = array("data" => $team->points_in_f8, "data-title" => t("Pti F8"), "class" => $team_class);
+
+	}
+	  	
+	$group->output = theme("table", array("header" => $header, "rows" => $rows, "attributes" => array("class" => "collapse-table table table-responsive standings", "id" => "classifica_" . $g_id), "sticky" => "", "empty" => ""));
+	  			
+ 	$groups[$g_id] = $group; 	
+  		   
+	$output["groups"] = $groups;
+    
+	return theme("standings", $output);
 }

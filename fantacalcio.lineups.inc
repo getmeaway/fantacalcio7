@@ -19,8 +19,8 @@ function _fantacalcio_lineup() {
     $items[] = l("Visualizza", "formazioni/view");
   if (user_access("administer team"))
     $items[] = l("Inserisci", "formazioni/insert");
-  if (user_access("administer team"))
-    $items[] = l("Multe", "formazioni/multe");
+  //if (user_access("administer team"))
+    //$items[] = l("Multe", "formazioni/multe");
 //   if (user_access("administer fantacalcio"))
 //     $items[] = l("Amministra", "formazioni/admin");
   return theme_item_list(array(
@@ -41,9 +41,11 @@ function _fantacalcio_lineup_view($competition_name, $round_number = null, $t_id
   
   global $user;
   
-  $selected_competition = Competition::getByName($competition_name);
+//  $competition_name = str_replace("-", " ", $competition_name);
+
+  $selected_competition = Competition::getByName(str_replace("-", " ", $competition_name));
   
-  $competitions = Competition::all(array("has_lineups" => 1));
+  $competitions = Competition::all(array("has_lineups" => 1, "active" => 1));
   
   $competition_is_selected = false;
   
@@ -91,7 +93,7 @@ function _fantacalcio_lineup_view($competition_name, $round_number = null, $t_id
         }
         
         array_push($teams_group_list, array(
-          "data" => l($team->name, "formazioni/view/" . $competition->name . "/" . $round->competition_round . "/" . $team->id), 
+          "data" => l($team->name, "formazioni/view/" . strtolower($competition->sanitized_name) . "/" . $round->competition_round . "/" . $team->id), 
           "class" => $classes, 
           "data-name" => $team->name));
       }
@@ -112,22 +114,25 @@ function _fantacalcio_lineup_view($competition_name, $round_number = null, $t_id
     
     if ($selected_competition == $competition && Team::exists($t_id))
       $columns_output["main_output"] = show_lineup(Team::get($t_id), $selected_competition, $round);
-    else 
+    else {
       $columns_output["main_output"] = "";
+	}
     
     $choose_rounds = array();
     
     $all_rounds = Round::allLineup($c_id);
+ksort($all_rounds);
     foreach ($all_rounds as $lineup_round) {
       $choose_rounds[$lineup_round->label] = base_path() . "formazioni/view/" . strtolower($competition->sanitized_name) . "/" . $lineup_round->competition_round;
     }
 
-	$columns_output["round_label"] = $all_rounds[$_round_number]->label;
+	$columns_output["round_label"] = isset($all_rounds[$_round_number]) ? $all_rounds[$_round_number]->label : "";
     $columns_output["choose_rounds"] = $choose_rounds;
     
     $competition->output = theme("columns", $columns_output);
-    
+    echo $competition->sanitized_name.$competition_name;
     $competition->active = (isset($competition_name) && strtolower($competition->sanitized_name) == strtolower($competition_name));
+
     if ($competition->active)
       $competition_is_selected = true;
     
@@ -162,9 +167,9 @@ function show_lineup($team, $competition, $round) {
     $out = "<h3 class='team_name'>" . $team->name . "</h3><br>";
     
     if (!empty($team->shirt))
-	    $out .= "<div class='shirt'><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></div>";
+	    $out .= "<div class='shirt'><img src='" . $team->shirt . "'></div>";
     $lineup = Lineup::get($competition->id, $team->id, $round->competition_round);
-    
+
     if ($lineup) {
       
       ksort($lineup->positions);
@@ -312,6 +317,8 @@ function show_position($position, $show_penalties = FALSE) {
 function fantacalcio_lineup_insert_start($team_id = "", $competition_name = "") {
   global $user;
   
+  $competition_name = str_replace("-", " ", $competition_name);
+  
   // teams
   $teams = array();
   if (!empty($team_id) && Team::exists($team_id)) {
@@ -404,13 +411,13 @@ function fantacalcio_lineup_insert_start($team_id = "", $competition_name = "") 
           $lineup = Lineup::get($competition_id, $t_id, $competition_round->competition_round);
     
           if ($lineup != null) {
-            if (time() > $date)
+            if (time() > strtotime($date))
               $rows[$t_id][] = "<i>" . t("Formazione inserita"). "</i>";
             else
               $rows[$t_id][] = "<i>" . l(t("Modifica formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
           }
           else {
-            if (time() > $date)
+            if (time() > strtotime($date))
               $rows[$t_id][] = "<i>" . t("Formazione non inserita"). "</i>";
             else
               $rows[$t_id][] = "<i>" . l(t("Inserisci formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
@@ -424,13 +431,13 @@ $rows[$t_id][] = array("data" => $team->name, "width" => array("50%"));
           $lineup = Lineup::get($competition_id, $t_id, $competition_round->competition_round);
     
           if ($lineup != null) {
-            if (time() > $date)
+            if (time() > strtotime($date))
               $rows[$t_id][] = "<i>" . t("Formazione inserita"). "</i>";
             else
               $rows[$t_id][] = "<i>" . l(t("Modifica formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
           }
           else {
-            if (time() > $date)
+            if (time() > strtotime($date))
               $rows[$t_id][] = "<i>" . t("Formazione non inserita"). "</i>";
             else
               $rows[$t_id][] = "<i>" . l(t("Inserisci formazione"), "formazioni/insert/" . $t_id . "/" . $competition->sanitized_name) . "</i>";
@@ -447,7 +454,7 @@ $rows[$t_id][] = array("data" => $team->name, "width" => array("50%"));
       }
     }
     
-    $out = "<h4 class='pull-right clearfix'><strong>" . date("d-m-Y H:i", $round->date) . "</strong></h4>";
+    $out = "<h4 class='pull-right clearfix'><strong>" . date("d-m-Y H:i", strtotime($round->date)) . "</strong></h4>";
     $out .= "<div class='clearfix'></div>";
     $out .= $out_competitions;
     
@@ -474,7 +481,7 @@ function fantacalcio_lineup_insert($competition, $team, $competition_round, $is_
   
   // squadra non confermata --> redirect
   if (!$team->isSquadComplete()) {
-    drupal_set_message(t("Attenzione. Per inserire la formazione devi prima completare la ") . l(t("rosa"), "mie/" . $team->id . "/movimenti"), "error");
+    drupal_set_message(t("Attenzione. Per inserire la formazione devi prima completare la ") . l(t("rosa"), "mie/" . $team->id . "/movimenti"), "warning");
     drupal_goto("formazioni");
   }
   
@@ -487,7 +494,7 @@ function fantacalcio_lineup_insert($competition, $team, $competition_round, $is_
   drupal_set_title(t("Inserisci formazione") . " / " . $team->name . " - " . $competition->name);
   
   // lineup inserita in orario
-  if ($round->date > time() || $is_admin) {
+  if ($round->date > date("Y-m-d H:i:s") || $is_admin) {
     
     $output["competition_name"] = ucwords($competition->name);
     $output["round"] = $round->label;
@@ -614,14 +621,7 @@ function fantacalcio_lineup_form_submit($form, &$form_state) {
     $lineup = json_decode($form_state['input']['lineup']);
     
     // cancello la vecchia formazione
-    /*$query = db_delete("fanta_lineups");
-    $query->condition("t_id", $t_id);
-    $query->condition("c_id", $c_id);
-    $query->condition("round", $round);
-    $query->execute();*/
-      
-    $query = db_update("fanta_lineups");
-    $query->fields(array("valid" => 0));
+    $query = db_delete("fanta_lineups");
     $query->condition("t_id", $t_id);
     $query->condition("c_id", $c_id);
     $query->condition("round", $round);
@@ -638,7 +638,6 @@ function fantacalcio_lineup_form_submit($form, &$form_state) {
           "c_id" => $c_id, 
           "round" => $round, 
           "position" => $player->position, 
-          "valid" => 1,
           "timestamp" => time(), 
           "uid" => $user->uid));
         $query->execute();
@@ -688,14 +687,7 @@ function fantacalcio_lineup_form_clean_submit($form, &$form_state) {
   // cancella la lineup inserita
   $competition = Competition::get($form_state['values']['c_id']);
   
-  /*$query = db_delete("fanta_lineups");
-  $query->condition("t_id", $form_state['values']['t_id']);
-  $query->condition("c_id", $form_state['values']['c_id']);
-  $query->condition("round", $form_state['values']['round']);
-  $query->execute();*/
-    
-  $query = db_update("fanta_lineups");
-  $query->fields(array("valid" => 0));
+  $query = db_delete("fanta_lineups");
   $query->condition("t_id", $form_state['values']['t_id']);
   $query->condition("c_id", $form_state['values']['c_id']);
   $query->condition("round", $form_state['values']['round']);
@@ -726,7 +718,7 @@ function fantacalcio_lineup_form_confirm($form, &$form_state, $competition, $tea
   
   $form['submit'] = array(
     '#type' => 'submit', 
-    '#value' => t("Conferma"), 
+    '#value' => t("Conferma precedente"), 
     '#attributes' => array(
       "id" => "line_up_confirm", 
       "class" => array("btn", "btn-sm", "btn-info")));
@@ -741,14 +733,7 @@ function fantacalcio_lineup_form_confirm_submit($form, &$form_state) {
   // conferma la formazione inserita
   $competition = Competition::get($form_state['values']['c_id']);
   
-  /*$query = db_delete("fanta_lineups");
-  $query->condition("t_id", $form_state['values']['t_id']);
-  $query->condition("c_id", $form_state['values']['c_id']);
-  $query->condition("round", $form_state['values']['round']);
-  $query->execute();*/
-    
-  $query = db_update("fanta_lineups");
-  $query->fields(array("valid" => 0));
+  $query = db_delete("fanta_lineups");
   $query->condition("t_id", $form_state['values']['t_id']);
   $query->condition("c_id", $form_state['values']['c_id']);
   $query->condition("round", $form_state['values']['round']);
@@ -768,7 +753,6 @@ function fantacalcio_lineup_form_confirm_submit($form, &$form_state) {
           "c_id" => $form_state['values']['c_id'],
           "round" => $form_state['values']['round'],
           "position" => $position,
-          "valid" => 1,
           "timestamp" => time(),
           "uid" => $user->uid));
       $query->execute();
@@ -927,7 +911,7 @@ global $user;
       
       $squad_mobile .= "<div class='row'>" . "<div class='player-row col-xs-10 col-xs-offset-1 " . $position_class . "' data-id='" . $player->pl_id . "' data-role='" . $player->role . "' data-team='" . $team->id . "' data-competition='" . $competition->id . "'>" . "<table class='table player-table'><tr>" . "<td class='player-role'>" . fantacalcio_show_role($player->role) . "</td>" . "<td class='player-name'>" . $player->name . "</td>" . "<td class='player-team'>" . $player->team . "</td>" . 
 
-      "<td class='player-status'>" . fantacalcio_show_status($player->name, $player->team, $player->getStatus($round->round)) . "</td>" . "<td class='player-position'>" . $position . "</td>" . "</tr>" . "</table>" . "<div class='position-message'></div>" . "</div>" . "</div>";
+      "<td class='player-status'>" . fantacalcio_show_status($player->name, $player->team, $player->getStatus($round->round), $player->pl_id) . "</td>" . "<td class='player-position'>" . $position . "</td>" . "</tr>" . "</table>" . "<div class='position-message'></div>" . "</div>" . "</div>";
     }
     
     // web
@@ -953,7 +937,7 @@ global $user;
         $row_data[] = array("data" => $player->name);
         $row_data[] = array("data" => ucwords(strtolower($player->team)));
         $row_data[] = array(
-          "data" => fantacalcio_show_status($player->name, $player->team, $player->getStatus($round->round)), 
+          "data" => fantacalcio_show_status($player->name, $player->team, $player->getStatus($round->round), $player->pl_id), 
           "class" => array("player-status"));
         $row_data[] = array(
           "data" => "<a data-toggle='modal' data-target='#player-stats-modal' href='" . base_path() . "scheda/giocatore/" . $player->pl_id . "' title='Dettagli giocatore'>" . "<i class=\"fa fa-bar-chart\"></i>" . "</a>");
@@ -1020,7 +1004,7 @@ global $user;
         $row_data[] = array("data" => $regular->name);
         $row_data[] = array("data" => ucwords(strtolower($regular->team)));
         $row_data[] = array(
-          "data" => fantacalcio_show_status($regular->name, $regular->team, $regular->getStatus($round->round)), 
+          "data" => fantacalcio_show_status($regular->name, $regular->team, $regular->getStatus($round->round), $regular->id), 
           "class" => array("player-status"));
         $row_data[] = array(
           "data" => "<a data-toggle='modal' data-target='#player-stats-modal' href='" . base_path() . "scheda/giocatore/" . $regular->id . "' title='Dettagli giocatore'>" . "<i class=\"fa fa-bar-chart\"></i>" . "</a>");
@@ -1097,7 +1081,7 @@ global $user;
         $row_data[] = array("data" => $reserve->name);
         $row_data[] = array("data" => ucwords(strtolower($reserve->team)));
         $row_data[] = array(
-          "data" => fantacalcio_show_status($reserve->name, $reserve->team, $reserve->getStatus($round->round)), 
+          "data" => fantacalcio_show_status($reserve->name, $reserve->team, $reserve->getStatus($round->round), $reserve->id), 
           "class" => array("player-status"));
         $row_data[] = array(
           "data" => "<a data-toggle='modal' data-target='#player-stats-modal' href='" . base_path() . "scheda/giocatore/" . $reserve->id . "' title='Dettagli giocatore'>" . "<i class=\"fa fa-bar-chart\"></i>" . "</a>");
@@ -1173,14 +1157,7 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
       "status" => 0));
     $query->execute();
  
-  /*$query = db_delete("fanta_lineups");
-  $query->condition("t_id", $t_id);
-  $query->condition("c_id", $c_id);
-  $query->condition("round", $round);
-  $query->execute();*/
-        
-  $query = db_update("fanta_lineups");
-  $query->fields(array("valid" => 0));
+  $query = db_delete("fanta_lineups");
   $query->condition("t_id", $t_id);
   $query->condition("c_id", $c_id);
   $query->condition("round", $round);
@@ -1200,7 +1177,6 @@ function fantacalcio_lineup_insert_players($type = 'new', $t_id, $c_id, $round, 
           "c_id" => $c_id,
           "round" => $round,
           "position" => $position,
-          "valid" => 1,
           "timestamp" => time(),
           "uid" => $user->uid));
       $query->execute();
@@ -1294,6 +1270,8 @@ function confirm_lineup_form_submit($form, $form_state) {
  */
 function fantacalcio_insert_penalties($t_id, $competition_name) {
   global $user;
+
+  $competition_name = str_replace("-", " ", $competition_name);
   
   drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.ui.js");
   drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/jquery.ui.touch-punch.min.js");
@@ -1364,7 +1342,7 @@ function insert_penalties_form($form, &$form_state, $t_id, $c_id, $round, $penal
   
   $form['round'] = array('#type' => 'hidden', '#value' => $round);
   
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Conferma'), "#attributes" => array("class" => array("btn-success")));
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Conferma ordine'), "#attributes" => array("class" => array("btn-success")));
   
   $form['reset'] = array(
     '#type' => 'submit', 
@@ -1422,118 +1400,7 @@ function insert_penalties_form_back($form, &$form_state) {
  * *****************************
  */
 
-/**
- * *****************************
- */
-/* multe */
-/**
- * *****************************
- */
-function fantacalcio_show_payments() {
-  $out = '';
-  $payments = array();
-  
-  $teams = Team::allActive();
-  
-  $fines_sum = 0;
-  $default_competition = Competition::getDefault();
-  
-  foreach ($teams as $t_id => $team) {
-    
-    $query = db_select("fanta_payments", "p");
-    $query->condition("t_id", $t_id);
-    $query->fields("p");
-    $result = $query->execute();
-    
-    foreach ($result as $row) {
-      $quota = $row->initial_quota;
-      $payed = $row->payed;
-      $win_quota = $row->win_quota;
-      $lost_quota = $row->lost_quota;
-      $quota_fine = ($row->initial_quota_fine == 1 ? variable_get("fantacalcio_quota_fine", 5) : 0);
-    }
-    
-    $lineups_fine = 0;
-    $lineups_rounds = array();
-//     $sql = "SELECT * FROM {fanta_lineups_inserts} WHERE status = 0 AND c_id = '%d' AND t_id = '%d'";
-//     $result = db_query($sql, variable_get("fantacalcio_main_competition", 1), $t_id);
-//     while ($row = db_fetch_object($result)) {
-      
-    $query = db_select("fanta_lineups_inserts", "l");
-    $query->condition("t_id", $t_id);
-    $query->condition("status", 0);
-    $query->condition("c_id", $default_competition->id);
-    $query->fields("l");
-    $result = $query->execute();
-      
-    foreach ($result as $row) {        
-      $lineups_fine++;
-      array_push($lineups_rounds, $row->round);
-    }
-    
-    $lineups_fine = $lineups_fine * ($lineups_fine + 1) / 2;
-    $lineups_rounds = ($lineups_fine > 0 ? implode(",", $lineups_rounds) : "");
-    
-    $payoff = -$quota + $payed - $lost_quota - $quota_fine - $lineups_fine + $win_quota;
-    
-    $payoff_class = ($payoff > 0 ? "ok" : ($payoff < 0 ? "error" : ""));
-    
-    $rows[$t_id] = array(
-      array("data" => $team->name, "class" => "text-left"), 
-      array("data" => $quota . " &euro;", "class" => "text-right"), 
-      array("data" => $payed . " &euro;", "class" => "text-right"), 
-      array("data" => $win_quota . " &euro;", "class" => "text-right"), 
-      array("data" => $lost_quota . " &euro;", "class" => "text-right"), 
-      array("data" => $quota_fine . " &euro;", "class" => "text-right"), 
-      array("data" => $lineups_fine . " &euro;", "class" => "text-right"), 
-      array("data" => $lineups_rounds, "class" => "text-right"), 
-      array(
-        "data" => $payoff . " &euro;", 
-        "class" => "text-right bold " . $payoff_class));
-    
-    $fines_sum += $lineups_fine + $quota_fine;
-  }
-  
-  $header = array(
-    array("data" => "Squadra", "class" => "text-left"), 
-    array("data" => "Quota", "class" => "text-right"), 
-    array("data" => "Pagato", "class" => "text-right"), 
-    array("data" => "Vincita", "class" => "text-right"), 
-    array("data" => "Perdita", "class" => "text-right"), 
-    array("data" => "Multe quota", "class" => "text-right"), 
-    array("data" => "Multe", "class" => "text-right"), 
-    array("data" => "Giornate", "class" => "text-right"), 
-    array("data" => "Saldo", "class" => "text-right"));
-  
-  $out = theme("table", array(
-    "header" => $header, 
-    "rows" => $rows, 
-    "attributes" => array("class" => "text-right")));
-  
-  $out .= theme("table", array(
-    "header" => array(), 
-    "rows" => array(
-      array(
-        array("data" => "Totale multe", "class" => "bold"), 
-        "attributes" => array(
-          "data" => $fines_sum . " &euro;", 
-          "class" => "bold")))));
-  
-  return $out;
-}
 
-function fantacalcio_calculate_fine($num) {
-  // calcola la multa totale per ciascuna squadra
-  return $num * ($num + 1) / 2;
-}
-
-/**
- * *****************************
- */
-/* END multe */
-/**
- * *****************************
- */
 
 /**
  * *****************

@@ -45,7 +45,7 @@
 			     </div>
 				<button type="button" class="center-block btn btn-sm btn-primary"
 					data-toggle="modal" data-target="#lineup-confirm-modal">
-				  <?php print t("Conferma");?>
+				  <?php print t("Conferma precedente");?>
 				</button>
 			</div>
 			<?php endif;?>
@@ -95,7 +95,7 @@
                         	<div class="col-xs-6">
 					<button type="button" class="center-block btn btn-sm btn-primary"
 						data-toggle="modal" data-target="#lineup-confirm-modal">
-                                  <?php print t("Conferma");?>
+                                  <?php print t("Conferma precedente");?>
                                 </button>
 				</div>
                         <?php endif;?>
@@ -195,7 +195,7 @@
 							<div class="center-block">
 								<button id="step-3-go" type="button"
 									class="center-block btn btn-success">
-            				<?php print t("Conferma");?>
+            				<?php print t("Invia");?>
             				</button>
 							</div>
 						</div>
@@ -219,7 +219,7 @@
 				<h4 class="modal-title"><?php print t("Conferma formazione"); ?></h4>
 			</div>
 			<div class="modal-body">
-				<p><?php print t("Sei sicuro di voler confermare la formazione?"); ?></p>
+				<p><?php print t("Sei sicuro di voler riconfermare l'ultima formazione inserita?"); ?></p>
 				<p><?php print "(" . $confirm['competition'] ." - " . $confirm['round_label'] . ")"; ?></p>
 			</div>
 			<div class="modal-footer">

@@ -9,7 +9,7 @@
 			 $first_match = array_shift($matches_values); 
 			 print t("Ultima giornata") . " - " .(!empty($first_match->round_label) ? $first_match->round_label : $last_round->round . t("&ordf; giornata"));
 			 ?>
-			<small class="pull-right"><em><?php print date("d-m-Y H:i", $rounds[$last_round->round]->date); ?></em></small>
+			<small class="pull-right"><em><?php print date_format(date_create($rounds[$last_round->round]->date), 'd-m-Y H:i'); ?></em></small>
 			
 			</h4>
 			<table class="table table-responsive">
@@ -66,7 +66,7 @@
 			 $first_match = array_shift($matches_values); 
 			 print t("Prossima giornata") . " - " .(!empty($first_match->round_label) ? $first_match->round_label : $next_round->round . t("&ordf; giornata"));
 			 ?>
-			<small class="pull-right"><em><?php print date("d-m-Y H:i", $rounds[$next_round->round]->date); ?></em></small>
+			<small class="pull-right"><em><?php print date_format(date_create($rounds[$next_round->round]->date), 'd-m-Y H:i'); ?></em></small>
 			
 			</h4>
 			<table class="table table-responsive">
@@ -138,6 +138,7 @@
 	<?php if (isset($matches)): ?>
 	<div class="row">
 	<?php foreach ($matches as $round => $round_matches): ?>
+	<?php usort($round_matches, function($a, $b) { return $a->match_label > $b->match_label ? 1 : -1;}); ?>
 		<div class="col-xs-12 col-sm-6">
 			<h4 id="round_<?php print $round; ?>">
 			<?php
@@ -145,7 +146,7 @@
 			 $first_match = array_shift($matches_values); 
 			 print (!empty($first_match->round_label) ? $first_match->round_label : $round . t("&ordf; giornata"));?>
 			<?php if (!$is_main_competition): ?>
-			 <small class="pull-right"><em><?php print date("d-m-Y H:i", $rounds[$round]->date); ?></em></small>
+			 <small class="pull-right"><em><?php print date_format(date_create($rounds[$round]->date), 'd-m-Y H:i'); ?></em></small>
 			<?php endif; ?>
 			</h4>
 			<table class="table table-responsive">

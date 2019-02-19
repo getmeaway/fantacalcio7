@@ -679,10 +679,6 @@ $schema['fanta_votes'] = array(
       'not null' => TRUE,
       'default' => 0,
     ),
-    'provider' => array(
-      'type' => 'int',
-      'not null' => TRUE,
-    ),
     'total' => array(
       'type' => 'float',
       'not null' => TRUE,
@@ -772,7 +768,6 @@ $schema['fanta_votes'] = array(
   'indexes' => array(
     'played' => array('has_vote'),
     'pl_id' => array('pl_id'),
-    'provider' => array('provider'),
     'round' => array('round'),
   ),
 );
@@ -1201,7 +1196,6 @@ variable_set('fantacalcio_points_own_goals', 0);
 variable_set('fantacalcio_points_assists', 0);
 variable_set('fantacalcio_points_draw_goals', 0);
 variable_set('fantacalcio_points_win_goals', 0);
-variable_set('fantacalcio_votes_provider', 0);
 variable_set('fantacalcio_automatic_updates', 0);
 variable_set('fantacalcio_round_advance_minutes', '0');
 variable_set('fantacalcio_lineups_reminder_hours', '0');
@@ -1247,7 +1241,6 @@ variable_del('fantacalcio_points_own_goals');
 variable_del('fantacalcio_points_assists');
 variable_del('fantacalcio_points_draw_goals');
 variable_del('fantacalcio_points_win_goals');
-variable_del('fantacalcio_votes_provider');
 variable_del('fantacalcio_automatic_updates');
 variable_del('fantacalcio_round_advance_minutes');
 variable_del('fantacalcio_lineups_reminder_hours');

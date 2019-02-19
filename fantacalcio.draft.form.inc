@@ -37,6 +37,7 @@ function group_buy_player_form($form, &$form_state, $g_id) {
     '#type' => 'submit', 
     '#title' => 'Compra', 
     '#value' => "Compra", 
+	'#attributes' => array("class" => array("btn-info")),
     '#validate' => array('group_buy_player_form_validate'));
   
   return $form;
@@ -49,6 +50,8 @@ function group_buy_player_form_submit($form, $form_state) {
 //   drupal_set_message('Acquisto effettuato');
   
   $exploded_player = explode(',', $form_state['values']['player']);
+
+  db_delete("fanta_squads")->condition("pl_id", $exploded_player[0])->condition("t_id", $form_state['input']['t_id'])->condition("status", 1)->execute();
   
   db_insert("fanta_squads")->fields(array(
   "pl_id" => $exploded_player[0],
@@ -97,7 +100,7 @@ function team_buy_player_form($form, &$form_state, $g_id, $t_id, $role) {
     '#title' => 'Compra', 
     '#value' => "Compra", 
     '#validate' => array('team_buy_player_form_validate'), 
-    "#attributes" => array("data-mini" => "true", "data-inline" => "true"));
+    "#attributes" => array("data-mini" => "true", "data-inline" => "true", "class" => array("btn-info")));
   
   return $form;
 }
@@ -105,6 +108,8 @@ function team_buy_player_form($form, &$form_state, $g_id, $t_id, $role) {
 function team_buy_player_form_submit($form, $form_state) {
   //$sql = "INSERT INTO {fanta_squads} (pl_id, t_id, status, cost) VALUES ('%d', '%d', 1, '%d')";
   $exploded_player = explode(',', $form_state['input']['player']);
+
+  db_delete("fanta_squads")->condition("pl_id", $exploded_player[0])->condition("t_id", $form_state['input']['t_id'])->condition("status", 1)->execute();
   
   db_insert("fanta_squads")->fields(array(
     "pl_id" => $exploded_player[0], 
@@ -190,6 +195,12 @@ function team_action_player_form($form, &$form_state, $t_id, $pl_id, $action) {
     "delete" => t("Annulla"), 
     "sell" => t("Vendi"), 
     "regain" => t("Recupera"));
+	
+$action_classes = array(
+    "restore" => ("btn-primary"), 
+    "delete" => ("btn-warning"), 
+    "sell" => ("btn-light"), 
+    "regain" => ("btn-primary"));
   
   $form['t_id'] = array('#type' => 'hidden', '#value' => $t_id);
   $form['pl_id'] = array('#type' => 'hidden', '#value' => $pl_id);
@@ -197,11 +208,11 @@ function team_action_player_form($form, &$form_state, $t_id, $pl_id, $action) {
   
   $form['button'] = array(
     '#type' => 'submit', 
-    '#attributes' => array("class" => array("btn-sm")),
+    '#attributes' => array("class" => array("btn-sm", $action_classes[$action])),
     '#value' => $action_values[$action]);
   
   $form['#prefix'] = "<div style='float:left'>";
-  $form['#suffix'] = "</div>";
+  $form['#suffix'] = "</div><span style='width:10px; float: left;'>&nbsp;</span> ";
   
   return $form;
 }

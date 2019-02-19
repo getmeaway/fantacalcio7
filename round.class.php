@@ -344,8 +344,14 @@ class Round
 	
 		if ($result->rowCount() == 0)
 			return 0;
-	
-		return $result->fetchField();
+
+		$last = $result->fetchField();
+
+		if($last == null) {
+			return 1;
+		}
+
+		return $last;
 	}
 	
 	static function getLastForCompetition($competition_id) {
@@ -430,12 +436,11 @@ class Round
 	  return $rounds_status;
 	}
 	
-	function getVotes($provider) {
+	function getVotes() {
   		$votes = array();
   		
   		$query = db_select("fanta_votes", "v");
   		$query->condition("round", $this->round);
-  		$query->condition("provider", $provider);
   		$query->fields("v");
 
 		$result = $query->execute();

@@ -15,7 +15,9 @@ function fantacalcio_create_lineups_reminder($round) {
 //   $node->path = array('alias' => 'news/risultati-' . $vote_round); // Setting a node path
   $node->uid = 1;//$user->uid; // Or any id you wish
 
-  $body = "Inserire le " . l("formazioni", "formazioni/insert"). " entro le " . date('H:i', $round->date) . " di oggi";
+  $reminder_date = date("H:i", strtotime($round->date));
+
+  $body = "Inserire le " . l("formazioni", "formazioni/insert"). " entro le " . $reminder_date . " di oggi";
 
   $node->body[$node->language][0]['value'] = $body;
   $node->body[$node->language][0]['summary'] = $body;

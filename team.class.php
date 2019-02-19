@@ -28,9 +28,31 @@ class Team {
 			$team->shirt = $row->shirt;
             $team->shirt_metadata = $row->shirt_metadata != null ? json_decode($row->shirt_metadata) : null;
 			$team->credits = $row->credits;
+			$team->honours = $row->honours;
+			$team->last_year = $row->last_year;
 			$team->register_date = $row->register_date;
 			$team->completed_date = $row->completed_date;
 			$team->active = $row->active;
+		}
+		
+		return $team;
+	}
+
+	static function getPayment ($id) {
+		$team = null;
+		$query = db_select("fanta_payments", "t");
+		$query->condition("t_id", $id);
+		$query->fields("t");
+		
+		$result = $query->execute();
+		
+		foreach ( $result as $row ) {
+			$team = (object) array();
+			$team->payed = $row->payed;
+			$team->is_admin = $row->is_admin;
+			$team->win_quota = $row->win_quota;
+			$team->lost_quota = $row->lost_quota;
+            $team->received = $row->received;
 		}
 		
 		return $team;
@@ -574,6 +596,33 @@ class Team {
 		$query->condition("played", 1);
 		$query->condition("g_id", $group_id);
 		$query->addExpression("SUM(tot_2)", "n");
+	
+		$result = $query->execute();
+		$goals_away = $result->fetchObject()->n;
+		 
+		return $goals_home + $goals_away;
+	}
+
+	function pointsForF8($group_id, $round_start, $round_end) {
+		 
+		$query = db_select("fanta_matches", "m");
+		$query->condition("t1_id", $this->id);
+		$query->condition("played", 1);
+		$query->condition("g_id", $group_id);
+		$query->condition("round", $round_start, ">=");
+		$query->condition("round", $round_end, "<=");
+		$query->addExpression("SUM(pt_1)", "n");
+		 
+		$result = $query->execute();
+		$goals_home = $result->fetchObject()->n;
+		 
+		$query = db_select("fanta_matches", "m");
+		$query->condition("t2_id", $this->id);
+		$query->condition("played", 1);
+		$query->condition("g_id", $group_id);
+		$query->condition("round", $round_start, ">=");
+		$query->condition("round", $round_end, "<=");
+		$query->addExpression("SUM(pt_2)", "n");
 	
 		$result = $query->execute();
 		$goals_away = $result->fetchObject()->n;

@@ -5,12 +5,14 @@
 * 
 */
 function fantacalcio_calendar($name = '', $round = null) {
+	$name = str_replace("-", " ", $name);
+	
   $competition = Competition::getByName($name);
   
   if ($competition == null || $competition->has_matches != 1) {
     
     $items = Competition::choose(array(
-      "has_matches" => 1, 
+      "has_matches" => 1, "active" => 1,
       "type" => COMPETITION_TYPE_SD), "calendario");
     return theme_item_list(array(
       "items" => $items, 
@@ -387,9 +389,9 @@ function fantacalcio_show_live() {
 	//giornata
 	$vote_round = Round::getNext();
 	$round = Round::getByRound($vote_round);
-	
-	if (time() < $round->date || $round->status == 1)
-		return "<h4>" . t("Giornata non ancora iniziata") . "</h4><p>" . t("Inizio giornata previsto: ") . date("d/m/Y H:i", $round->date) ."</p>";
+	//echo date("Y-m-d H:i:s");print_r($round);
+	if ((date("Y-m-d H:i:s") < $round->date && $round->round > 0) || $round->status == 1)
+		return "<h4>" . t("Giornata non ancora iniziata") . "</h4><p>" . t("Inizio giornata previsto: ") . date_format(date_create($round->date), "d-m-Y H:i") ."</p>";
 
 	$competitions = array();
 	$competition_is_selected = false;
@@ -411,8 +413,11 @@ function fantacalcio_show_live() {
 			foreach($matches as $match) {
 				
 				//mostro partita
-				$output .= show_match_details($match->id, false);
+				$output .= show_match_details($match->id, false, true);
 				$output .= "<div class='clearfix'></div>";
+$output .= "<div class='visible-xs'><div class='pull-left label-success page-title-bar'></div>
+	<div class='pull-left label-warning page-title-bar'></div>
+	<div class='pull-left label-info page-title-bar'></div></div>";
 			}
 		}
 		
@@ -436,8 +441,9 @@ function fantacalcio_show_live() {
 	$output["competitions"] = $competitions;
 	
 	//aggiungo javascript per refresh dati
-	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/live.js");
-	
+	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/live.js", array("type" => "file", "cache" => false));
+	//drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/live.js");
+		
 	return theme("lineup-view", $output);
 
 }
@@ -457,7 +463,7 @@ else
     
 }
 
-function show_match_details($m_id, $show_round = true) {
+function show_match_details($m_id, $show_round = true, $is_live = false) {
   $match = Match::get($m_id);
 
   if ($match != null) { 
@@ -474,9 +480,9 @@ $out = "";
 	  $out .= "</div>";
   }
   
-  $out .= "<div class='team-details col-xs-12 col-sm-6'>" . show_team_details($match->t1_id, $match->round, $match->c_id, $match->id, $match->played) . "</div>";
+  $out .= "<div class='team-details col-xs-12 col-sm-6'>" . show_team_details($match->t1_id, $match->round, $match->c_id, $match->id, $match->played, $is_live) . "</div>";
   
-  $out .= "<div class='team-details col-xs-12 col-sm-6'>" . show_team_details($match->t2_id, $match->round, $match->c_id, $match->id, $match->played) . "</div>";
+  $out .= "<div class='team-details col-xs-12 col-sm-6'>" . show_team_details($match->t2_id, $match->round, $match->c_id, $match->id, $match->played, $is_live) . "</div>";
   
   if ($round->next && $match->isDraw()) {
     $out .= "<div class='clear'></div>";
@@ -503,7 +509,8 @@ $out = "";
   }
   
   	//aggiungo javascript per refresh dati
-	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/live.js");
+	//drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/live.js");
+	drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/live.js", array("type" => "file", "cache" => false));
 
   
   return $out;
@@ -517,7 +524,7 @@ function show_match_overtime($match, $t_id) {
 //   $result = db_query($sql, $match->round, get_cid_by_gid($match->g_id));
 //   $round = db_result($result);
   $round = Round::get($match->round, $match->c_id);
-  $votes = $round->getVotes(variable_get("fantacalcio_votes_provider", 1));
+  $votes = $round->getVotes();
 //   $players = get_players($round);
   
   // riserve non entrate
@@ -746,9 +753,9 @@ function show_match_penalties($match, $t_id, $last_penalty_index) {
   return $out;
 }
 
-function show_team_details($t_id, $competition_round, $c_id, $m_id, $played) {
+function show_team_details($t_id, $competition_round, $c_id, $m_id, $played, $is_live = false) {
   if ($played == 0)
-    return show_team_details_not_played($t_id, $competition_round, $c_id, $m_id);
+    return show_team_details_not_played($t_id, $competition_round, $c_id, $m_id, $is_live);
   elseif ($played == 1)
     return show_team_details_played($t_id, $competition_round, $c_id, $m_id);
 }
@@ -759,11 +766,11 @@ function show_team_details_played($t_id, $competition_round, $c_id, $m_id) {
   $out = "<div style='margin:auto; margin-top: 10px; text-align: center;'>";
   $out .= "<h3>" . $team->name . "</h3>";
   if (!empty($team->shirt))
-    $out .= "<p><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></p>";
+    $out .= "<div class='shirt'><img src='" . $team->shirt . "'></div>";
   
   $round = Round::getByCompetitionRound($competition_round, $c_id);
   
-  $votes = $round->getVotes(variable_get("fantacalcio_votes_provider", 1));
+  $votes = $round->getVotes();
   // $players = get_players($round->round);
   
   $regulars = get_details_regulars($t_id, $c_id, $competition_round, $round->round);
@@ -1014,7 +1021,7 @@ if (variable_get("fantacalcio_points_win_goal", 0) != 0)
   return $out;
 }
 
-function show_team_details_not_played($t_id, $competition_round, $c_id, $m_id) {
+function show_team_details_not_played($t_id, $competition_round, $c_id, $m_id, $is_live = false) {
   
   // squadra trovata
   if (Team::exists($t_id)) {
@@ -1026,7 +1033,7 @@ function show_team_details_not_played($t_id, $competition_round, $c_id, $m_id) {
     $out = "<div style='margin:auto; margin-top: 10px; text-align: center;'>";
     $out .= "<h3>" . $team->name . "</h3>";
     if (!empty($team->shirt))
-	    $out .= "<p><img src='" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/shirts/" . $team->shirt . "'></p>";
+	    $out .= "<div class='shirt'><img src='" . $team->shirt . "'></div>";
     
     $round_label = isset($round->label) ? $round->label : $round->competitions[$c_id]->competition_round. "a giornata";
     
@@ -1093,7 +1100,7 @@ function show_team_details_not_played($t_id, $competition_round, $c_id, $m_id) {
       $out .= theme_table(array(
         "header" => $header_startings, 
         "rows" => $rows_startings, 
-        "attributes" => array("class" => "table table-responsive"), 
+        "attributes" => array("class" => "table table-responsive regulars ", "data-team" => ("team-" . $competition->id . "-" . $team->id)), 
         "colgroups" => array(), 
         "sticky" => "", 
         "caption" => "", 
@@ -1101,11 +1108,13 @@ function show_team_details_not_played($t_id, $competition_round, $c_id, $m_id) {
       $out .= theme_table(array(
         "header" => $header_reserves, 
         "rows" => $rows_reserves, 
-        "attributes" => array("class" => "table table-responsive"), 
+        "attributes" => array("class" => "table table-responsive reserves", "data-team" => ("team-" . $competition->id . "-" . $team->id)), 
         "colgroups" => array(), 
         "sticky" => "", 
         "caption" => "", 
         "empty" => ""));
+		
+	  $out .= "<table class='table table-responsive'><tr><th>Totale provvisorio</th><th class='live-total' data-team='team-" . $competition->id . "-" . $team->id . "'>0</th></tr></table>";
       
     }
     else
@@ -1148,7 +1157,8 @@ function team_details_show_position($position, $show_penalties = FALSE) {
 
               // '<a tabindex="0" class="player-stats" data-toggle="popover" data-placement="top" data-template="<div class=\'popover\' role=\'tooltip\'><div class=\'arrow\'></div><p class=\'text-danger popover-title\'></h1><div class=\'popover-content\'></div></div>" data-trigger="focus" title="' . $player->name . '" data-content="And hers some amazing content. Its very engaging. Right?"><i class="fa fa-bar-chart"></i></a>',
               $show_penalties ? "<span title='Ordine rigoristi'>(" . ($player->penalty_position + 12) . ")</span>" : ""),
-          "class" => array("role-" . $player->role));
+          "class" => array("role-" . $player->role),
+		  "data-role" => $player->role);
     }
   }
 

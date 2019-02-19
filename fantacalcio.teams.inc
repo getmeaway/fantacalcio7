@@ -38,7 +38,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
     $form["name"]["#attributes"] = array("readonly" =>  "readonly");
     }
   
-  /*$form["coach"] = array(
+  $form["coach"] = array(
     "#type" => "textfield", 
     "#title" => "Allenatore", 
     "#default_value" => $team ? check_plain($team->coach) : "");
@@ -46,7 +46,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
   $form["stadium"] = array(
     "#type" => "textfield", 
     "#title" => "Stadio", 
-    "#default_value" => $team ? check_plain($team->stadium) : "");*/
+    "#default_value" => $team ? check_plain($team->stadium) : "");
   
    $form ["shirt"] = array(
    "#type" => "fieldset",
@@ -76,7 +76,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
     $types = "<table><tr><td>" . t("Tipo") .": </td><td><div data-toggle='buttons' class='btn-group' role='group' aria-label='...'>";
     
     for($i = 0; $i < 9; $i++) {
-        $types .= "<label class='shirt-type btn btn-default' data-type='" . $i . "'>
+        $types .= "<label class='shirt-type btn' style='background-color: #CCC' data-type='" . $i . "'>
         <input type='radio' class='shirt-type-btn' data-type='" . $i . "'><img src='" . base_path(). drupal_get_path("module", "fantacalcio") . "/images/tipo_" . $i . ".png' width='30'>
       </label>";
     } 
@@ -236,7 +236,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
         "#type" => "hidden",
    "#title" => t("Colore 1"),
     "#prefix" => "<tr><td>" . t("Colore 1") . "</td><td>",
-        "#suffix" =>  "<div class='form-group'><div class='input-group-btn group-color'><button type='button' class='btn btn-default btn-box change-color dropdown-toggle' data-toggle='dropdown'>
+        "#suffix" =>  "<div class='form-group'><div class='input-group-btn group-color'><button type='button' class='btn btn-default btn-box change-color dropdown-toggle' data-toggle='dropdown' style='background-color: #CCC'>
 							<span class='fa fa-square preview preview-bg-color'></span> 
 						</button>" . $colors . '</div></div></td></tr>',
    "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->bgColor : "",
@@ -247,7 +247,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
             "#type" => "hidden",
    "#title" => t("Colore 2"),
     "#prefix" => "<tr><td>" . t("Colore 2") . "</td><td>",
-        "#suffix" =>  '<div class="form-group"><div class="input-group-btn group-color"><button type="button" class="btn btn-default btn-box change-color dropdown-toggle" data-toggle="dropdown">
+        "#suffix" =>  '<div class="form-group"><div class="input-group-btn group-color"><button type="button" class="btn btn-default btn-box change-color dropdown-toggle" data-toggle="dropdown" style="background-color: #CCC">
 							<span class="fa fa-square preview preview-main-color"></span> 
 						</button>' . $colors . '</td></tr>',
    "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->mainColor : "",
@@ -268,7 +268,7 @@ function fantacalcio_team_form($form, $form_state, $id) {
         "#type" => "hidden",
    "#title" => t("Colore bordo"),
     "#prefix" => "<tr><td>" . t("Colore bordo") . "</td><td>",
-        "#suffix" =>  '<div class="form-group"><div class="input-group-btn group-color"><button type="button" class="btn btn-default btn-box change-color dropdown-toggle" data-toggle="dropdown">
+        "#suffix" =>  '<div class="form-group"><div class="input-group-btn group-color"><button type="button" class="btn btn-default btn-box change-color dropdown-toggle" data-toggle="dropdown" style="background-color: #CCC">
 							<span class="fa fa-square preview preview-border-color"></span> 
 						</button>' . $colors . '</td></tr></table><canvas id="myCanvas" width="350" height="350"></canvas>',
    "#default_value" => $team && $team->shirt_metadata ? $team->shirt_metadata->borderColor : "",
@@ -281,11 +281,12 @@ function fantacalcio_team_form($form, $form_state, $id) {
   
   $form["action"] = array("#type" => "hidden", "#value" => check_plain($action));
   
-  $form["submit"] = array("#type" => "submit", "#value" => "Ok");
+  $form["submit"] = array("#type" => "submit", "#value" => "Ok", "#attributes" => array("class" => array("btn", "btn-success")));
   
   $form["clear"] = array(
     "#type" => "submit", 
     "#value" => "Annulla", 
+	"#attributes" => array("class" => array("btn", "btn-warning")),
     "#validate" => array("fantacalcio_team_form_clear"));
   
   return $form;
@@ -319,8 +320,8 @@ function fantacalcio_team_form_submit($form, &$form_state) {
   global $user;
   
   $team_name = $form_state["values"]["name"];
-  $team_coach = "";//$form_state["values"]["coach"];
-  $team_stadium = "";//$form_state["values"]["stadium"];
+  $team_coach = $form_state["values"]["coach"];
+  $team_stadium = $form_state["values"]["stadium"];
   $team_shirt = $form_state["values"]["image"]; // shirt_" . $form_state ["values"] ["type"] . "_" . $form_state ["values"] ["color_1"] . "_" . $form_state ["values"] ["color_2"] . ".png";
   $team_shirt_metadata = $form_state["values"]["metadata"]; // shirt_" . $form_state ["values"] ["type"] . "_" . $form_state ["values"] ["color_1"] . "_" . $form_state ["values"] ["color_2"] . ".png";
   $t_id = $form_state["values"]["t_id"];
@@ -623,7 +624,7 @@ function show_team_credits($t_id) {
   $result = $query->execute();
   
   foreach ($result as $row) {
-    $spent += $row->status == 1 ? $row->cost : ceil($row->cost / 2);
+    $spent += $row->status > -1 ? $row->cost : floor($row->cost / 2);
   }
   
   //scambi
@@ -674,10 +675,8 @@ function show_team_details($t_id = "") {
   if (!empty($t_id) && $team != null) {
     $rows[] = array("<h4>" . t("Allenatore") . "</h4>", $team->coach);
     $rows[] = array("<h4>" . t("Stadio") . "</h4>", $team->stadium);
-    // $rows [] = array(
-    // "<h4>" . t("Trofei") . "</h4>",
-    // theme_team_history($team->honours)
-    // );
+    $rows [] = array("<h4>" . t("Trofei") . "</h4>", theme_team_history($team->honours));
+	$rows [] = array("", "<img src='" . $team->shirt . "' class='img-responsive' width='150'>");
     
     return array(
       "header" => array(), 
@@ -795,7 +794,7 @@ function show_team_rounds($t_id) {
 
 function show_team_stats($t_id) {
   if (count(Round::allPlayed()) > 0) {
-    drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/Chart.min.js");
+    drupal_add_js(drupal_get_path("module", "fantacalcio") . "/js/Chart.js");
     
     $team = Team::get($t_id);
     
@@ -852,7 +851,13 @@ function show_team_stats($t_id) {
 			datasets: [
 			{
 				label: '" . t("Punteggi") . "',
-				fillColor: 'rgba(255,100,40,0.2)',
+				borderColor: '#FFC870',
+                borderWidth: 3,
+				pointColor: 'rgba(20,20,220,0.5)',
+				pointStrokeColor: '#fff',
+				pointHighlightFill: '#fff',
+                //fill:false,
+                backgroundColor: 'rgba(255,255,40,0.2)',
 				strokeColor: 'rgba(255,100,40,0.5)',
 				pointColor: 'rgba(255,100,40,0.5)',
 				pointStrokeColor: '#fff',
@@ -863,7 +868,7 @@ function show_team_stats($t_id) {
 			]
 		};
 		
-		new Chart(ctx).Line(data);
+		new Chart(ctx, {type: 'line', data: data});
 		});
 		});";
     
@@ -889,18 +894,19 @@ function show_team_stats($t_id) {
 			datasets: [
 			{
 				label: '" . t("Punteggio") . "',
-				fillColor: 'rgba(20,20,220,0.2)',
-				strokeColor: 'rgba(20,20,220,0.5)',
+				borderColor: '#FFC870',
+                borderWidth: 3,
 				pointColor: 'rgba(20,20,220,0.5)',
 				pointStrokeColor: '#fff',
 				pointHighlightFill: '#fff',
+                fill:false,
 				pointHighlightStroke: 'rgba(220,220,220,1)',
 				data: [" . implode(", ", $round_positions) . "]
 			},
 			]
 		};
 	
-		new Chart(ctx).Line(data);
+		new Chart(ctx, {type: 'line', data: data});
 		});
 		});";
     
@@ -923,27 +929,40 @@ function show_team_stats($t_id) {
       
       $season_positions_js = "jQuery(document).ready(function () {
       	jQuery('a[href=\"#stats\"], #stats').on('shown.bs.tab', function () {
-			var ctx = jQuery('#seasonPositionsChart').get(0).getContext('2d');
-			var data = {
-				labels: [" . implode(", ", array_keys($season_positions)) . "],
-				datasets: [
-				{
-					label: '" . t("Punteggi") . "',
-					yAxisID: 'y-axis',
-					fillColor: 'rgba(20,220,20,0.2)',
-					strokeColor: 'rgba(20,220,20,0.5)',
-					pointColor: 'rgba(220,220,220,0.5)',
-					pointStrokeColor: '#fff',
-					pointHighlightFill: '#fff',
-					pointHighlightStroke: 'rgba(220,220,220,1)',
-					data: [" . implode(", ", $season_positions) . "]
-				},
-				]
-			};
-			
-			new Chart(ctx).Line(data);
+                var ctx = jQuery('#seasonPositionsChart').get(0).getContext('2d');
+                var data = {
+                    labels: [" . implode(", ", array_keys($season_positions)) . "],
+                    datasets: [{
+                        label: '" . t("Posizione") . "',
+                        borderColor: '#5AD351',
+                        borderWidth: 3,
+                        strokeColor: 'rgba(20,220,20,0.5)',
+                        pointColor: 'rgba(220,220,220,0.5)',
+                        pointStrokeColor: '#fff',
+                        pointHighlightFill: '#fff',
+                        pointHighlightStroke: 'rgba(220,220,220,1)',
+                        fill: false,
+                        data: [" . implode(", ", $season_positions) . "]
+                    }]
+                };
+               
+                new Chart(ctx,  {
+                    type: 'line',
+                    data: data,
+                     options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    min: 1,
+                                    max: 8,
+                                    reverse: true
+                                }
+                            }]
+                        }
+                    }
+                });
 			});
-			});";
+        });";
       
       drupal_add_js($season_positions_js, "inline");
     //}
@@ -964,28 +983,26 @@ function show_team_stats($t_id) {
         	jQuery('a[href=\"#stats\"], #stats').on('shown.bs.tab', function () {
 			var ctx = jQuery('#matchesChart').get(0).getContext('2d');
 			
-			var data = [
-			    {
-			        value: " . $matches->losts . ",
-			        color:\"#F7464A\",
-			        highlight: \"#FF5A5E\",
-			        label: \"" . t("Sconfitte") . "\"
-			    },
-			    {
-			        value: " . $matches->wins . ",
-			        color: \"#46BF5D\",
-			        highlight: \"#5AD351\",
-			        label: \"" . t("Vittorie") . "\"
-			    },
-			    {
-			        value: " . $matches->draws . ",
-			        color: \"#FDB45C\",
-			        highlight: \"#FFC870\",
-			        label: \"" . t("Pareggi") . "\"
-			    }
-			]
-		
-			new Chart(ctx).Pie(data);
+			var data = {
+            labels: [
+        'Sconfitte',
+        'Vittorie',
+        'Pareggi'
+    ],
+    datasets: [{
+                data: [" . $matches->losts . ", " . $matches->wins . ", " . $matches->draws . "],
+            backgroundColor: [
+                '#F7464A',
+                '#46BF5D',
+                '#FDB45C'
+            ],
+            hoverBackgroundColor: [
+                '#FF5A5E',
+                '#5AD351',
+                '#FFC870'
+            ]}]};
+			   		
+			new Chart(ctx, {type: 'doughnut', data: data});
 			});
 			});";
         
@@ -1000,13 +1017,24 @@ function show_team_stats($t_id) {
 }
 
 function theme_team_history($history) {
+	
   if ($history) {
-    $data = unserialize($history);
+    $data = json_decode($history);
     $out = "";
     $out = "<ul class=\"team-history\">";
     if ($data) {
-      foreach ($data as $key => $value)
-        $out .= "<li>" . $key . " <img src=\"" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . variable_get($value, "") . "\"></li>";
+      foreach ($data as $key => $value) {
+		  if(!is_array($value)) {
+			$out .= "<li>" . $key . " <img src=\"" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . variable_get($value, "") . "\"></li>";
+		  }
+		  else {
+			  $out .= "<li>" . $key;
+			  foreach ($value as $_value) {
+				  $out .= " <img src=\"" . base_path() . drupal_get_path("module", "fantacalcio") . "/images/" . variable_get($_value, "") . "\">";
+			  }
+			  $out .= "</li>";
+		  }
+	  }
     }
     $out .= "</ul>";
     return $out;

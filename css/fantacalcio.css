@@ -161,12 +161,14 @@ td.name{
 
 
 div.shirt{
-	float: left;
+	/*float: left;*/
+	display: block;
 }
 
 div.shirt img{
 	padding: 5px;
 	margin: 5px;
+	width: 100px;
 }
 
 .last-year {

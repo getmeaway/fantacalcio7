@@ -97,7 +97,7 @@ class Result {
       
     global $roles;
  
-    $votes_url = DATA_SOURCE_URL . "/votes/" . $vote_round . "-" . variable_get("fantacalcio_votes_provider", 1) . ".json";
+    $votes_url = DATA_SOURCE_URL . "/votes/" . $vote_round . ".json";
     
     $votes = json_decode(file_get_contents($votes_url));
     
@@ -107,7 +107,7 @@ class Result {
     $players_ids = Player::getIdList();
 
     // cancello i giocatori della giornata per evitare doppioni
-    if ($vote_round > 1) {
+    /*if ($vote_round > 1) {
         db_delete("fanta_players_rounds")->condition("round", $vote_round)->execute();
 
         $query = db_select("fanta_players_rounds", "pr");
@@ -120,7 +120,7 @@ class Result {
           ->fields(array("pl_id" => $row->pl_id, "round" => $vote_round, "rt_id" => $row->rt_id, "quotation" => $row->quotation, "not_rounded_quotation" => $row->not_rounded_quotation, "active" => $row->active))
           ->execute();
         }
-    }
+    }*/
     
     // real teams
     $real_teams = RealTeam::allNames();
@@ -140,11 +140,15 @@ class Result {
       
         $total = $vote->vote + ($vote->goals_for * variable_get("fantacalcio_points_goals_for", "3")) + ($vote->penalty_goals * variable_get("fantacalcio_points_penalty_goals", "3")) + ($vote->assists * variable_get("fantacalcio_points_assists", "1")) + ($vote->saved_penalties * variable_get("fantacalcio_points_saved_penalties", "3")) + ($vote->goals_against * variable_get("fantacalcio_points_goals_against", "-1")) + ($vote->red_cards * variable_get("fantacalcio_points_red_card", "-1")) + ($vote->yellow_cards * variable_get("fantacalcio_points_yellow_card", "-0.5")) + ($vote->own_goals * variable_get("fantacalcio_points_own_goal", "-2")) + ($vote->missed_penalties * variable_get("fantacalcio_points_missed_penalties", "-3")) + ($vote->draw_goals * variable_get("fantacalcio_points_draw_goals", "1")) + ($vote->win_goals * variable_get("fantacalcio_points_win_goals", "3"));
     
+    if($vote->vote == 0 && $total != 0) {
+    $vote->vote = 6;
+    $total = $vote->vote + ($vote->goals_for * variable_get("fantacalcio_points_goals_for", "3")) + ($vote->penalty_goals * variable_get("fantacalcio_points_penalty_goals", "3")) + ($vote->assists * variable_get("fantacalcio_points_assists", "1")) + ($vote->saved_penalties * variable_get("fantacalcio_points_saved_penalties", "3")) + ($vote->goals_against * variable_get("fantacalcio_points_goals_against", "-1")) + ($vote->red_cards * variable_get("fantacalcio_points_red_card", "-1")) + ($vote->yellow_cards * variable_get("fantacalcio_points_yellow_card", "-0.5")) + ($vote->own_goals * variable_get("fantacalcio_points_own_goal", "-2")) + ($vote->missed_penalties * variable_get("fantacalcio_points_missed_penalties", "-3")) + ($vote->draw_goals * variable_get("fantacalcio_points_draw_goals", "1")) + ($vote->win_goals * variable_get("fantacalcio_points_win_goals", "3"));
+    }
+    
         $query = db_insert("fanta_votes");
         $query->fields(array(
             "round" => $vote_round,
             "pl_id" => $pl_id,
-            "provider" => variable_get("fantacalcio_votes_provider", "1"),
             "total" => $total,
             "vote" => $vote->vote,
             "goals_for" => $vote->goals_for,
@@ -291,12 +295,12 @@ class Result {
     $teams = Team::all();
     
     $round = Round::getByRound($vote_round);
-    $votes = $round->getVotes(variable_get("fantacalcio_votes_provider", 1));
+    $votes = $round->getVotes();
    
     $pl_votes = array();
 
     foreach ($votes as $vote) {
-      if ($vote->has_vote == 1)
+      if ($vote->has_vote == 1 || $vote->vote > 0)
         $pl_votes[] = $vote->pl_id;
     }  
     foreach ($round->competitions as $round_competition) {
@@ -344,7 +348,7 @@ class Result {
       // $vote_round = get_last_votes();
       $teams = Team::all();
       $round = Round::getByRound($vote_round); // print_r($round);die();
-      $votes = $round->getVotes(variable_get("fantacalcio_votes_provider", 1));
+      $votes = $round->getVotes();
       $competitions = Competition::all();
       
       $matches = Match::getMatchesByRound($vote_round);
@@ -355,8 +359,8 @@ class Result {
         $competition_round = $match->round;
         
         if (variable_get('fantacalcio_modifier_role_0', '0')) {
-          $mod_1_role_0 = self::getModifierRole_0($t1_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
-          $mod_2_role_0 = self::getModifierRole_0($t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+          $mod_1_role_0 = self::getModifierRole_0($t1_id, $match->c_id, $vote_round, $competition_round);
+          $mod_2_role_0 = self::getModifierRole_0($t2_id, $match->c_id, $vote_round, $competition_round);
         }
         else {
           $mod_1_role_0 = 0;
@@ -364,8 +368,8 @@ class Result {
         }
         
         if (variable_get('fantacalcio_modifier_role_1', '0')) {
-          $mod_1_role_1 = self::getModifierRole_1($t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
-          $mod_2_role_1 = self::getModifierRole_1($t1_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+          $mod_1_role_1 = self::getModifierRole_1($t2_id, $match->c_id, $vote_round, $competition_round);
+          $mod_2_role_1 = self::getModifierRole_1($t1_id, $match->c_id, $vote_round, $competition_round);
         }
         else {
           $mod_1_role_1 = 0;
@@ -373,7 +377,7 @@ class Result {
         }
         
         if (variable_get('fantacalcio_modifier_role_2', '0')) {
-          $mod_role_2 = self::getModifierRole_2($t1_id, $t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+          $mod_role_2 = self::getModifierRole_2($t1_id, $t2_id, $match->c_id, $vote_round, $competition_round);
           $mod_1_role_2 = $mod_role_2[1];
           $mod_2_role_2 = $mod_role_2[2];
         }
@@ -383,8 +387,8 @@ class Result {
         }
         
         if (variable_get('fantacalcio_modifier_role_3', '0')) {
-          $mod_1_role_3 = self::getModifierRole_3($t1_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
-          $mod_2_role_3 = self::getModifierRole_3($t2_id, $match->c_id, $vote_round, $competition_round, variable_get("fantacalcio_votes_provider", 1));
+          $mod_1_role_3 = self::getModifierRole_3($t1_id, $match->c_id, $vote_round, $competition_round);
+          $mod_2_role_3 = self::getModifierRole_3($t2_id, $match->c_id, $vote_round, $competition_round);
         }
         else {
           $mod_1_role_3 = 0;
@@ -415,7 +419,7 @@ class Result {
     $teams = Team::all();
   
     $round = Round::getByRound($vote_round);
-    $votes = $round->getVotes(variable_get("fantacalcio_votes_provider", 1));
+    $votes = $round->getVotes();
   
     $matches_competitions = array();
   
@@ -465,8 +469,8 @@ class Result {
           $bonus_t1 = $match->bonus_t1;
           $bonus_t2 = $match->bonus_t2;
   
-          $tot_votes_1 = self::getTotal($t1_id, $competition_round, $vote_round, $c_id, variable_get("fantacalcio_votes_provider", 1));
-          $tot_votes_2 = self::getTotal($t2_id, $competition_round, $vote_round, $c_id, variable_get("fantacalcio_votes_provider", 1));
+          $tot_votes_1 = self::getTotal($t1_id, $competition_round, $vote_round, $c_id);
+          $tot_votes_2 = self::getTotal($t2_id, $competition_round, $vote_round, $c_id);
           $tot_1 = $tot_votes_1 + array_sum($mod_1) + $bonus_t1;
           $tot_2 = $tot_votes_2 + array_sum($mod_2) + $bonus_t2;
   
@@ -551,7 +555,7 @@ class Result {
             $season_positions = array();
   
             foreach ($teams as $team) {
-              $total = get_total($team->id, $competition_round, $vote_round, $competition->id, variable_get("fantacalcio_votes_provider", 1));
+              $total = get_total($team->id, $competition_round, $vote_round, $competition->id);
   
               $totals[$team->id] = $total;
               $round_positions[$team->id] = $total;
@@ -652,7 +656,6 @@ class Result {
 		$query = db_select("fanta_votes", "v");
 		$query->join("fanta_players_rounds", "pr", "v.pl_id = pr.pl_id AND v.round = pr.round");
 		$query->join("fanta_players", "p", "p.pl_id = v.pl_id AND pr.pl_id = p.pl_id");
-		$query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
 		$query->condition("v.round", $vote_round);
 		$query->fields("v");
 		$query->fields("pr");
@@ -741,7 +744,7 @@ class Result {
   
   }
   
-  static function getModifierRole_0($t_id, $c_id, $vote_round, $competition_round, $votes_provider) {
+  static function getModifierRole_0($t_id, $c_id, $vote_round, $competition_round) {
   
     $query = db_select("fanta_lineups", "l");
     $query->join("fanta_players", "p", "p.pl_id = l.pl_id");
@@ -760,12 +763,11 @@ class Result {
     }
   
     if (isset($pl_id)) {
-      $sql = "SELECT * FROM {fanta_votes} " . "WHERE pl_id = '%d' " . "AND round = '%d' " . "AND provider = '%d'";
+      $sql = "SELECT * FROM {fanta_votes} " . "WHERE pl_id = '%d' " . "AND round = '%d' ";
   
       $query = db_select("fanta_votes", "v");
       $query->condition("pl_id", $pl_id);
       $query->condition("round", $vote_round);
-      $query->condition("provider", $votes_provider);
   
       $query->fields("v");
   
@@ -782,7 +784,7 @@ class Result {
       return 0;
   }
   
-  static function getModifierRole_1($t_id, $c_id, $vote_round, $competition_round, $votes_provider) {
+  static function getModifierRole_1($t_id, $c_id, $vote_round, $competition_round) {
     $pl_ids = array();
     $role_0_lineup_number = 0;
     $role_0_played_number = 0;
@@ -820,7 +822,6 @@ class Result {
   
       $query->condition("pl_id", $pl_ids, "IN");
       $query->condition("round", $vote_round);
-      $query->condition("provider", $votes_provider);
   
       $result = $query->execute();
 
@@ -842,7 +843,7 @@ class Result {
     }
   }
   
-  static function getModifierRole_2($t1_id, $t2_id, $c_id, $vote_round, $competition_round, $votes_provider) {
+  static function getModifierRole_2($t1_id, $t2_id, $c_id, $vote_round, $competition_round) {
     $role_2_t1_ids = array();
     $role_2_t1_regulars = 0;
     $role_2_t1_played = 0;
@@ -904,12 +905,10 @@ class Result {
       // voti team 1
       $query = db_select("fanta_votes", "v");
       $query->condition("pl_id", $role_2_t1_ids, "IN");
-      $query->condition("round", $vote_round);
-      $query->condition("provider", $votes_provider);
-  
+      $query->condition("round", $vote_round);  
       $query->fields("v", array("vote", "pl_id"));
   
-      $result = $query->execute(); // ($sql, $vote_round, $votes_provider);
+      $result = $query->execute(); 
       foreach ($result as $row) {
         $role_2_tot_1 += $row->vote;
       }
@@ -918,11 +917,10 @@ class Result {
       $query = db_select("fanta_votes", "v");
       $query->condition("pl_id", $role_2_t2_ids, "IN");
       $query->condition("round", $vote_round);
-      $query->condition("provider", $votes_provider);
   
       $query->fields("v", array("vote", "pl_id"));
   
-      $result = $query->execute(); // ($sql, $vote_round, $votes_provider);
+      $result = $query->execute();
       foreach ($result as $row) {
         $role_2_tot_2 += $row->vote;
       }
@@ -955,7 +953,7 @@ class Result {
     return $mod_role_2;
   }
   
-  static function getModifierRole_3($t_id, $c_id, $vote_round, $competition_round, $votes_provider) {
+  static function getModifierRole_3($t_id, $c_id, $vote_round, $competition_round) {
     $mod_role_3 = 0;
   
     $query = db_select("fanta_lineups", "l");
@@ -974,12 +972,10 @@ class Result {
       $pl_id = $row->pl_id;
   
       if ($pl_id) {
-        $sql = "SELECT * FROM {fanta_votes} " . "WHERE pl_id = '%d' " . "AND round = '%d' " . "AND provider = '%d'";
-  
+        
         $query2 = db_select("fanta_votes", "v");
         $query2->condition("pl_id", $pl_id);
         $query2->condition("round", $vote_round);
-        $query2->condition("provider", $votes_provider);
   
         $query2->fields("v");
   
@@ -1006,8 +1002,7 @@ class Result {
     $query->condition("l.t_id", $t_id);
     $query->condition("l.c_id", $c_id);
     $query->condition("l.has_played", 1);
-    $query->condition("v.provider", variable_get("fantacalcio_votes_provider", 1));
-  
+      
     $result = $query->execute();
   
     foreach ($result as $row) {

@@ -75,6 +75,24 @@ function fantacalcio_admin_settings() {
     '#title' => t('Assegna ruolo <em>allenatore</em> in automatico ad ogni utente registrato'), 
     '#default_value' => variable_get("fantacalcio_assign_default_role", 0), 
     '#description' => t("Consigliato in caso di leghe con iscrizione libera"));
+
+  $form["fantacalcio_generals"]['fantacalcio_quota'] = array(
+    '#type' => 'numberfield', 
+    '#title' => t('Quota annuale per i partecipanti'), 
+    '#default_value' => variable_get("fantacalcio_quota", 0), 
+    '#description' => t(""));
+
+  $form["fantacalcio_generals"]['fantacalcio_quota_admin'] = array(
+    '#type' => 'numberfield', 
+    '#title' => t('Quota annuale per l\'amministratore'), 
+    '#default_value' => variable_get("fantacalcio_quota_admin", 0), 
+    '#description' => t(""));
+	
+  $form["fantacalcio_generals"]['fantacalcio_quota_admin_players'] = array(
+    '#type' => 'numberfield', 
+    '#title' => t('Quota annuale per l\'amministratore (pagata dagli altri giocatori)'), 
+    '#default_value' => variable_get("fantacalcio_quota_admin_players", 0), 
+    '#description' => t(""));
   
   $form["fantacalcio_team"] = array(
     "#type" => "fieldset", 
@@ -337,13 +355,6 @@ function fantacalcio_admin_settings() {
     "#collapsed" => TRUE, 
     "#collapsible" => TRUE, 
     "#title" => t("Caricamento Dati"));
-  
-  $form["fantacalcio_data_load"]['fantacalcio_votes_provider'] = array(
-    '#type' => 'select', 
-    '#title' => t('Redazione di riferimento'), 
-    '#default_value' => variable_get('fantacalcio_votes_provider', ''), 
-    '#options' => get_providers_for_select(), 
-    '#description' => t('Redazione di riferimento per voti e lista giocatori'));
  
   $form["fantacalcio_data_load"]['fantacalcio_automatic_updates'] = array(
     '#type' => 'checkbox',
@@ -2268,10 +2279,10 @@ function fantacalcio_admin_real_teams_list_import_submit($form, &$form_state) {
     
   db_delete("fanta_real_teams")->execute();
 
-  foreach($teams as $team) {
-    db_insert("fanta_real_teams")->fields(array("rt_id" => $team->id, "name" => $team->name, "active" => 1))->execute();
+  foreach($teams as $rt_id => $team) {
+    db_insert("fanta_real_teams")->fields(array("rt_id" => $rt_id, "name" => $team, "active" => 1))->execute();
   }
-
+/*
 $teams_url = DATA_SOURCE_URL . "/teams/teams.json?t=" . time();
   
   $teams = json_decode(file_get_contents($teams_url));
@@ -2281,8 +2292,38 @@ $teams_url = DATA_SOURCE_URL . "/teams/teams.json?t=" . time();
   foreach($teams as $team) {
     db_insert("fanta_real_teams")->fields(array("rt_id" => $team->id, "name" => $team->name, "active" => 1))->execute();
   }
-
+*/
   drupal_set_message("Squadre importate");
+
+  $matches_url = DATA_SOURCE_URL . "/teams/matches.json?t=" . time();
+  
+  $matches = json_decode(file_get_contents($matches_url));
+    
+  db_delete("fanta_real_teams_matches")->execute();
+
+  foreach($matches as $match) {
+    db_insert("fanta_real_teams_matches")->fields(array("rt1_id" => $match->home_team, "rt2_id" => $match->away_team, "round" => $match->round, "goals_1" => 0, "goals_2" => 0, "datetime" => 0, "forfeit" => 0, "winner_id" => 0, "played" => 0))->execute();
+  }
+
+
+  drupal_set_message("Partite importate");
+
+  drupal_goto("admin/fantacalcio/realteams");
+}
+
+function fantacalcio_admin_real_teams_matches_import_submit($form, &$form_state) {
+  $matches_url = DATA_SOURCE_URL . "/teams/matches.json?t=" . time();
+  
+  $matches = json_decode(file_get_contents($matches_url));
+    
+  db_delete("fanta_real_teams_matches")->execute();
+
+  foreach($teams as $team) {
+    db_insert("fanta_real_teams_matches")->fields(array("rt1_id" => $team->home_team, "rt2_id" => $team->away_team, "round" => $team->round))->execute();
+  }
+
+
+  drupal_set_message("Partite importate");
 
   drupal_goto("admin/fantacalcio/realteams");
 }
@@ -2324,8 +2365,8 @@ function fantacalcio_admin_rounds_list() {
       
       $rows[] = array(
         l($round_number, "admin/fantacalcio/rounds/" . $round_number), 
-        date("d-m-Y H:i", $round->date), 
-        date("d-m-Y H:i", $round->end_date), 
+        date_format(date_create($round->date), "d-m-Y H:i"), 
+        date_format(date_create($round->end_date), "d-m-Y H:i"), 
         $round->status, 
         theme("item_list", array("items" => $round_items)));
     }
@@ -2377,9 +2418,9 @@ function fantacalcio_admin_round($form, &$form_state, $round = "") {
       '#type' => 'date', 
       '#title' => t('Data'), 
       '#default_value' => array(
-        'year' => date('Y', $round_data->date), 
-        'month' => date('n', $round_data->date), 
-        'day' => date('j', $round_data->date)));
+        'year' => date('Y', strtotime($round_data->date)), 
+        'month' => date('n', strtotime($round_data->date)), 
+        'day' => date('j', strtotime($round_data->date))));
     
     $form['hour'] = array(
       '#type' => 'select', 
@@ -2409,7 +2450,7 @@ function fantacalcio_admin_round($form, &$form_state, $round = "") {
         21 => "21", 
         22 => "22", 
         23 => "23"), 
-      '#default_value' => date('G', $round_data->date));
+      '#default_value' => date('G', strtotime($round_data->date)));
     
     $form['minute'] = array(
       '#type' => 'select', 
@@ -2427,15 +2468,15 @@ function fantacalcio_admin_round($form, &$form_state, $round = "") {
         45 => "45", 
         50 => "50", 
         55 => "55"), 
-      '#default_value' => date('i', $round_data->date));
+      '#default_value' => date('i', strtotime($round_data->date)));
     
     $form['end_date'] = array(
       '#type' => 'date', 
       '#title' => t('Data chiusura'), 
       '#default_value' => array(
-        'year' => date('Y', $round_data->end_date), 
-        'month' => date('n', $round_data->end_date), 
-        'day' => date('j', $round_data->end_date)));
+        'year' => date('Y', strtotime($round_data->end_date)), 
+        'month' => date('n', strtotime($round_data->end_date)), 
+        'day' => date('j', strtotime($round_data->end_date))));
     
     $form['end_hour'] = array(
       '#type' => 'select', 
@@ -2465,7 +2506,7 @@ function fantacalcio_admin_round($form, &$form_state, $round = "") {
         21 => "21", 
         22 => "22", 
         23 => "23"), 
-      '#default_value' => date('G', $round_data->end_date));
+      '#default_value' => date('G', strtotime($round_data->end_date)));
     
     $form['end_minute'] = array(
       '#type' => 'select', 
@@ -2483,7 +2524,7 @@ function fantacalcio_admin_round($form, &$form_state, $round = "") {
         45 => "45", 
         50 => "50", 
         55 => "55"), 
-      '#default_value' => date('i', $round_data->end_date));
+      '#default_value' => date('i', strtotime($round_data->end_date)));
     
     $form['status'] = array(
       '#type' => 'select', 
@@ -2579,15 +2620,17 @@ function fantacalcio_admin_round_submit($form, &$form_state) {
   $competitions = Competition::all();
   
   $ts_start = mktime($form_state["values"]["hour"], $form_state["values"]["minute"], 0, $form_state["values"]["date"]['month'], $form_state["values"]["date"]['day'], $form_state["values"]["date"]['year']);
+  $date_start = date("Y-m-d H:i:s", $ts_start);
   
   $ts_end = mktime($form_state["values"]["end_hour"], $form_state["values"]["end_minute"], 0, $form_state["values"]["end_date"]['month'], $form_state["values"]["end_date"]['day'], $form_state["values"]["end_date"]['year']);
+  $date_end = date("Y-m-d H:i:s", $ts_end);
   
   if ($form_state["values"]["action"] == "edit") {
     // update round
     $query = db_update("fanta_rounds");
     $query->fields(array(
-      "date" => $ts_start, 
-      "end_date" => $ts_end, 
+      "date" => $date_start, 
+      "end_date" => $date_end, 
       "status" => $form_state["values"]["status"]));
     $query->condition("round", $form_state["values"]["round"]);
     $result = $query->execute();
@@ -2602,8 +2645,8 @@ function fantacalcio_admin_round_submit($form, &$form_state) {
     $query = db_insert("fanta_rounds");
     $query->fields(array(
       "round" => $form_state["values"]["round"], 
-      "date" => $ts_start, 
-      "end_date" => $ts_end, 
+      "date" => $date_start, 
+      "end_date" => $date_end, 
       "status" => $form_state["values"]["status"]));
     $query->condition("round", $form_state["values"]["round"]);
     $result = $query->execute();
@@ -2692,16 +2735,17 @@ function fantacalcio_admin_rounds_list_import_clear($form, &$form_state) {
 function fantacalcio_admin_rounds_list_import_submit($form, &$form_state) {
   $rounds_url = DATA_SOURCE_URL . "/rounds/rounds.json?t=" . time();
   
-  $rounds = json_decode(file_get_contents($rounds_url));//print_r($rounds);die();
+  $rounds = json_decode(file_get_contents($rounds_url));
     
   db_delete("fanta_rounds")->execute();
   
-  $c_id = Competition::getDefault()->id;
+  $c_id = 1;//Competition::getDefault()->id;
     
-  db_insert("fanta_rounds")->fields(array("round" => 0, "date" => 0, "end_date" => 0, "status" => 0, "reminder_sent" => 0))->execute();
-
+  db_insert("fanta_rounds")->fields(array("round" => 0, "date" => null, "end_date" => null, "status" => 0, "reminder_sent" => 0))->execute();
+//print_r($rounds);die();
   foreach($rounds as $number => $round) {
-    db_insert("fanta_rounds")->fields(array("round" => $number, "date" => $round->date, "end_date" => $round->date, "status" => 0, "reminder_sent" => 0))->execute();
+  echo $number;
+    db_insert("fanta_rounds")->fields(array("round" => $number, "date" => $round->date, "end_date" => $round->end_date, "status" => 0, "reminder_sent" => 0))->execute();
     db_insert("fanta_rounds_competitions")->fields(array("round" => $number, "c_id" => $c_id, "competition_round" => $number, "round_label" => "", "next" => 0))->execute();
   }
 
@@ -3060,18 +3104,6 @@ function get_teams_for_select($g_id) {
   }
   
   return $teams_options;
-}
-
-function get_providers_for_select() {
-  global $providers;
-
-  $providers_options = array();
- 
-  foreach ($providers as $p_id => $provider) {
-    $providers_options[$p_id] = $provider;
-  }
-  
-  return $providers_options;
 }
 
 function groups_count() {

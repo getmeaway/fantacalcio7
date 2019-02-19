@@ -148,7 +148,7 @@ class Player {
   
   static function updateList() {
 
-      $players_url = DATA_SOURCE_URL . "/players/" . variable_get("fantacalcio_votes_provider", 1) . ".json?t=" . time();
+      $players_url = DATA_SOURCE_URL . "/players/players.json?t=" . time();
   
   $players = json_decode(file_get_contents($players_url));
   
@@ -480,4 +480,68 @@ class Player {
     
     return $status;
   }
+
+  static function getAvgTotal($pl_id) {
+    $query = db_select("fanta_votes", "v");
+  $query->condition("v.pl_id", $pl_id);
+  $query->condition("v.has_vote", 1);
+  $query->addExpression("AVG(total)", "avg");
+ 
+  $result = $query->execute();
+  $result = $result->fetchField();
+
+    return number_format((float)$result, 2, '.', '');
+  } 
+
+  static function getAvgVote($pl_id) {
+    $query = db_select("fanta_votes", "v");
+  $query->condition("v.pl_id", $pl_id);
+  $query->condition("v.has_vote", 1);
+  $query->addExpression("AVG(vote)", "avg");
+ 
+  $result = $query->execute();
+  $result = $result->fetchField();
+
+    return number_format((float)$result, 2, '.', '');
+  } 
+
+  static function getRegular($pl_id) {
+    $query = db_select("fanta_votes", "v");
+  $query->condition("v.pl_id", $pl_id);
+  $query->condition("v.regular", 1);
+  $query->condition("v.has_vote", 1);
+  $query->addExpression("COUNT(vote)", "regular");
+ 
+  $result = $query->execute();
+  $result = $result->fetchField();
+
+    return $result;
+  } 
+
+  static function getSub($pl_id) {
+    $query = db_select("fanta_votes", "v");
+  $query->condition("v.pl_id", $pl_id);
+  $query->condition("v.regular", 0);
+  $query->condition("v.has_vote", 1);
+  $query->addExpression("COUNT(vote)", "substituted");
+ 
+  $result = $query->execute();
+  $result = $result->fetchField();
+
+    return $result;
+  } 
+
+  static function getNotPlayed($pl_id) {
+    $query = db_select("fanta_rounds", "r");
+  $query->condition("r.status", 1);
+  $query->addExpression("COUNT(*)", "_count");
+ 
+  $result = $query->execute();
+  $total_round = $result->fetchField();
+  
+  $regular = self::getRegular($pl_id);
+  $sub = self::getSub($pl_id);
+
+    return $total_round - $regular - $sub;
+  } 
 }
