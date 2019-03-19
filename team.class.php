@@ -939,6 +939,69 @@ class Team {
 	
 		return $positions;
 	}
+	
+	function getRoundsGoals($competition_id) {
+		$query = db_select("fanta_matches", "m");
+		$query->condition("t1_id", $this->id);
+		$query->condition("g_id", array(1,2,3), "IN");
+		$query->condition("played", 1);
+		$query->fields("m", array("goals_1", "round"));
+	
+		$result = $query->execute();
+	
+		$goals = array();
+		foreach($result as $row) {
+			$goals[$row->round] = $row->goals_1;
+		}
+		
+		$query = db_select("fanta_matches", "m");
+		$query->condition("t2_id", $this->id);
+		$query->condition("g_id", array(1,2,3), "IN");
+		$query->condition("played", 1);
+		$query->fields("m", array("goals_2", "round"));
+	
+		$result = $query->execute();
+	
+		foreach($result as $row) {
+			$goals[$row->round] = $row->goals_2;
+		}
+		
+		ksort($goals);
+	
+		return $goals;
+	}
+	
+	function getRoundsTotals($competition_id) {
+		$query = db_select("fanta_matches", "m");
+		$query->condition("t1_id", $this->id);
+		//$query->condition("c_id", $competition->id);
+		$query->condition("g_id", array(1,2,3), "IN");
+		$query->condition("played", 1);
+		$query->fields("m", array("tot_1", "round"));
+	
+		$result = $query->execute();
+	
+		$totals = array();
+		foreach($result as $row) {
+			$totals[$row->round] = $row->tot_1;
+		}
+		
+		$query = db_select("fanta_matches", "m");
+		$query->condition("t2_id", $this->id);
+		$query->condition("g_id", array(1,2,3), "IN");
+		$query->condition("played", 1);
+		$query->fields("m", array("tot_2", "round"));
+	
+		$result = $query->execute();
+	
+		foreach($result as $row) {
+			$totals[$row->round] = $row->tot_2;
+		}
+		
+		ksort($totals);
+	
+		return $totals;
+	}
 
 	function getRoundsSeasonPositions($competition) {
 	

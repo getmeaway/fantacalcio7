@@ -58,41 +58,43 @@ jQuery(document).ready(function() {
                 jQuery(this).parent().find("td.live").html("<td><small>" + outEvents + "</small></td>");
 			}
 		});
-		
+				
 		//totali provvisori
-		jQuery("table.regulars tbody").each(function() {
-			let tot = 0; 
-			let team = jQuery(this).parent().attr("data-team")
-			
-			jQuery("table[data-team='" + team + "'] tr").removeClass("not_played")
-			jQuery("table.reserves[data-team='" + team + "'] tr").removeClass("substituted").addClass("not_played")
+		if(votes.length > 0 || true) {
+			jQuery("table.regulars tbody").each(function() {
+				let tot = 0; 
+				let team = jQuery(this).parent().attr("data-team")
+				
+				jQuery("table[data-team='" + team + "'] tr").removeClass("not_played")
+				jQuery("table.reserves[data-team='" + team + "'] tr").removeClass("substituted").addClass("not_played")
 
-			jQuery(this).find("tr").each(function() {
-				let val = (jQuery(this).find("strong").html())
-				let role = jQuery(this).attr("data-role")
+				jQuery(this).find("tr").each(function() {
+					let val = (jQuery(this).find("strong").html())
+					let role = jQuery(this).attr("data-role")
 
-				if(val != undefined && val != 0) {
-					tot += eval(val)
-				}
-				else {
-					jQuery(this).addClass('not_played');
-					let found = false
-					jQuery("table.reserves[data-team='" + team + "']").find("tr[data-role=" + role + "]").each(function() {
-						if(!jQuery(this).hasClass("substituted") && !found) {
-							let val2 = (jQuery(this).find("strong").html())		
-							found = true
-							if(val2 != undefined && val2 != 0) {
-								jQuery(this).addClass("substituted")
-								tot += eval(val2)
-								jQuery(this).removeClass('not_played');
+					if(val != undefined && val != 0) {
+						tot += eval(val)
+					}
+					else {
+						jQuery(this).addClass('not_played');
+						let found = false
+						jQuery("table.reserves[data-team='" + team + "']").find("tr[data-role=" + role + "]").each(function() {
+							if(!jQuery(this).hasClass("substituted") && !found) {
+								let val2 = (jQuery(this).find("strong").html())		
+								found = true
+								if(val2 != undefined && val2 != 0) {
+									jQuery(this).addClass("substituted")
+									tot += eval(val2)
+									jQuery(this).removeClass('not_played');
+								}
 							}
-						}
-					})
-				}
+						})
+					}
+				});
+				
+				jQuery(".live-total[data-team='" + team + "']").html(tot)
 			});
-			
-			jQuery(".live-total[data-team='" + team + "']").html(tot)
-		});
+		}
 	}
 
 	window.live = function(data) {

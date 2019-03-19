@@ -42,7 +42,8 @@ function fantacalcio_block_user_summary() {
         //partita
         $match = Match::getByTeamAndRound($t_id, $competition_id, $competition_round->competition_round);
         //formazione inserita o no
-        $rows[$t_id][] = array("data" => $match->home_team . " - " . $match->away_team, "width" => "50%");
+        //$rows[$t_id][] = array("data" => $match->home_team . " - " . $match->away_team, "width" => "50%");
+		$rows[$t_id][] = array("data" => l($match->home_team, "squadre/" . $match->t1_id) . " - " . l($match->away_team, "squadre/" . $match->t2_id), "width" => "50%");
 
         $lineup = Lineup::get($competition_id, $t_id, $competition_round->competition_round);
 
@@ -104,7 +105,7 @@ $rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $matc
       if ($team->hasMatch($competition_id, $competition_round->competition_round)) {
         //partita
         $match = Match::getByTeamAndRound($t_id, $competition_id, $competition_round->competition_round);
-        $rows[$t_id][] = array("data" => $match->home_team . " - " . $match->away_team, "width" => "50%");
+        $rows[$t_id][] = array("data" => l($match->home_team, "squadre/" . $match->t1_id ) . " - " . l($match->away_team, "squadre/" . $match->t2_id), "width" => "50%");
 		$rows[$t_id][] = $match->goals_1 . "-" . $match->goals_2;
 		$rows[$t_id][] = $match->tot_1 . "-" . $match->tot_2;
 		$rows[$t_id][] =  l("<i class='fa fa-bar-chart'></i>", "scheda/partita/" . $match->id, array("html" => true, "attributes" => array("data-toggle" => "modal", "data-target" => "#match-details-modal")) ) ;

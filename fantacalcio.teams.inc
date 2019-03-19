@@ -769,7 +769,12 @@ function show_team_rounds($t_id) {
       $rows[$row->m_id][] = ($row->played == 1) ? $row->goals_1 . " - " . $row->goals_2 : "";
       
       if ($row->round == Round::getNextForCompetition(Group::get($row->g_id)->competition_id) || $row->played == 1) {
-        $rows[$row->m_id][] = l("<i class=\"fa fa-bar-chart\"></i>", "scheda/partita/" . $row->m_id, array(
+        $rows[$row->m_id][] = "<span class='fa-stack'>
+					<i class='fa fa-circle fa-stack-2x " . (($row->winner_id == -1) ? "text-warning" : 
+			($row->winner_id == $t_id ? "text-success" : "text-danger")) . "'></i>
+					<i class='fa fa-stack-1x " . (($row->winner_id == -1) ? "fa-pause fa-rotate-90" : 
+			($row->winner_id == $t_id ? "fa-arrow-up" : "fa-arrow-down")) . "' style='color: white;'></i>
+				</span>" . "&nbsp;&nbsp;" . l("<i class=\"fa fa-bar-chart\"></i>", "scheda/partita/" . $row->m_id, array(
           "html" => "true", 
           "attributes" => array(
             "class" => "_thickbox", 
@@ -835,10 +840,10 @@ function show_team_stats($t_id) {
     
     $points = $team->getRoundsPoints($default_competition);
     
-    $points_chart = "<div class=\"row\">
-			<div class=\"cols-xs-12\">
-			<label>" . t("Punteggi") . "</label><br>
-			<canvas id=\"pointsChart\" style='width:100%; height: 200px'></canvas>
+    $points_chart = "<div class=\"row\" style='margin-top:30px'>
+			<div class=\"cols-xs-12\">"
+			//. "<label>" . t("Punti") . "</label><br>"
+			. "<canvas id=\"pointsChart\" style='width:100%; height: 200px'></canvas>
 			</div>
 			</div>";
     
@@ -850,7 +855,7 @@ function show_team_stats($t_id) {
 			labels: [" . implode(", ", array_keys($points)) . "],
 			datasets: [
 			{
-				label: '" . t("Punteggi") . "',
+				label: '" . t("Punti") . "',
 				borderColor: '#FFC870',
                 borderWidth: 3,
 				pointColor: 'rgba(20,20,220,0.5)',
@@ -879,7 +884,7 @@ function show_team_stats($t_id) {
     $round_positions = $team->getRoundsPositions($default_competition);
     array_reverse($round_positions);
     
-    $round_positions_chart = "<div class=\"row\">
+    $round_positions_chart = "<div class=\"row\" style='margin-top:30px'>
 			<div class=\"cols-xs-12\">
 			<label>" . t("Posizioni giornata") . "</label><br>
 			<canvas id=\"positionsChart\" style='width:100%; height: 200px'></canvas>
@@ -917,10 +922,10 @@ function show_team_stats($t_id) {
     $matches_chart = "";
     
    // if ($default_competition->type == COMPETITION_TYPE_GP) {
-      $season_position_chart = "<div class=\"row\">
-				<div class=\"cols-xs-12\">
-				<label>" . t("Posizioni stagione") . "</label><br>
-				<canvas id=\"seasonPositionsChart\" style='width:100%; height: 200px'></canvas>
+      $season_position_chart = "<div class=\"row\" style='margin-top:30px'>
+				<div class=\"cols-xs-12\">"
+				//. "<label>" . t("Posizioni stgione") . "</label><br>" 
+				. "<canvas id=\"seasonPositionsChart\" style='width:100%; height: 200px'></canvas>
 				</div>
 				</div>";
       
@@ -966,14 +971,113 @@ function show_team_stats($t_id) {
       
       drupal_add_js($season_positions_js, "inline");
     //}
+	
+	////////////////////////////////////////////////////////////////////////////////////////
+	$season_points_chart = "";
+    
+   // if ($default_competition->type == COMPETITION_TYPE_GP) {
+      $season_points_chart = "<div class=\"row\" style='margin-top:30px'>
+				<div class=\"cols-xs-12\">"
+				//. "<label>" . t("Punteggi stagione") . "</label><br>"
+				. "<canvas id=\"seasonPointsChart\" style='width:100%; height: 200px'></canvas>
+				</div>
+				</div>";
+      
+      $season_points = $team->getRoundsTotals($default_competition);
+//       $season_positions = array_reverse($season_positions);
+      
+      $season_points_js = "jQuery(document).ready(function () {
+      	jQuery('a[href=\"#stats\"], #stats').on('shown.bs.tab', function () {
+                var ctx = jQuery('#seasonPointsChart').get(0).getContext('2d');
+                var data = {
+                    labels: [" . implode(", ", array_keys($season_points)) . "],
+                    datasets: [{
+                        label: '" . t("Punteggi") . "',
+                        borderColor: '#515AD3',
+                        borderWidth: 3,
+                        strokeColor: 'rgba(20,220,20,0.5)',
+                        pointColor: 'rgba(220,220,220,0.5)',
+                        pointStrokeColor: '#fff',
+                        pointHighlightFill: '#fff',
+                        pointHighlightStroke: 'rgba(220,220,220,1)',
+                        fill: false,
+                        data: [" . implode(", ", $season_points) . "]
+                    }]
+                };
+               
+                new Chart(ctx,  {
+                    type: 'line',
+                    data: data,
+
+                });
+			});
+        });";
+      
+      drupal_add_js($season_points_js, "inline");
+	  //////////////////////
+	  
+	  
+	  ////////////////////////////////////////////////////////////////////////////////////////
+	$season_goals_chart = "";
+    
+   // if ($default_competition->type == COMPETITION_TYPE_GP) {
+      $season_goals_chart = "<div class=\"row\" style='margin-top:30px'>
+				<div class=\"cols-xs-12\">"
+				//. "<label>" . t("Goal stagione") . "</label><br>"
+				. "<canvas id=\"seasonGoalsChart\" style='width:100%; height: 200px'></canvas>
+				</div>
+				</div>";
+      
+      $season_goals = $team->getRoundsGoals($default_competition);
+//       $season_positions = array_reverse($season_positions);
+      
+      $season_goals_js = "jQuery(document).ready(function () {
+      	jQuery('a[href=\"#stats\"], #stats').on('shown.bs.tab', function () {
+                var ctx = jQuery('#seasonGoalsChart').get(0).getContext('2d');
+                var data = {
+                    labels: [" . implode(", ", array_keys($season_goals)) . "],
+                    datasets: [{
+                        label: '" . t("Goal") . "',
+                        borderColor: '#EA9133',
+                        borderWidth: 3,
+                        strokeColor: 'rgba(20,220,20,0.5)',
+                        pointColor: 'rgba(220,220,220,0.5)',
+                        pointStrokeColor: '#fff',
+                        pointHighlightFill: '#fff',
+                        pointHighlightStroke: 'rgba(220,220,220,1)',
+                        fill: false,
+                        data: [" . implode(", ", $season_goals) . "]
+                    }]
+                };
+               
+                new Chart(ctx,  {
+					scaleSteps: 1,
+                    type: 'line',
+                    data: data,    
+					options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+									stepSize: 1,
+                                    beginAtZero: true
+                                }
+                            }]
+                        }
+                    }					
+                });
+			});
+        });";
+      
+      drupal_add_js($season_goals_js, "inline");
+	  //////////////////////
     
     //else 
     $matches_chart = "";
       if ($default_competition->type == COMPETITION_TYPE_SD) {
-        $matches_chart = "<div class=\"row\">
-				<div class=\"cols-xs-12\">
-				<label>" . t("Partite") . "</label><br>
-				<canvas id=\"matchesChart\" style='width:100%; height: 200px'></canvas>
+        $matches_chart = "<div class=\"row\" style='margin-top:30px'>
+				<div class=\"cols-xs-12\">"
+				//."<label>" . t("Partite") . "</label><br>"
+				."<canvas id=\"matchesChart\" style='width:100%; height: 200px'></canvas>
 				</div>
 				</div>";
         
@@ -1009,7 +1113,7 @@ function show_team_stats($t_id) {
         drupal_add_js($matches_js, "inline");
       }
     
-    return theme("table", $stats) . $points_chart . $round_positions_chart . $season_position_chart . $matches_chart;
+    return theme("table", $stats) . $points_chart . $round_positions_chart . $season_position_chart . $season_points_chart . $season_goals_chart . $matches_chart;
   }
   else {
     return t("Nessuna giornata giocata");
